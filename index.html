@@ -305,14 +305,14 @@
     // simple fields
     document.querySelectorAll('[data-k]').forEach(el=>{ el.value = data[el.dataset.k] || ''; });
     document.querySelectorAll('.ht').forEach(el=>{ el.disabled = !isHT(); });
-    const locked = !!data.s1Locked;
+    const locked = false; // teachers can keep editing after submitting
     document.querySelectorAll('#s1goals textarea').forEach(el=>{ el.disabled = locked; });
     document.querySelectorAll('#s1goals [data-del]').forEach(el=>{ el.style.display = locked ? 'none' : ''; });
     ['addGoal','name','designation','location'].forEach(id=>{ document.getElementById(id).disabled = locked; });
     document.getElementById('btnSubmit1').textContent = data.s1SubmittedAt ? 'Resubmit Step 1' : 'Submit Step 1 to Head Teacher';
     document.getElementById('btnSubmit1').disabled = locked;
     document.getElementById('btnClear').disabled = locked && !isHT();
-    document.getElementById('s1banner').innerHTML = data.s1SubmittedAt ? `<div class="sub-banner"><span>✓ Step 1 submitted on ${esc(new Date(data.s1SubmittedAt).toLocaleString('en-AU',{dateStyle:'medium',timeStyle:'short'}))}${locked?' — locked':' — unlocked for changes'}.</span>${locked && isHT() ? '<button class="btn" type="button" id="btnUnlock1">Unlock Step 1</button>' : ''}</div>` : '';
+    document.getElementById('s1banner').innerHTML = data.s1SubmittedAt ? `<div class="sub-banner"><span>✓ Step 1 submitted on ${esc(new Date(data.s1SubmittedAt).toLocaleString('en-AU',{dateStyle:'medium',timeStyle:'short'}))}. You can still make changes and click Resubmit.</span></div>` : '';
     document.getElementById('lockmsg').style.display = isHT() ? 'none' : 'block';
 
     // role + steps
@@ -448,7 +448,7 @@
     data.goals.slice(0,4).forEach((g,i)=>{ if(!(g.area||'').trim() || !(g.action||'').trim()) missing.push(`Goal ${i+1} area and action strategies`); });
     if(missing.length){ subMsg('Please fill in: ' + missing.join(', ') + '.', 'err'); return; }
     if(!SUBMIT_URL){ subMsg('Submitting isn\'t set up yet. Use Save file and send it to your Head Teacher for now.', 'err'); return; }
-    if(!confirmSafe('Submit Step 1 to your Head Teacher? Your goals will be locked after submitting.')) return;
+    if(!confirmSafe('Submit Step 1 to your Head Teacher?')) return;
     const btn = document.getElementById('btnSubmit1'); btn.disabled = true; subMsg('Submitting…');
     const now = new Date().toISOString();
     const payload = {
@@ -456,13 +456,13 @@
       stage: 'Step 1 - Goals & action plan', submittedOn: now,
       goal1: goalText(data.goals[0]), goal2: goalText(data.goals[1]), goal3: goalText(data.goals[2]), goal4: goalText(data.goals[3]),
       otherGoals: data.goals.slice(4).map((g,i)=>`Goal ${i+5}\n`+goalText(g)).join('\n\n----\n\n'),
-      planJson: JSON.stringify(Object.assign({}, data, {role:'teacher', s1SubmittedAt: now, s1Locked: true}))
+      planJson: JSON.stringify(Object.assign({}, data, {role:'teacher', s1SubmittedAt: now}))
     };
     try{
       // text/plain avoids a CORS pre-flight; the flow parses it with "Parse JSON".
       const res = await fetch(SUBMIT_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(payload)});
       if(!res.ok) throw new Error('HTTP ' + res.status);
-      data.s1SubmittedAt = now; data.s1Locked = true; save(); render();
+      data.s1SubmittedAt = now; save(); render(); btn.disabled = false;
       subMsg('Submitted. Your Head Teacher can now read your plan.', 'ok');
     }catch(err){
       btn.disabled = false;
@@ -470,9 +470,6 @@
     }
   }
   document.getElementById('btnSubmit1').onclick = submitStep1;
-  document.addEventListener('click', e=>{
-    if(e.target.id==='btnUnlock1' && isHT()){ data.s1Locked = false; save(); render(); }
-  });
 
   load(); data.role = 'teacher'; render();  // always start locked
 })();

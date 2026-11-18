@@ -140,6 +140,5 @@ The header is required: without it the form can't read the reply and will show "
 ## How it behaves in the form
 
 - Submit checks that Teacher Name, Location, and the area + action strategies for Goals 1–4 are filled in.
-- After submitting, Step 1 (and the name / designation / location fields) is **locked** on that computer. Step 2 stays open.
-- A Head Teacher (password) can click **Unlock Step 1** so the teacher can make changes and **Resubmit**.
+- After submitting, teachers can keep editing Step 1 and click **Resubmit Step 1**. Their row in the list is updated (no duplicate).
 - Until `SUBMIT_URL` is set, the button tells teachers to use **Save file** and email it instead.
