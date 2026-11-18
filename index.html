@@ -82,18 +82,34 @@
   #printView{display:none}
   @media (max-width:760px){.grid3,.grid3.signoff,.goal-b.cols3,.goal-b.cols2{grid-template-columns:1fr}.steps{flex-direction:column}.steps button{border-right:0;border-bottom:1px solid var(--line)}}
   @media print{
-    @page{size:A4 landscape;margin:12mm}
-    body{background:#fff}
-    .wrap>*:not(#printView):not(header.top):not(.bar){display:none!important}
+    @page{size:A4 landscape;margin:12mm 0 5mm 0}
+    @page :first{margin:0}
+    html,body{background:#fff;margin:0;padding:0}
+    .wrap{max-width:none;padding:0;margin:0}
+    .wrap>*:not(#printView){display:none!important}
     #printView{display:block}
-    .bar{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    table{width:100%;border-collapse:collapse;font-size:11px}
-    th,td{border:1px solid #444;padding:6px;height:34px;vertical-align:top;white-space:pre-wrap}
-    th{background:#eee;-webkit-print-color-adjust:exact;print-color-adjust:exact;text-align:left}
-    th small{font-weight:normal;display:block}
-    .pv-info{display:flex;gap:30px;font-size:12px;margin-bottom:10px}
-    .pv-h{font-size:13px;font-weight:bold;margin:14px 0 6px}
-    tr{page-break-inside:avoid}
+    #printView *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .pv{width:297mm;font-family:Calibri,Carlito,"Segoe UI",Arial,sans-serif;font-size:11pt;color:#252525;line-height:4.75mm}
+    .pv-top{position:relative;height:44.5mm}
+    .pv-abs{position:absolute;white-space:nowrap}
+    .pv-logo{left:2.36mm;top:1.34mm;width:48.37mm;height:13.76mm}
+    .pv-title{left:12.16mm;right:12.5mm;top:16.6mm;text-align:center;font-size:20pt;line-height:8.1mm}
+    .pv-title span{background:#9185BD;color:#fff;letter-spacing:.65pt;display:inline-block;transform:scaleX(1.05);padding:0 .3mm}
+    .pv-ul{display:flex;align-items:baseline}
+    .pv-ul .fill{flex:1;border-bottom:.75pt solid #000;height:3.9mm}
+    .pv-ul.whole{border-bottom:.75pt solid #000;display:block;overflow:hidden;height:3.9mm;line-height:4.75mm;overflow:visible}
+    .pv-sig{font-family:"Brush Script MT","Brush Script Std",cursive;font-size:12pt}
+    .pv table{margin-left:9.35mm;width:272.86mm;border-collapse:collapse;table-layout:fixed;font-size:11pt}
+    .pv th,.pv td{border:.5pt solid #000;padding:0;vertical-align:top}
+    .pv th{background:#D0CDED;color:#252525;font-weight:normal;text-align:center;vertical-align:middle;height:9.47mm;line-height:4.55mm}
+    .pv td{font-family:"Times New Roman","Liberation Serif",Times,serif;color:#000;height:20.1mm;line-height:4.45mm;white-space:pre-wrap;word-wrap:break-word}
+    .pv tr{break-inside:avoid}
+    .pv-after{position:relative;height:14.5mm;margin-top:.4mm}
+    .pv-notes{margin:4.8mm 16.7mm 0 20mm}
+    .pv-notes p{margin:0}
+    .pv-notes a{color:#808080;text-decoration:underline}
+    .pv-p2{break-before:page;padding-top:2mm}
+    .pv-p2 h3{font-size:11pt;font-weight:bold;margin:0 0 2mm 9.35mm}
   }
 </style>
 </head>
@@ -297,25 +313,56 @@
 
   function renderPrint(){
     const d = data;
-    const rows = d.goals.map((g,i)=>`<tr><td><b>${title(g,i)}</b>\n${esc(g.area)}</td><td>${esc(g.action)}</td><td>${esc(g.review)}</td><td>${esc(g.progress)}${g.status?`\n\n<b>${esc(g.status)}</b>`:''}</td></tr>`).join('');
-    const htRows = d.goals.map((g,i)=>`<tr><td><b>${title(g,i)}</b>\n${esc(g.area)}</td><td>${esc(g.outcome)}</td><td>${esc(g.htComment)}</td></tr>`).join('');
+    const fmt = v => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v||''); return m ? `${m[3]}/${m[2]}/${m[1]}` : esc(v); };
+    const logo = document.querySelector('header.top img').src;
+    const cell = v => esc(v);
+    const rows = d.goals.map(g=>`<tr><td>${cell(g.area)}</td><td>${cell(g.action)}</td><td>${cell(g.review)}</td><td>${cell(g.progress)}${g.status?(g.progress?'\n\n':'')+esc(g.status):''}</td></tr>`).join('');
+    const lmName = [esc(d.htName), d.htSign?`<span class="pv-sig">${esc(d.htSign)}</span>`:''].filter(Boolean).join(' &nbsp; ');
+    const hasHT = d.htOverall || d.goals.some(g=>g.outcome||g.htComment);
+    const htRows = d.goals.map((g,i)=>`<tr><td>${esc(title(g,i))}${g.area?'\n'+esc(g.area):''}</td><td>${esc(g.outcome)}</td><td>${esc(g.htComment)}</td></tr>`).join('');
     document.getElementById('printView').innerHTML = `
-      <div class="pv-info"><span><b>Teacher Name:</b> ${esc(d.name)}</span><span><b>Designation:</b> ${esc(d.designation)}</span><span><b>Location:</b> ${esc(d.location)}</span></div>
+    <div class="pv">
+      <div class="pv-top">
+        <img class="pv-abs pv-logo" src="${logo}" alt="">
+        <div class="pv-abs pv-title"><span>ANNUAL REVIEW DEVELOPMENT PLAN</span></div>
+        <div class="pv-abs" style="left:11.2mm;top:30.6mm">Teacher/Related</div>
+        <div class="pv-abs" style="left:11.2mm;top:34.9mm">Employee Name</div>
+        <div class="pv-abs pv-ul" style="left:47.2mm;top:34.9mm;width:66.3mm"><span>${esc(d.name)}</span><span class="fill"></span></div>
+        <div class="pv-abs" style="left:114.6mm;top:34.9mm">Designation</div>
+        <div class="pv-abs pv-ul" style="left:139.2mm;top:34.9mm;width:71.6mm"><span>${esc(d.designation)}</span><span class="fill"></span></div>
+        <div class="pv-abs" style="left:212.3mm;top:34.9mm">Location</div>
+        <div class="pv-abs pv-ul whole" style="left:229.4mm;top:34.9mm;width:53.6mm">&nbsp;${esc(d.location)}</div>
+      </div>
       <table>
+        <colgroup><col style="width:68.22mm"><col style="width:68.18mm"><col style="width:68.22mm"><col style="width:68.24mm"></colgroup>
         <thead><tr>
-          <th style="width:22%">Areas to be developed</th>
-          <th style="width:28%">Action Strategies<small>(What, When, Who responsible)</small></th>
-          <th style="width:25%">Review Strategies<small>(How and when to be reviewed)</small></th>
-          <th style="width:25%">Progress Review<small>(Comments based on discussion)</small></th>
-        </tr></thead><tbody>${rows}</tbody>
+          <th>Areas to be developed</th>
+          <th>Action Strategies<br>(What, When, Who responsible)</th>
+          <th>Review Strategies<br>(How and when to be reviewed)</th>
+          <th>Progress Review<br>(Comments based on discussion)</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
       </table>
-      <div class="pv-h">Final Review (Head Teacher)</div>
-      <table><thead><tr><th style="width:40%">Goal</th><th style="width:18%">Outcome</th><th>Head Teacher comments</th></tr></thead><tbody>${htRows}</tbody></table>
-      ${d.htOverall?`<p style="font-size:12px"><b>Overall comments:</b> ${esc(d.htOverall)}</p>`:''}
-      <table style="margin-top:12px"><tr>
-        <td><b>Teacher signature:</b> ${esc(d.tSign)}<br><b>Date:</b> ${esc(d.tDate)}</td>
-        <td><b>Line Manager name:</b> ${esc(d.htName)}<br><b>Signature:</b> ${esc(d.htSign)}<br><b>Date:</b> ${esc(d.htDate)}</td>
-      </tr></table>`;
+      <div class="pv-after">
+        <div class="pv-abs" style="left:11.2mm;top:0">Teacher/Related Employee</div>
+        <div class="pv-abs" style="left:11.2mm;top:4.8mm">Signature</div>
+        <div class="pv-abs pv-ul" style="left:59.8mm;top:4.8mm;width:80.5mm"><span class="pv-sig">${esc(d.tSign)}</span><span class="fill"></span></div>
+        <div class="pv-abs pv-ul" style="left:154.3mm;top:4.8mm;width:113mm"><span>Line Manager Name/Signature&nbsp;</span><span class="fill" style="height:auto;padding-left:1mm">${lmName}</span></div>
+        <div class="pv-abs" style="left:154mm;top:9.7mm">Date</div>
+        <div class="pv-abs pv-ul whole" style="left:204mm;top:9.7mm;width:64.6mm">${fmt(d.htDate)}</div>
+      </div>
+      <div class="pv-notes">
+        <p>Teacher/Related Employee to upload Annual Review Development Plan to People@TAFE via a KIC form.</p>
+        <p>For support: <a href="https://tafehelp.tafensw.edu.au/staff_portal?id=kb_article&amp;sysparm_article=KB00008093">Knowledge Article-KIC form – Uploading a Qualification, Licence, VCTM or other document</a></p>
+        <p>(Please note, if you are not on campus, you will need to <a href="https://tafensw.service-now.com/staff_portal?id=kb_article&amp;sysparm_article=KB00008405">connect to a VPN</a> or <a href="https://tafensw.service-now.com/staff_portal?id=kb_article&amp;sysparm_article=KB00003026">TAFE Virtual Desktop</a> to access this link).&nbsp; Select <b>Annual Teacher Review</b> from the <b>Document Type</b> dropdown list.&nbsp; Note:&nbsp; Signatures not required when uploaded and approved as a KIC form.</p>
+      </div>
+      ${hasHT?`<div class="pv-p2">
+        <h3>Final Review (Head Teacher)</h3>
+        <table><colgroup><col style="width:90mm"><col style="width:45mm"><col></colgroup>
+          <thead><tr><th>Goal</th><th>Outcome</th><th>Head Teacher comments</th></tr></thead>
+          <tbody>${htRows}${d.htOverall?`<tr><td>Overall comments</td><td colspan="2">${esc(d.htOverall)}</td></tr>`:''}</tbody>
+        </table></div>`:''}
+    </div>`;
   }
 
   // ---------- events ----------
