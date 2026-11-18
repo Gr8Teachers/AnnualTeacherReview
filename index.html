@@ -37,6 +37,7 @@
   .btn.primary{background:var(--dark);color:#fff}
   .btn.danger{border-color:var(--accent);color:var(--accent)}
   .btn:hover{filter:brightness(.95)}
+  .btn:disabled{background:#eee;color:#999;border-color:#ccc;cursor:not-allowed;filter:none}
 
   .steps{display:flex;gap:0;margin-bottom:18px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
   .steps button{flex:1;border:0;border-right:1px solid var(--line);background:#fff;padding:12px 10px;font:inherit;cursor:pointer;text-align:left}
@@ -78,6 +79,9 @@
   .modal-box h2{font-size:17px;margin:0 0 12px}
   .modal-box .err{color:var(--accent);font-size:13px;min-height:18px;margin:6px 0 10px}
   .modal-box .row{display:flex;gap:8px;justify-content:flex-end}
+  .sub-banner{border:1px solid #b7dcc8;background:#eef8f2;color:#165c3a;border-radius:8px;padding:10px 14px;font-size:14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .sub-msg{font-size:13px;margin-top:8px;min-height:18px}
+  .sub-msg.err{color:var(--accent)} .sub-msg.ok{color:var(--ok)}
   /* print-only table */
   #printView{display:none}
   @media (max-width:760px){.grid3,.grid3.signoff,.goal-b.cols3,.goal-b.cols2{grid-template-columns:1fr}.steps{flex-direction:column}.steps button{border-right:0;border-bottom:1px solid var(--line)}}
@@ -156,10 +160,12 @@
 
   <!-- STAGE 1 -->
   <section class="stage on" id="stage1">
+    <div id="s1banner"></div>
     <p class="stage-intro">Set out each goal you want to develop, what you'll do about it, and how it will be reviewed.</p>
     <div id="s1goals"></div>
     <button class="btn" type="button" id="addGoal">+ Add another goal</button>
-    <div class="nav"><span></span><button class="btn primary" type="button" data-go="2">Next: Progress review →</button></div>
+    <div class="nav"><button class="btn primary" type="button" id="btnSubmit1">Submit Step 1 to Head Teacher</button><button class="btn" type="button" data-go="2">Next: Progress review →</button></div>
+    <div class="sub-msg" id="subMsg"></div>
   </section>
 
   <!-- STAGE 2 -->
@@ -215,6 +221,10 @@
 <script>
 (function(){
   const KEY = 'ardp-form-v1';
+  // ---------- SUBMISSION SETTINGS ----------
+  // Paste the HTTP POST URL from your Power Automate flow between the quotes (see SETUP-SHAREPOINT.md).
+  const SUBMIT_URL = '';
+  // ------------------------------------------
   const STATUS = ['', 'Not started', 'Ongoing', 'Scheduled', 'Completed'];
   const OUTCOME = ['', 'Achieved', 'Partially achieved', 'Not achieved', 'Carry forward to next year'];
   const blankGoal = () => ({area:'', action:'', review:'', progress:'', status:'', outcome:'', htComment:''});
@@ -295,6 +305,14 @@
     // simple fields
     document.querySelectorAll('[data-k]').forEach(el=>{ el.value = data[el.dataset.k] || ''; });
     document.querySelectorAll('.ht').forEach(el=>{ el.disabled = !isHT(); });
+    const locked = !!data.s1Locked;
+    document.querySelectorAll('#s1goals textarea').forEach(el=>{ el.disabled = locked; });
+    document.querySelectorAll('#s1goals [data-del]').forEach(el=>{ el.style.display = locked ? 'none' : ''; });
+    ['addGoal','name','designation','location'].forEach(id=>{ document.getElementById(id).disabled = locked; });
+    document.getElementById('btnSubmit1').textContent = data.s1SubmittedAt ? 'Resubmit Step 1' : 'Submit Step 1 to Head Teacher';
+    document.getElementById('btnSubmit1').disabled = locked;
+    document.getElementById('btnClear').disabled = locked && !isHT();
+    document.getElementById('s1banner').innerHTML = data.s1SubmittedAt ? `<div class="sub-banner"><span>✓ Step 1 submitted on ${esc(new Date(data.s1SubmittedAt).toLocaleString('en-AU',{dateStyle:'medium',timeStyle:'short'}))}${locked?' — locked':' — unlocked for changes'}.</span>${locked && isHT() ? '<button class="btn" type="button" id="btnUnlock1">Unlock Step 1</button>' : ''}</div>` : '';
     document.getElementById('lockmsg').style.display = isHT() ? 'none' : 'block';
 
     // role + steps
@@ -388,7 +406,7 @@
   document.getElementById('addGoal').onclick = ()=>{ data.goals.push(blankGoal()); save(); render(); };
   document.getElementById('btnPrint').onclick = ()=>{ renderPrint(); window.print(); };
   document.getElementById('btnClear').onclick = ()=>{
-    if(confirmSafe('Clear all answers on this form?')){ data = {role:data.role, stage:1, goals:[blankGoal(),blankGoal(),blankGoal(),blankGoal()]}; save(); render(); }
+    if(confirmSafe('Clear all answers on this form?')){ data = {role:data.role, stage:1, goals:[blankGoal(),blankGoal(),blankGoal(),blankGoal()]}; subMsg(''); save(); render(); }
   };
   document.getElementById('btnSave').onclick = ()=>{
     const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
@@ -418,6 +436,42 @@
     e.preventDefault();
     if(pwIn.value === HT_PASSWORD){ closePw(); data.role='ht'; save(); render(); flash('Unlocked'); }
     else { pwErr.textContent = 'Incorrect password.'; pwIn.select(); }
+  });
+
+  // ---------- Submit Step 1 ----------
+  function subMsg(t, cls){ const m=document.getElementById('subMsg'); m.textContent=t; m.className='sub-msg'+(cls?' '+cls:''); }
+  function goalText(g){ return `Area to be developed:\n${g.area||''}\n\nAction strategies:\n${g.action||''}\n\nReview strategies:\n${g.review||''}`; }
+  async function submitStep1(){
+    const missing = [];
+    if(!(data.name||'').trim()) missing.push('Teacher name');
+    if(!(data.location||'').trim()) missing.push('Location');
+    data.goals.slice(0,4).forEach((g,i)=>{ if(!(g.area||'').trim() || !(g.action||'').trim()) missing.push(`Goal ${i+1} area and action strategies`); });
+    if(missing.length){ subMsg('Please fill in: ' + missing.join(', ') + '.', 'err'); return; }
+    if(!SUBMIT_URL){ subMsg('Submitting isn\'t set up yet. Use Save file and send it to your Head Teacher for now.', 'err'); return; }
+    if(!confirmSafe('Submit Step 1 to your Head Teacher? Your goals will be locked after submitting.')) return;
+    const btn = document.getElementById('btnSubmit1'); btn.disabled = true; subMsg('Submitting…');
+    const now = new Date().toISOString();
+    const payload = {
+      teacherName: data.name.trim(), designation: data.designation||'', location: data.location||'',
+      stage: 'Step 1 - Goals & action plan', submittedOn: now,
+      goal1: goalText(data.goals[0]), goal2: goalText(data.goals[1]), goal3: goalText(data.goals[2]), goal4: goalText(data.goals[3]),
+      otherGoals: data.goals.slice(4).map((g,i)=>`Goal ${i+5}\n`+goalText(g)).join('\n\n----\n\n'),
+      planJson: JSON.stringify(Object.assign({}, data, {role:'teacher', s1SubmittedAt: now, s1Locked: true}))
+    };
+    try{
+      // text/plain avoids a CORS pre-flight; the flow parses it with "Parse JSON".
+      const res = await fetch(SUBMIT_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(payload)});
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      data.s1SubmittedAt = now; data.s1Locked = true; save(); render();
+      subMsg('Submitted. Your Head Teacher can now read your plan.', 'ok');
+    }catch(err){
+      btn.disabled = false;
+      subMsg('Could not submit (' + err.message + '). Check your connection and try again, or use Save file and email it to your Head Teacher.', 'err');
+    }
+  }
+  document.getElementById('btnSubmit1').onclick = submitStep1;
+  document.addEventListener('click', e=>{
+    if(e.target.id==='btnUnlock1' && isHT()){ data.s1Locked = false; save(); render(); }
   });
 
   load(); data.role = 'teacher'; render();  // always start locked
