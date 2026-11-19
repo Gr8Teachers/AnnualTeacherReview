@@ -411,6 +411,20 @@
     const lmName = [esc(d.htName), d.htSign?`<span class="pv-sig">${esc(d.htSign)}</span>`:''].filter(Boolean).join(' &nbsp; ');
     const hasHT = d.htOverall || d.goals.some(g=>g.outcome||g.htComment);
     const htRows = d.goals.map((g,i)=>`<tr><td>${esc(title(g,i))}${g.area?'\n'+esc(g.area):''}</td><td>${esc(g.outcome)}</td><td>${esc(g.htComment)}</td></tr>`).join('');
+    const signoff = `
+      <div class="pv-after">
+        <div class="pv-abs" style="left:11.2mm;top:0">Teacher/Related Employee</div>
+        <div class="pv-abs" style="left:11.2mm;top:4.8mm">Signature</div>
+        <div class="pv-abs pv-ul" style="left:59.8mm;top:4.8mm;width:80.5mm"><span class="pv-sig">${esc(d.tSign)}</span><span class="fill"></span></div>
+        <div class="pv-abs pv-ul" style="left:154.3mm;top:4.8mm;width:113mm"><span>Line Manager Name/Signature&nbsp;</span><span class="fill" style="height:auto;padding-left:1mm">${lmName}</span></div>
+        <div class="pv-abs" style="left:154mm;top:9.7mm">Date</div>
+        <div class="pv-abs pv-ul whole" style="left:204mm;top:9.7mm;width:64.6mm">${fmt(d.htDate)}</div>
+      </div>
+      <div class="pv-notes">
+        <p>Teacher/Related Employee to upload Annual Review Development Plan to People@TAFE via a KIC form.</p>
+        <p>For support: <a href="https://tafehelp.tafensw.edu.au/staff_portal?id=kb_article&amp;sysparm_article=KB00008093">Knowledge Article-KIC form – Uploading a Qualification, Licence, VCTM or other document</a></p>
+        <p>(Please note, if you are not on campus, you will need to <a href="https://tafensw.service-now.com/staff_portal?id=kb_article&amp;sysparm_article=KB00008405">connect to a VPN</a> or <a href="https://tafensw.service-now.com/staff_portal?id=kb_article&amp;sysparm_article=KB00003026">TAFE Virtual Desktop</a> to access this link).&nbsp; Select <b>Annual Teacher Review</b> from the <b>Document Type</b> dropdown list.&nbsp; Note:&nbsp; Signatures not required when uploaded and approved as a KIC form.</p>
+      </div>`;
     document.getElementById('printView').innerHTML = `
     <div class="pv">
       <div class="pv-top">
@@ -435,25 +449,15 @@
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
-      <div class="pv-after">
-        <div class="pv-abs" style="left:11.2mm;top:0">Teacher/Related Employee</div>
-        <div class="pv-abs" style="left:11.2mm;top:4.8mm">Signature</div>
-        <div class="pv-abs pv-ul" style="left:59.8mm;top:4.8mm;width:80.5mm"><span class="pv-sig">${esc(d.tSign)}</span><span class="fill"></span></div>
-        <div class="pv-abs pv-ul" style="left:154.3mm;top:4.8mm;width:113mm"><span>Line Manager Name/Signature&nbsp;</span><span class="fill" style="height:auto;padding-left:1mm">${lmName}</span></div>
-        <div class="pv-abs" style="left:154mm;top:9.7mm">Date</div>
-        <div class="pv-abs pv-ul whole" style="left:204mm;top:9.7mm;width:64.6mm">${fmt(d.htDate)}</div>
-      </div>
-      <div class="pv-notes">
-        <p>Teacher/Related Employee to upload Annual Review Development Plan to People@TAFE via a KIC form.</p>
-        <p>For support: <a href="https://tafehelp.tafensw.edu.au/staff_portal?id=kb_article&amp;sysparm_article=KB00008093">Knowledge Article-KIC form – Uploading a Qualification, Licence, VCTM or other document</a></p>
-        <p>(Please note, if you are not on campus, you will need to <a href="https://tafensw.service-now.com/staff_portal?id=kb_article&amp;sysparm_article=KB00008405">connect to a VPN</a> or <a href="https://tafensw.service-now.com/staff_portal?id=kb_article&amp;sysparm_article=KB00003026">TAFE Virtual Desktop</a> to access this link).&nbsp; Select <b>Annual Teacher Review</b> from the <b>Document Type</b> dropdown list.&nbsp; Note:&nbsp; Signatures not required when uploaded and approved as a KIC form.</p>
-      </div>
+      ${signoff}
       ${hasHT?`<div class="pv-p2">
         <h3>Final Review (Head Teacher)</h3>
         <table><colgroup><col style="width:90mm"><col style="width:45mm"><col></colgroup>
           <thead><tr><th>Goal</th><th>Outcome</th><th>Head Teacher comments</th></tr></thead>
           <tbody>${htRows}${d.htOverall?`<tr><td>Overall comments</td><td colspan="2">${esc(d.htOverall)}</td></tr>`:''}</tbody>
-        </table></div>`:''}
+        </table>
+        <div style="height:4mm"></div>
+        ${signoff}</div>`:''}
     </div>`;
   }
 
