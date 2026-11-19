@@ -161,6 +161,7 @@
   <!-- STAGE 1 -->
   <section class="stage on" id="stage1">
     <div id="s1banner"></div>
+    <div class="lockmsg" id="dirtyNote" style="display:none">You have changes that haven't been submitted. Click <b>Resubmit Goals and Action plans</b> so your Head Teacher sees the latest version.</div>
     <p class="stage-intro">Set out each goal you want to develop, what you'll do about it, and how it will be reviewed.</p>
     <div id="s1goals"></div>
     <button class="btn" type="button" id="addGoal">+ Add another goal</button>
@@ -313,6 +314,7 @@
     document.getElementById('btnSubmit1').disabled = locked;
     document.getElementById('btnClear').disabled = locked && !isHT();
     document.getElementById('s1banner').innerHTML = data.s1SubmittedAt ? `<div class="sub-banner"><span>✓ Goals and Action plans submitted on ${esc(new Date(data.s1SubmittedAt).toLocaleString('en-AU',{dateStyle:'medium',timeStyle:'short'}))}. You can still make changes and click Resubmit.</span></div>` : '';
+    updateDirtyNote();
     document.getElementById('lockmsg').style.display = isHT() ? 'none' : 'block';
 
     // role + steps
@@ -397,15 +399,15 @@
     if(el.dataset.g !== undefined){ data.goals[+el.dataset.g][el.dataset.f] = el.value; }
     else if(el.dataset.k){ data[el.dataset.k] = el.value; }
     else return;
-    save(); renderPrint();
+    save(); renderPrint(); updateDirtyNote();
   });
   document.addEventListener('click', e=>{
     const b = e.target.closest('button'); if(!b) return;
     if(b.closest('#steps') && b.dataset.s == data.stage) return;
     if(b.dataset.del !== undefined){
       if(confirmSafe('Remove this goal?')){ data.goals.splice(+b.dataset.del,1); save(); render(); }
-    } else if(b.dataset.go){ showStage(b.dataset.go); }
-    else if(b.dataset.s){ showStage(b.dataset.s); }
+    } else if(b.dataset.go){ navTo(b.dataset.go); }
+    else if(b.dataset.s){ navTo(b.dataset.s); }
     else if(b.dataset.role){
       if(b.dataset.role==='ht' && data.role!=='ht'){ openPw(); }
       else { data.role = b.dataset.role; save(); render(); }
@@ -437,10 +439,11 @@
     data = Object.assign({stage:1, goals:[]}, obj); delete data.v; data.role = role;
     data.goals = (data.goals||[]).map(g=>Object.assign(blankGoal(), g));
     while(data.goals.length<4) data.goals.push(blankGoal());
-    // A complete plan reopened from the teacher's PDF unlocks the Progress review and goes straight to it
+    // A complete plan reopened from the teacher's PDF unlocks the Progress review (teacher clicks Next)
     const complete = data.goals.slice(0,4).every(g=>(g.area||'').trim() && (g.action||'').trim());
-    if(complete){ data.s1FromPdf = true; data.stage = 2; }
-    else if(!canOpen(data.stage)) data.stage = 1;
+    data.s1Hash = s1Snapshot();   // treat the reopened PDF as what is on the list
+    if(complete) data.s1FromPdf = true;   // unlocks Next / Progress review
+    data.stage = 1;                        // always land on Goals and Action plans first
     save(); render();
     window.scrollTo({top:document.getElementById('steps').offsetTop-10, behavior:'smooth'});
   }
@@ -475,7 +478,7 @@
     flash('Opening…', 60000);
     try{
       const obj = /\.pdf$/i.test(f.name) || f.type==='application/pdf' ? await readPdf(f) : JSON.parse(await f.text());
-      applyLoaded(obj); flash(data.stage===2 ? 'Opened — carry on with your Progress review' : 'Opened — you can keep editing', 5000);
+      applyLoaded(obj); flash(data.s1FromPdf ? 'Opened — check your goals, then click Next' : 'Opened — you can keep editing', 5000);
     }catch(err){ flash('', 1); window.alert(err.message || 'Could not open that file.'); }
   };
   function confirmSafe(msg){ try{ return window.confirm(msg); }catch(e){ return true; } }
@@ -497,14 +500,14 @@
   // ---------- Submit Step 1 ----------
   function subMsg(t, cls){ const m=document.getElementById('subMsg'); m.textContent=t; m.className='sub-msg'+(cls?' '+cls:''); }
   function goalText(g){ return `Area to be developed:\n${g.area||''}\n\nAction strategies:\n${g.action||''}\n\nReview strategies:\n${g.review||''}`; }
-  async function submitStep1(){
+  async function submitStep1(skipConfirm){
     const missing = [];
     if(!(data.name||'').trim()) missing.push('Teacher name');
     if(!(data.location||'').trim()) missing.push('Location');
     data.goals.slice(0,4).forEach((g,i)=>{ if(!(g.area||'').trim() || !(g.action||'').trim()) missing.push(`Goal ${i+1} area and action strategies`); });
-    if(missing.length){ subMsg('Please fill in: ' + missing.join(', ') + '.', 'err'); return; }
-    if(!SUBMIT_URL){ subMsg('Submitting isn\'t set up yet. Use Save a PDF copy for me and email it to your Head Teacher for now.', 'err'); return; }
-    if(!confirmSafe('Submit your Goals and Action plans to your Head Teacher?')) return;
+    if(missing.length){ subMsg('Please fill in: ' + missing.join(', ') + '.', 'err'); return false; }
+    if(!SUBMIT_URL){ subMsg('Submitting isn\'t set up yet. Use Save a PDF copy for me and email it to your Head Teacher for now.', 'err'); return false; }
+    if(skipConfirm !== true && !confirmSafe('Submit your Goals and Action plans to your Head Teacher?')) return false;
     const btn = document.getElementById('btnSubmit1'); btn.disabled = true; subMsg('Submitting…');
     const now = new Date().toISOString();
     const payload = {
@@ -518,16 +521,39 @@
       // text/plain avoids a CORS pre-flight; the flow parses it with "Parse JSON".
       const res = await fetch(SUBMIT_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(payload)});
       if(!res.ok) throw new Error('HTTP ' + res.status);
-      data.s1SubmittedAt = now; save(); render(); btn.disabled = false;
+      data.s1SubmittedAt = now; data.s1Hash = s1Snapshot(); save(); render(); btn.disabled = false;
       subMsg('Submitted. Your Head Teacher can now read your plan.', 'ok');
+      return true;
     }catch(err){
       btn.disabled = false;
       subMsg('Could not submit (' + err.message + '). Check your connection and try again, or use Save a PDF copy for me and email it to your Head Teacher.', 'err');
+      return false;
     }
   }
-  document.getElementById('btnSubmit1').onclick = submitStep1;
+  document.getElementById('btnSubmit1').onclick = ()=>submitStep1(false);
 
-  load(); data.role = 'teacher'; render();  // always start locked
+  // ---------- Unsubmitted changes to the Goals and Action plans ----------
+  function s1Snapshot(){
+    return JSON.stringify([data.name||'', data.designation||'', data.location||'', data.goals.map(g=>[g.area||'', g.action||'', g.review||''])]);
+  }
+  function updateDirtyNote(){
+    const el = document.getElementById('dirtyNote'); if(!el) return;
+    el.style.display = (s1Dirty() && !isHT()) ? '' : 'none';
+  }
+  function s1Dirty(){ return !!data.s1Hash && data.s1Hash !== s1Snapshot(); }
+  async function navTo(n){
+    n = +n;
+    if(n !== 1 && data.stage === 1 && !isHT() && canOpen(n) && s1Dirty()){
+      if(!confirmSafe('You changed your Goals and Action plans but haven\'t submitted the changes.\n\nClick OK to submit them now and continue, or Cancel to stay here.')) return;
+      const ok = await submitStep1(true);
+      if(!ok) return;   // the reason is shown under the Submit button
+    }
+    showStage(n);
+  }
+
+  load(); data.role = 'teacher';
+  if(data.s1SubmittedAt && !data.s1Hash) data.s1Hash = s1Snapshot();
+  render();  // always start locked
 })();
 </script>
 </body>
