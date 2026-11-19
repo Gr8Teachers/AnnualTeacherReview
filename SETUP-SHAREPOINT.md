@@ -142,3 +142,49 @@ The header is required: without it the form can't read the reply and will show "
 - Submit checks that every field in Goals and Action plans is filled in (name, designation, location, and area / action / review strategies for every goal).
 - After submitting, teachers can keep editing their Goals and Action plans and click **Resubmit Goals and Action plans**. Their row in the list is updated (no duplicate).
 - Until `SUBMIT_URL` is set, the button tells teachers to use **Save a PDF copy for me** and email it instead.
+
+---
+
+## 5. Head Teacher import: the "read" flow
+
+Head Teachers can click **Import from MS List** (visible in Head Teacher mode) to load any teacher's submitted plan into the form. This uses a second, separate flow that reads the list.
+
+> **Keep this flow's link private.** Anyone with it can read every plan on the list. That's why it is **not** put in `index.html` (which is public on GitHub). Each Head Teacher pastes it into the form once, and it is saved only in their own browser. Share it with Head Teachers only, e.g. in a private Teams chat.
+
+### Build it
+
+**make.powerautomate.com → Create → Instant cloud flow → Skip**, name it e.g. *ATR – read list*.
+
+1. **Trigger: *When an HTTP request is received***
+   - **Who can trigger the flow:** Anyone
+   - Leave the schema empty.
+
+2. **SharePoint *Get items***
+   - **Site Address / List Name:** the same Annual Teacher Review list
+   - **Top Count:** `500`
+
+3. **Data operation *Select***
+   - **From:** `value` (from Get items)
+   - Add these four rows (key → value, values picked from Get items dynamic content):
+
+   | Key | Value |
+   |---|---|
+   | `name` | Title (Teacher Name) |
+   | `location` | Location |
+   | `submittedOn` | Submitted On |
+   | `planJson` | Plan JSON |
+
+4. **Response**
+   - **Status Code:** `200`
+   - **Headers:** `Access-Control-Allow-Origin` = `*` and `Content-Type` = `application/json`
+   - **Body:** `Output` (from Select)
+
+**Save**, then copy the **HTTP URL** from the trigger.
+
+### Use it
+
+1. Open the form → **Head Teacher** → enter the password.
+2. Click **Import from MS List**. The first time, paste the read-flow URL and click **Save and load list**.
+3. Search or scroll, click a teacher's name, and their plan fills the form.
+
+**Change flow link** in the import window replaces the saved link (e.g. if the flow is rebuilt). Each Head Teacher's browser keeps its own copy, so a new computer or browser needs the link pasted again.
