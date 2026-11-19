@@ -164,7 +164,7 @@
     <p class="stage-intro">Set out each goal you want to develop, what you'll do about it, and how it will be reviewed.</p>
     <div id="s1goals"></div>
     <button class="btn" type="button" id="addGoal">+ Add another goal</button>
-    <div class="nav"><button class="btn primary" type="button" id="btnSubmit1">Submit Goals and Action plans</button><button class="btn" type="button" data-go="2">Next: Progress review →</button></div>
+    <div class="nav"><button class="btn primary" type="button" id="btnSubmit1">Submit Goals and Action plans</button><button class="btn" type="button" data-go="2" id="btnNext1">Next: Progress review →</button></div>
     <div class="sub-msg" id="subMsg"></div>
   </section>
 
@@ -318,11 +318,18 @@
     // role + steps
     document.querySelectorAll('#role button').forEach(b=>b.classList.toggle('on', b.dataset.role===data.role));
     document.querySelector('#steps [data-s="3"]').classList.toggle('locked', !isHT());
+    // Progress review only opens once the Goals and Action plans have been submitted (HT can always open)
+    const s1done = !!data.s1SubmittedAt;
+    document.querySelector('#steps [data-s="2"]').classList.toggle('locked', !canOpen(2));
+    document.getElementById('btnNext1').style.display = s1done ? '' : 'none';
+    if(!canOpen(data.stage)) data.stage = 1;
     showStage(data.stage, true);
     renderPrint();
   }
 
+  function canOpen(n){ return +n === 1 || isHT() || !!data.s1SubmittedAt; }
   function showStage(n, quiet){
+    if(!canOpen(n)){ subMsg('Submit your Goals and Action plans first. The Progress review opens after that (usually mid-year).', 'err'); n = 1; quiet = true; }
     data.stage = +n;
     document.querySelectorAll('.stage').forEach(s=>s.classList.toggle('on', s.id==='stage'+n));
     document.querySelectorAll('#steps button').forEach(b=>b.classList.toggle('on', b.dataset.s==n));
