@@ -515,6 +515,7 @@
   async function submitStep1(skipConfirm){
     const missing = [];
     if(!(data.name||'').trim()) missing.push('Teacher name');
+    if(!['Teacher ESOL - Full Time','Teacher ESOL - Part Time','Teacher ESOL - Casual'].includes(data.designation||'')) missing.push('Designation');
     if(!(data.location||'').trim()) missing.push('Location');
     data.goals.slice(0,4).forEach((g,i)=>{ if(!(g.area||'').trim() || !(g.action||'').trim()) missing.push(`Goal ${i+1} area and action strategies`); });
     if(missing.length){ subMsg('Please fill in: ' + missing.join(', ') + '.', 'err'); return false; }
