@@ -133,10 +133,9 @@
     .toolbar{flex-direction:column;align-items:stretch}
   }
   @media print{
-    @page{size:A4 landscape;margin:12mm 0 5mm 0}
-    @page :first{margin:0}
+    @page{size:A4 landscape;margin:0 0 5mm 0}
     @page arform{size:A4 portrait;margin:0}
-    @page planp{size:A4 landscape;margin:0}
+    @page planp{size:A4 landscape;margin:0 0 5mm 0}
     .pf{page:arform;position:relative;width:210mm;height:295mm;overflow:hidden;break-after:page;break-inside:avoid;font-family:Arial,"Liberation Sans",Helvetica,sans-serif;font-size:11pt;color:#000;line-height:4.45mm}
     .pf *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .pf-a{position:absolute;white-space:nowrap}
@@ -156,7 +155,8 @@
     #printView{display:block}
     #printView *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .pv{width:297mm;font-family:Calibri,Carlito,"Segoe UI",Arial,sans-serif;font-size:11pt;color:#252525;line-height:4.75mm}
-    .pv-top{position:relative;height:44.5mm}
+    .pv-top{position:relative;height:32.5mm}
+    .pv thead tr.pv-gap td{height:12mm;border:0!important;padding:0;background:none}
     .pv-data{position:absolute;left:60mm;top:2mm;width:225mm;overflow:visible;color:#fff;font:1pt/1.1 Arial,sans-serif;white-space:nowrap}
     .pv-abs{position:absolute;white-space:nowrap}
     .pv-logo{left:2.36mm;top:1.34mm;width:48.37mm;height:13.76mm}
@@ -170,7 +170,8 @@
     .pv th,.pv td{border:.5pt solid #000;padding:0;vertical-align:top}
     .pv th{background:#D0CDED;color:#252525;font-weight:normal;text-align:center;vertical-align:middle;height:9.47mm;line-height:4.55mm}
     .pv td{font-family:"Times New Roman","Liberation Serif",Times,serif;color:#000;height:20.1mm;line-height:4.45mm;white-space:pre-wrap;word-wrap:break-word}
-    .pv tr{break-inside:avoid}
+    .pv tr{break-inside:auto}
+    .pv thead{display:table-header-group}
     .pv-keep{break-inside:avoid;page-break-inside:avoid}
     .pv-after{position:relative;height:14.5mm;margin-top:.4mm}
     .pv-notes{margin:4.8mm 16.7mm 0 20mm}
@@ -591,7 +592,7 @@
       </div>
       <table>
         <colgroup><col style="width:68.22mm"><col style="width:68.18mm"><col style="width:68.22mm"><col style="width:68.24mm"></colgroup>
-        <thead><tr>
+        <thead><tr class="pv-gap"><td colspan="4"></td></tr><tr>
           <th>Areas to be developed</th>
           <th>Action Strategies<br>(What, When, Who responsible)</th>
           <th>Review Strategies<br>(How and when to be reviewed)</th>
