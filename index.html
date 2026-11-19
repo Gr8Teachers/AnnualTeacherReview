@@ -134,6 +134,7 @@
   }
   /* print layout (only #printView uses these; it is hidden on screen except while measuring) */
     .pf{page:arform;position:relative;z-index:2;background:#fff;width:210mm;height:295mm;overflow:hidden;break-after:page;break-inside:avoid;font-family:Arial,"Liberation Sans",Helvetica,sans-serif;font-size:11pt;color:#000;line-height:4.45mm}
+    .pf-in{position:absolute;left:0;top:0;width:210mm;height:297mm;transform:translate(5.25mm,7.4mm) scale(.95);transform-origin:0 0}
     .pf *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .pf-a{position:absolute;white-space:nowrap}
     .pf-t{background:#9185BD;color:#fff;font-size:18pt;letter-spacing:.7pt;display:inline-block;transform:scaleX(1.05);transform-origin:0 0;line-height:7.3mm}
@@ -145,16 +146,16 @@
     .pf-kic{font-family:Calibri,Carlito,sans-serif;font-size:9pt;line-height:3.9mm}
     .pf-kic mark{background:#00FF00;color:inherit}
     body.print-full .pv{page:planp}
-    .pv-logo-fixed{display:none;position:fixed;left:2.36mm;top:1.34mm;width:48.37mm;height:13.76mm;z-index:1;border:0}
+    .pv-logo-fixed{display:none;position:fixed;left:8mm;top:8mm;width:48.37mm;height:13.76mm;z-index:1;border:0}
     .pv{width:297mm;font-family:Calibri,Carlito,"Segoe UI",Arial,sans-serif;font-size:11pt;color:#252525;line-height:4.75mm}
-    .pv-top{position:relative;height:26.5mm}
-    .pv thead tr.pv-gap td{height:18mm;border:0!important;padding:0;background:none}
+    .pv-top{position:relative;height:18.5mm}
+    .pv thead tr.pv-gap td{height:26mm;border:0!important;padding:0;background:none}
     .pv tfoot{display:table-footer-group}
     .pv tfoot tr.pv-gap td{height:6mm;border:0!important;border-top:.5pt solid #000!important;padding:0;background:none}
     .pv-data{position:absolute;left:60mm;top:2mm;width:225mm;overflow:visible;color:#fff;font:1pt/1.1 Arial,sans-serif;white-space:nowrap}
     .pv-abs{position:absolute;white-space:nowrap}
-    .pv-logo{left:2.36mm;top:1.34mm;width:48.37mm;height:13.76mm}
-    .pv-title{left:12.16mm;right:12.5mm;top:16.6mm;text-align:center;font-size:20pt;line-height:8.1mm}
+    .pv-logo{left:8mm;top:8mm;width:48.37mm;height:13.76mm}
+    .pv-title{left:12.16mm;right:12.5mm;top:10.8mm;text-align:center;font-size:20pt;line-height:8.1mm}
     .pv-title span{background:#9185BD;color:#fff;letter-spacing:.65pt;display:inline-block;transform:scaleX(1.05);padding:0 .3mm}
     .pv-ul{display:flex;align-items:baseline}
     .pv-ul .fill{flex:1;border-bottom:.75pt solid #000;height:3.9mm}
@@ -702,7 +703,7 @@
     const yr = (d.lmYear||'').trim() || '&lt;insert year&gt;';
     const sig = x => x ? `<span class="pf-sig">${esc(x)}</span>` : '';
     const logo = document.querySelector('header.top img').src;
-    return `<div class="pf">
+    return `<div class="pf"><div class="pf-in">
       <img src="${logo}" alt="" style="position:absolute;left:4.1mm;top:2.4mm;width:44.2mm;height:12.6mm">
       ${A(34.0, 17.6, '<span class="pf-t">Teachers and Related Employees Assessment –</span>', 'line-height:7.3mm')}
       ${A(88.4, 24.9, '<span class="pf-t">Annual Review</span>', 'line-height:7.3mm')}
@@ -766,7 +767,7 @@
       ${A(168.3, 280.6, 'Page 1 of 1', 'font-size:8pt')}
       ${A(166.9, 283.9, 'Last Updated: 30/05/2025', 'font-size:8pt')}
       ${A(97.9, 289.8, 'OFFICIAL', 'font-size:8pt')}
-    </div>`;
+    </div></div>`;
   }
 
   // ---------- events ----------
