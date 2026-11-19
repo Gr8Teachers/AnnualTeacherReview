@@ -137,6 +137,7 @@
     .pv th{background:#D0CDED;color:#252525;font-weight:normal;text-align:center;vertical-align:middle;height:9.47mm;line-height:4.55mm}
     .pv td{font-family:"Times New Roman","Liberation Serif",Times,serif;color:#000;height:20.1mm;line-height:4.45mm;white-space:pre-wrap;word-wrap:break-word}
     .pv tr{break-inside:avoid}
+    .pv-keep{break-inside:avoid;page-break-inside:avoid}
     .pv-after{position:relative;height:14.5mm;margin-top:.4mm}
     .pv-notes{margin:4.8mm 16.7mm 0 20mm}
     .pv-notes p{margin:0}
@@ -407,11 +408,17 @@
     const fmt = v => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v||''); return m ? `${m[3]}/${m[2]}/${m[1]}` : esc(v); };
     const logo = document.querySelector('header.top img').src;
     const cell = v => esc(v);
-    const rows = d.goals.map(g=>`<tr><td>${cell(g.area)}</td><td>${cell(g.action)}</td><td>${cell(g.review)}</td><td>${cell(g.progress)}${g.status?(g.progress?'\n\n':'')+esc(g.status):''}</td></tr>`).join('');
+    // Progress Review column: Mid-year Review (status + teacher comments), then Final Review (outcome + HT comments)
+    const lines = (...xs) => xs.filter(x=>(x||'').trim()).map(esc).join('\n');
+    const reviewCell = g => {
+      const sec = (h, status, text) => `<b>${h}</b>${(status||'').trim()?' '+esc(status):''}${(text||'').trim()?'\n'+esc(text):''}`;
+      return sec('Mid-year Review:', g.status, g.progress) + '\n' + sec('Final Review:', g.outcome, g.htComment);
+    };
+    const rows = d.goals.map(g=>`<tr><td>${cell(g.area)}</td><td>${cell(g.action)}</td><td>${cell(g.review)}</td><td>${reviewCell(g)}</td></tr>`).join('');
     const lmName = [esc(d.htName), d.htSign?`<span class="pv-sig">${esc(d.htSign)}</span>`:''].filter(Boolean).join(' &nbsp; ');
-    const hasHT = d.htOverall || d.goals.some(g=>g.outcome||g.htComment);
+    const hasHT = !!(d.htOverall||'').trim();   // outcomes/comments now print on page 1; page 2 only for overall comments
     const htRows = d.goals.map((g,i)=>`<tr><td>${esc(title(g,i))}${g.area?'\n'+esc(g.area):''}</td><td>${esc(g.outcome)}</td><td>${esc(g.htComment)}</td></tr>`).join('');
-    const signoff = `
+    const signoff = `<div class="pv-keep">
       <div class="pv-after">
         <div class="pv-abs" style="left:11.2mm;top:0">Teacher/Related Employee</div>
         <div class="pv-abs" style="left:11.2mm;top:4.8mm">Signature</div>
@@ -424,7 +431,7 @@
         <p>Teacher/Related Employee to upload Annual Review Development Plan to People@TAFE via a KIC form.</p>
         <p>For support: <a href="https://tafehelp.tafensw.edu.au/staff_portal?id=kb_article&amp;sysparm_article=KB00008093">Knowledge Article-KIC form – Uploading a Qualification, Licence, VCTM or other document</a></p>
         <p>(Please note, if you are not on campus, you will need to <a href="https://tafensw.service-now.com/staff_portal?id=kb_article&amp;sysparm_article=KB00008405">connect to a VPN</a> or <a href="https://tafensw.service-now.com/staff_portal?id=kb_article&amp;sysparm_article=KB00003026">TAFE Virtual Desktop</a> to access this link).&nbsp; Select <b>Annual Teacher Review</b> from the <b>Document Type</b> dropdown list.&nbsp; Note:&nbsp; Signatures not required when uploaded and approved as a KIC form.</p>
-      </div>`;
+      </div></div>`;
     document.getElementById('printView').innerHTML = `
     <div class="pv">
       <div class="pv-top">
@@ -452,9 +459,8 @@
       ${signoff}
       ${hasHT?`<div class="pv-p2">
         <h3>Final Review (Head Teacher)</h3>
-        <table><colgroup><col style="width:90mm"><col style="width:45mm"><col></colgroup>
-          <thead><tr><th>Goal</th><th>Outcome</th><th>Head Teacher comments</th></tr></thead>
-          <tbody>${htRows}${d.htOverall?`<tr><td>Overall comments</td><td colspan="2">${esc(d.htOverall)}</td></tr>`:''}</tbody>
+        <table><thead><tr><th>Overall comments</th></tr></thead>
+          <tbody><tr><td>${esc(d.htOverall)}</td></tr></tbody>
         </table>
         <div style="height:4mm"></div>
         ${signoff}</div>`:''}
