@@ -471,7 +471,7 @@
   document.getElementById('btnPdf1').onclick = ()=>{ if(isHT()) saveModifiedPlan(); else printPdf(); };
 
   // ---------- Head Teacher: Save modified plan = update the teacher's row on the list + save a v2 PDF ----------
-  const HT_STAGE = 'Goals and Action plans - v2 modified by Head Teacher';
+  const HT_STAGE = 'Goals and Action plans - v2 by HT';
   async function saveModifiedPlan(){
     const missing = s1Missing();
     if(missing.length){ markMissing(); subMsg('Please fill in: ' + missing.join(', ') + '.', 'err'); return; }

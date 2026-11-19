@@ -189,5 +189,5 @@ That's all; the form picks out Teacher Name, Location, Submitted On and Plan JSO
 
 In Head Teacher mode the **Save modified plan** button (under the goals) does two things:
 
-1. Updates the teacher's row on the list with the Head Teacher's version. The **Stage** column changes to **Goals and Action plans - v2 modified by Head Teacher**, and **Submitted On** shows when the Head Teacher saved it. It uses the same submit flow, so there is nothing extra to set up.
+1. Updates the teacher's row on the list with the Head Teacher's version. The **Stage** column changes to **Goals and Action plans - v2 by HT**, and **Submitted On** shows when the Head Teacher saved it. It uses the same submit flow, so there is nothing extra to set up.
 2. Saves a PDF named "… v2". Send this to the teacher; they open it with **Open my PDF copy** for their Progress review.
