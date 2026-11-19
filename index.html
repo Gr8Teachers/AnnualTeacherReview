@@ -468,7 +468,35 @@
     setTimeout(()=>{ document.title = t; }, 1000);
   }
   document.getElementById('btnPrint').onclick = printPdf;
-  document.getElementById('btnPdf1').onclick = printPdf;
+  document.getElementById('btnPdf1').onclick = ()=>{ if(isHT()) saveModifiedPlan(); else printPdf(); };
+
+  // ---------- Head Teacher: Save modified plan = update the teacher's row on the list + save a v2 PDF ----------
+  const HT_STAGE = 'Goals and Action plans - v2 modified by Head Teacher';
+  async function saveModifiedPlan(){
+    const missing = s1Missing();
+    if(missing.length){ markMissing(); subMsg('Please fill in: ' + missing.join(', ') + '.', 'err'); return; }
+    if(!SUBMIT_URL){ subMsg('The list isn\'t connected yet, so only the v2 PDF was saved.', 'err'); printPdf(); return; }
+    const btn = document.getElementById('btnPdf1'); btn.disabled = true; subMsg('Updating the list…');
+    const now = new Date().toISOString();
+    const payload = {
+      teacherName: data.name.trim(), designation: data.designation||'', location: data.location||'',
+      stage: HT_STAGE, submittedOn: now,
+      goal1: goalText(data.goals[0]), goal2: goalText(data.goals[1]), goal3: goalText(data.goals[2]), goal4: goalText(data.goals[3]),
+      otherGoals: data.goals.slice(4).map((g,i)=>`Goal ${i+5}\n`+goalText(g)).join('\n\n----\n\n'),
+      planJson: JSON.stringify(Object.assign({}, data, {role:'teacher', version:'v2', htModifiedAt: now}))
+    };
+    let ok = false;
+    try{
+      const res = await fetch(SUBMIT_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(payload)});
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      ok = true;
+    }catch(err){
+      subMsg('The list could not be updated (' + err.message + '). The v2 PDF will still be saved; try again later to update the list.', 'err');
+    }
+    btn.disabled = false;
+    if(ok){ data.version = 'v2'; data.htModifiedAt = now; data.s1Hash = s1Snapshot(); save(); subMsg(`List updated (${HT_STAGE}). Now save the v2 PDF and send it to the teacher.`, 'ok'); }
+    printPdf();
+  }
   document.getElementById('btnClear').onclick = ()=>{
     if(confirmSafe('Clear all answers on this form?')){ data = {role:data.role, stage:1, goals:[blankGoal(),blankGoal(),blankGoal(),blankGoal()]}; subMsg(''); save(); render(); }
   };
