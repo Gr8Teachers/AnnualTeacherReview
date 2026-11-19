@@ -132,11 +132,8 @@
     .grid3>span:empty{display:none}
     .toolbar{flex-direction:column;align-items:stretch}
   }
-  @media print{
-    @page{size:A4 landscape;margin:0}
-    @page arform{size:A4 portrait;margin:0}
-    @page planp{size:A4 landscape;margin:0}
-    .pf{page:arform;position:relative;width:210mm;height:295mm;overflow:hidden;break-after:page;break-inside:avoid;font-family:Arial,"Liberation Sans",Helvetica,sans-serif;font-size:11pt;color:#000;line-height:4.45mm}
+  /* print layout (only #printView uses these; it is hidden on screen except while measuring) */
+    .pf{page:arform;position:relative;z-index:2;background:#fff;width:210mm;height:295mm;overflow:hidden;break-after:page;break-inside:avoid;font-family:Arial,"Liberation Sans",Helvetica,sans-serif;font-size:11pt;color:#000;line-height:4.45mm}
     .pf *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .pf-a{position:absolute;white-space:nowrap}
     .pf-t{background:#9185BD;color:#fff;font-size:18pt;letter-spacing:.7pt;display:inline-block;transform:scaleX(1.05);transform-origin:0 0;line-height:7.3mm}
@@ -148,15 +145,10 @@
     .pf-kic{font-family:Calibri,Carlito,sans-serif;font-size:9pt;line-height:3.9mm}
     .pf-kic mark{background:#00FF00;color:inherit}
     body.print-full .pv{page:planp}
-    html,body{background:#fff;margin:0;padding:0;height:auto!important;min-height:0!important}
-    #printView>:last-child,.pv>:last-child{margin-bottom:0!important;break-after:auto}
-    .wrap{max-width:none;padding:0;margin:0}
-    .wrap>*:not(#printView){display:none!important}
-    #printView{display:block}
-    #printView *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .pv-logo-fixed{position:fixed;left:2.36mm;top:1.34mm;width:48.37mm;height:13.76mm;z-index:1}
     .pv{width:297mm;font-family:Calibri,Carlito,"Segoe UI",Arial,sans-serif;font-size:11pt;color:#252525;line-height:4.75mm}
-    .pv-top{position:relative;height:32.5mm}
-    .pv thead tr.pv-gap td{height:12mm;border:0!important;padding:0;background:none}
+    .pv-top{position:relative;height:26.5mm}
+    .pv thead tr.pv-gap td{height:18mm;border:0!important;padding:0;background:none}
     .pv tfoot{display:table-footer-group}
     .pv tfoot tr.pv-gap td{height:6mm;border:0!important;border-top:.5pt solid #000!important;padding:0;background:none}
     .pv-data{position:absolute;left:60mm;top:2mm;width:225mm;overflow:visible;color:#fff;font:1pt/1.1 Arial,sans-serif;white-space:nowrap}
@@ -175,12 +167,23 @@
     .pv tr{break-inside:auto}
     .pv thead{display:table-header-group}
     .pv-keep{break-inside:avoid;page-break-inside:avoid}
+    .pv-push{height:0}
     .pv-after{position:relative;height:14.5mm;margin-top:-5.6mm}
     .pv-notes{margin:4.8mm 16.7mm 0 20mm}
     .pv-notes p{margin:0}
     .pv-notes a{color:#808080;text-decoration:underline}
     .pv-p2{break-before:page;padding-top:2mm}
     .pv-p2 h3{font-size:11pt;font-weight:bold;margin:0 0 2mm 9.35mm}
+  @media print{
+    @page{size:A4 landscape;margin:0}
+    @page arform{size:A4 portrait;margin:0}
+    @page planp{size:A4 landscape;margin:0}
+    html,body{background:#fff;margin:0;padding:0;height:auto!important;min-height:0!important}
+    #printView>:last-child,.pv>:last-child{margin-bottom:0!important;break-after:auto}
+    .wrap{max-width:none;padding:0;margin:0}
+    .wrap>*:not(#printView){display:none!important}
+    #printView{display:block}
+    #printView *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   }
 </style>
 </head>
@@ -564,7 +567,7 @@
     const rows = d.goals.map(g=>`<tr><td>${cell(g.area)}</td><td>${cell(g.action)}</td><td>${cell(g.review)}</td><td>${reviewCell(g)}</td></tr>`).join('');
     const lmName = [esc(d.htName), d.htSign?`<span class="pv-sig">${esc(d.htSign)}</span>`:''].filter(Boolean).join(' &nbsp; ');
     const htRows = d.goals.map((g,i)=>`<tr><td>${esc(title(g,i))}${g.area?'\n'+esc(g.area):''}</td><td>${esc(g.outcome)}</td><td>${esc(g.htComment)}</td></tr>`).join('');
-    const signoff = `<div class="pv-keep">
+    const signoff = `<div class="pv-push"></div><div class="pv-keep">
       <div class="pv-after">
         <div class="pv-abs" style="left:11.2mm;top:0">Teacher/Related Employee</div>
         <div class="pv-abs" style="left:11.2mm;top:4.8mm">Signature</div>
@@ -578,11 +581,10 @@
         <p>For support: <a href="https://tafehelp.tafensw.edu.au/staff_portal?id=kb_article&amp;sysparm_article=KB00008093">Knowledge Article-KIC form – Uploading a Qualification, Licence, VCTM or other document</a></p>
         <p>(Please note, if you are not on campus, you will need to <a href="https://tafensw.service-now.com/staff_portal?id=kb_article&amp;sysparm_article=KB00008405">connect to a VPN</a> or <a href="https://tafensw.service-now.com/staff_portal?id=kb_article&amp;sysparm_article=KB00003026">TAFE Virtual Desktop</a> to access this link).&nbsp; Select <b>Annual Teacher Review</b> from the <b>Document Type</b> dropdown list.&nbsp; Note:&nbsp; Signatures not required when uploaded and approved as a KIC form.</p>
       </div></div>`;
-    document.getElementById('printView').innerHTML = (fullPrint ? formSheet() : '') + `
+    document.getElementById('printView').innerHTML = `<img class="pv-logo-fixed" src="${logo}" alt="">` + (fullPrint ? formSheet() : '') + `
     <div class="pv">
       <div class="pv-top">
         <div class="pv-data">${("ARDPDATA:" + encodeData() + ":ARDPEND").match(/.{1,300}/g).map(l=>`<div>${l}</div>`).join("")}</div>
-        <img class="pv-abs pv-logo" src="${logo}" alt="">
         <div class="pv-abs pv-title"><span>ANNUAL REVIEW DEVELOPMENT PLAN</span></div>
         <div class="pv-abs" style="left:11.2mm;top:30.6mm">Teacher/Related</div>
         <div class="pv-abs" style="left:11.2mm;top:34.9mm">Employee Name</div>
@@ -800,6 +802,23 @@
     }
   });
   document.getElementById('addGoal').onclick = ()=>{ data.goals.push(blankGoal()); save(); render(); };
+  // One-page plans: push the signature block + KIC note to the bottom of the page.
+  // The plan is measured off-screen with the print styles; longer plans are left as they are
+  // (signature straight after the table) so this can never add or split a page.
+  function pinSignoff(){
+    const pv = document.querySelector('#printView .pv'); if(!pv) return;
+    const push = pv.querySelector('.pv-push'); if(!push) return;
+    const view = document.getElementById('printView');
+    const old = view.getAttribute('style') || '';
+    push.style.height = '0';
+    view.setAttribute('style', 'display:block;position:absolute;left:-30000px;top:0;visibility:hidden');
+    const total = pv.getBoundingClientRect().height * 25.4 / 96;   // mm
+    view.setAttribute('style', old);
+    const spare = 205 - total;                                       // 5 mm safety below the 210 mm page
+    if(spare > 0) push.style.height = spare + 'mm';
+  }
+  window.addEventListener('beforeprint', pinSignoff);
+
   function printPdf(){
     renderPrint();
     const t = document.title;
