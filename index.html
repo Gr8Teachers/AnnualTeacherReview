@@ -401,9 +401,10 @@
     other:    'What do you want to improve?'
   };
   const goalType = (g,i) => (g && GOAL_TYPES[g.type]) ? g.type : (DEFAULT_TYPES[i] || 'other');
-  // Teaching goals are numbered in order: Teaching [1], Teaching [2], ...
-  const teachingNo = i => { let n = 0; for(let j=0; j<=i; j++){ if(j===i || goalType(data.goals[j], j)==='teaching') n++; } return n; };
-  const typeLabel = (t,i) => t === 'teaching' ? `Teaching [${teachingNo(i)}]` : GOAL_TYPES[t];
+  // Teaching and Section Contribution goals are numbered in order: Teaching [1], Teaching [2], Section Contribution [1] ...
+  const NUMBERED = ['teaching','section'];
+  const typeNo = (t,i) => { let n = 0; for(let j=0; j<=i; j++){ if(j===i || goalType(data.goals[j], j)===t) n++; } return n; };
+  const typeLabel = (t,i) => NUMBERED.includes(t) ? `${GOAL_TYPES[t]} [${typeNo(t,i)}]` : GOAL_TYPES[t];
   const areaHint = i => TYPE_HINTS[goalType(data.goals[i], i)];
   const title = (g,i) => `Goal ${i+1} - ${typeLabel(goalType(g,i), i)}`;
   const GOAL_NAMES = DEFAULT_TYPES;   // the first four goals can't be removed
