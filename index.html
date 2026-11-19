@@ -149,7 +149,7 @@
   <section class="card">
     <div class="grid3">
       <label for="name">Teacher name</label><label for="designation">Designation</label><label for="location">Location</label>
-      <input type="text" id="name" data-k="name"><select id="designation" data-k="designation"><option value="">— select —</option><option>Teacher ESOL - Full Time</option><option>Teacher ESOL - Part Time</option><option>Teacher ESOL - Casual</option></select><input type="text" id="location" data-k="location" placeholder="e.g. Campsie / St Leonards">
+      <input type="text" id="name" data-k="name"><select id="designation" data-k="designation"><option value="">— select —</option><option>Teacher ESOL - Full Time</option><option>Teacher ESOL - Part Time</option><option>Teacher ESOL - Casual</option></select><select id="location" data-k="location"><option value="">— select —</option><option>St Leonards</option><option>Campsie</option></select>
     </div>
   </section>
 
@@ -312,10 +312,12 @@
       </div>`).join('');
 
     // simple fields
-    // keep an older typed-in designation (e.g. from a saved PDF) visible as an extra option
-    const des = document.getElementById('designation'), dv = data.designation || '';
-    des.querySelectorAll('option[data-old]').forEach(o=>o.remove());
-    if(dv && ![...des.options].some(o=>o.value===dv)){ const o=document.createElement('option'); o.textContent=dv; o.dataset.old='1'; des.appendChild(o); }
+    // keep an older typed-in value (e.g. from a saved PDF) visible as an extra option
+    ['designation','location'].forEach(k=>{
+      const sel = document.getElementById(k), v = data[k] || '';
+      sel.querySelectorAll('option[data-old]').forEach(o=>o.remove());
+      if(v && ![...sel.options].some(o=>o.value===v)){ const o=document.createElement('option'); o.textContent=v; o.dataset.old='1'; sel.appendChild(o); }
+    });
     document.querySelectorAll('[data-k]').forEach(el=>{ el.value = data[el.dataset.k] || ''; });
     document.querySelectorAll('.ht').forEach(el=>{ el.disabled = !isHT(); });
     const locked = false; // teachers can keep editing after submitting
@@ -516,7 +518,7 @@
     const missing = [];
     if(!(data.name||'').trim()) missing.push('Teacher name');
     if(!['Teacher ESOL - Full Time','Teacher ESOL - Part Time','Teacher ESOL - Casual'].includes(data.designation||'')) missing.push('Designation');
-    if(!(data.location||'').trim()) missing.push('Location');
+    if(!['St Leonards','Campsie'].includes(data.location||'')) missing.push('Location');
     data.goals.slice(0,4).forEach((g,i)=>{ if(!(g.area||'').trim() || !(g.action||'').trim()) missing.push(`Goal ${i+1} area and action strategies`); });
     if(missing.length){ subMsg('Please fill in: ' + missing.join(', ') + '.', 'err'); return false; }
     if(!SUBMIT_URL){ subMsg('Submitting isn\'t set up yet. Use Save a PDF copy for me and email it to your Head Teacher for now.', 'err'); return false; }
