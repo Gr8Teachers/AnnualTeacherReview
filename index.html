@@ -163,8 +163,6 @@
     .pv th{background:#D0CDED;color:#252525;font-weight:normal;text-align:center;vertical-align:middle;height:9.47mm;line-height:4.55mm}
     .pv td{font-family:"Times New Roman","Liberation Serif",Times,serif;color:#000;height:20.1mm;line-height:4.45mm;white-space:pre-wrap;word-wrap:break-word}
     .pv tr{break-inside:avoid}
-    .pv table.pv-overall{margin-top:-.5pt}
-    .pv table.pv-overall td{height:auto;min-height:0;padding:0}
     .pv-keep{break-inside:avoid;page-break-inside:avoid}
     .pv-after{position:relative;height:14.5mm;margin-top:.4mm}
     .pv-notes{margin:4.8mm 16.7mm 0 20mm}
@@ -247,7 +245,6 @@
     <p class="stage-intro">Head Teacher's final review of each goal, then sign-off.</p>
     <div id="s3goals"></div>
     <div class="card">
-      <label for="htOverall">Overall comments</label><textarea id="htOverall" data-k="htOverall" class="ht" style="margin-bottom:14px"></textarea>
       <div class="grid3 signoff">
         <label for="htName">Line Manager / Head Teacher name</label><label for="htSign">Signature (type name)</label><label for="htDate">Date</label>
         <input type="text" id="htName" data-k="htName" class="ht"><input type="text" id="htSign" data-k="htSign" class="ht"><input type="date" id="htDate" data-k="htDate" class="ht">
@@ -542,7 +539,6 @@
     };
     const rows = d.goals.map(g=>`<tr><td>${cell(g.area)}</td><td>${cell(g.action)}</td><td>${cell(g.review)}</td><td>${reviewCell(g)}</td></tr>`).join('');
     const lmName = [esc(d.htName), d.htSign?`<span class="pv-sig">${esc(d.htSign)}</span>`:''].filter(Boolean).join(' &nbsp; ');
-    const hasHT = !!(d.htOverall||'').trim();   // overall comments print in a box directly under the plan table
     const htRows = d.goals.map((g,i)=>`<tr><td>${esc(title(g,i))}${g.area?'\n'+esc(g.area):''}</td><td>${esc(g.outcome)}</td><td>${esc(g.htComment)}</td></tr>`).join('');
     const signoff = `<div class="pv-keep">
       <div class="pv-after">
@@ -582,7 +578,6 @@
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
-      ${hasHT?`<table class="pv-overall"><tbody><tr><td><b>Overall comments (Head Teacher):</b>\n${esc(d.htOverall)}</td></tr></tbody></table>`:''}
       ${signoff}
     </div>`;
   }
@@ -620,7 +615,7 @@
         <div><b>Review strategies:</b> ${esc(g.review||'—')}</div>
         <div><b>Mid-year Review:</b> ${esc([g.status, g.progress].filter(x=>(x||'').trim()).join(' – ')||'—')}</div>
         <div><b>Final Review:</b> ${esc([g.outcome, g.htComment].filter(x=>(x||'').trim()).join(' – ')||'—')}</div>
-      </div>`).join('') + ((data.htOverall||'').trim()?`<div class="rv-goal"><b>Overall comments:</b><div>${esc(data.htOverall)}</div></div>`:'');
+      </div>`).join('');
   }
   function fmtDate(v){ const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v||''); return m ? `${m[3]}/${m[2]}/${m[1]}` : (v||''); }
 
@@ -809,7 +804,7 @@
   // ---------- Saved copies: the PDF carries the answers invisibly ----------
   function encodeData(){
     const keep = {v:1, name:data.name||'', designation:data.designation||'', location:data.location||'',
-      tSign:data.tSign||'', tDate:data.tDate||'', htName:data.htName||'', htSign:data.htSign||'', htDate:data.htDate||'', htOverall:data.htOverall||'',
+      tSign:data.tSign||'', tDate:data.tDate||'', htName:data.htName||'', htSign:data.htSign||'', htDate:data.htDate||'',
       s1SubmittedAt:data.s1SubmittedAt||'', goals:data.goals,
       lastName:data.lastName||'', firstName:data.firstName||'', empId:data.empId||'', lmYear:data.lmYear||'',
       lmWork:!!data.lmWork, lmConduct:!!data.lmConduct, lmExplain:data.lmExplain||'', lmSick:!!data.lmSick, lmPlan:!!data.lmPlan, lmFeedback:!!data.lmFeedback,
