@@ -40,11 +40,12 @@
   .btn:disabled{background:#eee;color:#999;border-color:#ccc;cursor:not-allowed;filter:none}
 
   .steps{display:flex;gap:0;margin-bottom:18px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
-  .steps button{flex:1;border:0;border-right:1px solid var(--line);background:#fff;padding:12px 10px;font:inherit;cursor:pointer;text-align:left}
+  .steps button{flex:1;border:0;border-right:1px solid var(--line);background:#fff;padding:11px 10px;font:inherit;cursor:pointer;text-align:left;display:grid;grid-template-columns:auto 1fr;column-gap:8px;align-items:start}
+  .steps button .n{grid-row:span 2;margin-right:0!important}
   .steps button:last-child{border-right:0}
   .steps button .n{display:inline-flex;width:24px;height:24px;border-radius:50%;background:#e6e6e6;align-items:center;justify-content:center;font-size:12px;font-weight:bold;margin-right:8px}
-  .steps button .t{font-weight:bold;font-size:14px}
-  .steps button .s{display:block;font-size:12px;color:var(--muted);margin-left:32px}
+  .steps button .t{font-weight:bold;font-size:13.5px;line-height:1.3}
+  .steps button .s{display:block;font-size:11.5px;color:var(--muted);margin-left:0}
   .steps button.on{background:var(--soft);box-shadow:inset 0 -3px 0 var(--dark)}
   .steps button.on .n{background:var(--dark);color:#fff}
   .steps button.locked .t::after{content:" 🔒";font-size:12px}
@@ -88,6 +89,17 @@
   .imp-row{display:flex;justify-content:space-between;gap:10px;align-items:center;width:100%;border:0;border-bottom:1px solid var(--line);background:#fff;padding:10px 12px;font:inherit;font-size:14px;text-align:left;cursor:pointer}
   .imp-row:hover{background:var(--soft)}
   .imp-row small{color:var(--muted);white-space:nowrap}
+  .form-h{margin:0 0 12px;font-size:16px}
+  .lm-page p{font-size:14px;margin:0 0 10px}
+  .tick{display:flex!important;gap:10px;align-items:flex-start;text-transform:none!important;letter-spacing:0!important;font-weight:normal!important;color:var(--ink)!important;font-size:14px!important;margin:0 0 10px!important;cursor:pointer}
+  .tick input{width:18px;height:18px;margin:1px 0 0;flex:none;accent-color:#2b2b2b}
+  .yr{width:70px!important;height:32px!important;display:inline-block;padding:4px 8px!important;text-align:center}
+  .nb-green{color:#00a656;font-weight:bold;font-size:14px;margin:14px 0 0}
+  .rv-list{margin:0;padding-left:0;list-style:none;font-size:14px}
+  .rv-list li{margin:0 0 6px}
+  .rv-goal{border-top:1px solid var(--line);padding:10px 0;font-size:14px}
+  .rv-goal:first-of-type{border-top:0}
+  .rv-goal div{white-space:pre-wrap;margin:2px 0 6px}
   .sub-msg{font-size:13px;margin-top:8px;min-height:18px}
   .sub-msg.err{color:var(--accent)} .sub-msg.ok{color:var(--ok)}
   /* print-only table */
@@ -109,13 +121,27 @@
     .goal-b.cols2>:nth-child(6){order:7}.goal-b.cols2>:nth-child(8){order:8}
     .goal-b>textarea,.goal-b>.ref,.goal-b>select{margin-bottom:16px!important}
     .goal-b>:last-child,.goal-b.cols3>:nth-child(6),.goal-b.cols2>:nth-child(8){margin-bottom:0!important}
-    .grid3>input,.grid3>select{margin-bottom:14px}
+    .grid3>input,.grid3>select,.grid3>.ref{margin-bottom:14px}
     .grid3>span:empty{display:none}
     .toolbar{flex-direction:column;align-items:stretch}
   }
   @media print{
     @page{size:A4 landscape;margin:12mm 0 5mm 0}
     @page :first{margin:0}
+    @page arform{size:A4 portrait;margin:0}
+    @page planp{size:A4 landscape;margin:0}
+    .pf{page:arform;position:relative;width:210mm;height:297mm;overflow:hidden;break-after:page;font-family:Arial,"Liberation Sans",Helvetica,sans-serif;font-size:11pt;color:#000;line-height:4.45mm}
+    .pf *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .pf-a{position:absolute;white-space:nowrap}
+    .pf-t{background:#9185BD;color:#fff;font-size:18pt;letter-spacing:.7pt;display:inline-block;transform:scaleX(1.05);transform-origin:0 0;line-height:7.3mm}
+    .pf-l{position:absolute;border:0 solid #000;box-sizing:border-box}
+    .pf-box{position:absolute;width:3.3mm;height:3.3mm;border:.6pt solid #000;box-shadow:.45mm .45mm 0 #000;font-size:9pt;line-height:3.3mm;text-align:center;font-weight:bold}
+    .pf-explain{white-space:pre-wrap;line-height:5.6mm;height:16.8mm;overflow:hidden;font-size:10.5pt}
+    .pf-sig{font-family:"Brush Script MT","Brush Script Std",cursive;font-size:13pt}
+    .pf-link{color:#0000FF;text-decoration:underline}
+    .pf-kic{font-family:Calibri,Carlito,sans-serif;font-size:9pt;line-height:3.9mm}
+    .pf-kic mark{background:#00FF00;color:inherit}
+    body.print-full .pv{page:planp}
     html,body{background:#fff;margin:0;padding:0}
     .wrap{max-width:none;padding:0;margin:0}
     .wrap>*:not(#printView){display:none!important}
@@ -123,7 +149,7 @@
     #printView *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .pv{width:297mm;font-family:Calibri,Carlito,"Segoe UI",Arial,sans-serif;font-size:11pt;color:#252525;line-height:4.75mm}
     .pv-top{position:relative;height:44.5mm}
-    .pv-data{position:absolute;left:60mm;top:2mm;width:225mm;height:13mm;overflow:hidden;color:#fff;font:1pt/1.1 Arial,sans-serif;word-break:break-all;white-space:normal}
+    .pv-data{position:absolute;left:60mm;top:2mm;width:225mm;overflow:visible;color:#fff;font:1pt/1.1 Arial,sans-serif;white-space:nowrap}
     .pv-abs{position:absolute;white-space:nowrap}
     .pv-logo{left:2.36mm;top:1.34mm;width:48.37mm;height:13.76mm}
     .pv-title{left:12.16mm;right:12.5mm;top:16.6mm;text-align:center;font-size:20pt;line-height:8.1mm}
@@ -186,6 +212,8 @@
     <button type="button" data-s="1" class="on"><span class="n">1</span><span class="t">Goals and Action plans</span><span class="s">Teacher · start of year</span></button>
     <button type="button" data-s="2"><span class="n">2</span><span class="t">Progress review</span><span class="s">Teacher · mid year</span></button>
     <button type="button" data-s="3" class="locked"><span class="n">3</span><span class="t">Final review</span><span class="s">Head Teacher only</span></button>
+    <button type="button" data-s="4" class="locked"><span class="n">4</span><span class="t">Annual Review Form</span><span class="s">Head Teacher only</span></button>
+    <button type="button" data-s="5"><span class="n">5</span><span class="t">Employee signature</span><span class="s">Teacher · end of year</span></button>
   </nav>
 
   <!-- STAGE 1 -->
@@ -219,13 +247,71 @@
         <input type="text" id="htName" data-k="htName" class="ht"><input type="text" id="htSign" data-k="htSign" class="ht"><input type="date" id="htDate" data-k="htDate" class="ht">
       </div>
     </div>
+    <div class="nav"><button class="btn" type="button" data-go="2">← Back</button><button class="btn" type="button" data-go="4" id="btnNext3">Next: Annual Review Form →</button></div>
+  </section>
+
+  <!-- STAGE 4: Annual Review Form (Head Teacher only) -->
+  <section class="stage" id="stage4">
+    <div class="lockmsg" id="lockmsg4">This stage is completed by the Head Teacher. Click <b>Head Teacher</b> at the top and enter the password to fill it in.</div>
+    <p class="stage-intro">Teachers and Related Employees Assessment – Annual Review. Employee details come from the plan; check them and add the Emp I.D.</p>
     <div class="card">
+      <h3 class="form-h">Employee details</h3>
       <div class="grid3">
-        <label for="tSign">Teacher signature (type name)</label><label for="tDate">Date</label><span></span>
-        <input type="text" id="tSign" data-k="tSign"><input type="date" id="tDate" data-k="tDate"><span></span>
+        <label for="lastName">Last name</label><label for="firstName">First name</label><label for="empId">Emp I.D.</label>
+        <input type="text" id="lastName" data-k="lastName" class="ht"><input type="text" id="firstName" data-k="firstName" class="ht"><input type="text" id="empId" data-k="empId" class="ht" inputmode="numeric">
+      </div>
+      <div class="grid3" style="margin-top:12px">
+        <label>Classification <span class="hint" style="display:inline">(same as Designation)</span></label><label>Location</label><span></span>
+        <div class="ref" id="classRef"></div><div class="ref" id="locRef"></div><span></span>
+      </div>
+      <button class="btn" type="button" id="btnRefill" style="margin-top:12px">↻ Re-import from the plan</button>
+    </div>
+
+    <div class="card lm-page">
+      <h3 class="form-h">Line Manager</h3>
+      <p class="note" style="margin:-4px 0 12px"><b>Please tick the appropriate box</b></p>
+      <p>I certify that I have reviewed the employee's performance during the TAFE Teachers and Related Employees Annual Review for the year
+        <span style="white-space:nowrap"><input type="text" id="lmYear" data-k="lmYear" class="ht yr" inputmode="numeric" maxlength="4">.</span></p>
+      <p>I have found the employee to be demonstrating:</p>
+      <label class="tick"><input type="checkbox" data-k="lmWork" class="ht"><span>Satisfactory work performance and professional development</span></label>
+      <label class="tick"><input type="checkbox" data-k="lmConduct" class="ht"><span>Satisfactory conduct</span></label>
+      <p style="margin-top:14px">You are required to provide an explanation if the employee is not demonstrating satisfactory work performance, professional development or conduct.</p>
+      <textarea id="lmExplain" data-k="lmExplain" class="ht" rows="3" style="min-height:80px"></textarea>
+      <label class="tick" style="margin-top:14px"><input type="checkbox" data-k="lmSick" class="ht"><span>Satisfactory sick leave record (i.e. is not on Medical Certificate requirement)</span></label>
+      <p class="note" style="margin:0 0 8px 30px">N.B: where sick leave is approaching unsatisfactory the process for unsatisfactory sick leave must be applied</p>
+      <label class="tick"><input type="checkbox" data-k="lmPlan" class="ht"><span>I certify that a <a href="https://tafensw.sharepoint.com/sites/Int-PerformanceHub/Shared%20Documents/Annual%20Review%20Development%20Plan.pdf" target="_blank" rel="noopener">professional development plan</a> has been developed in conjunction with the staff member</span></label>
+      <label class="tick"><input type="checkbox" data-k="lmFeedback" class="ht"><span>I further certify that the above employee has been provided with feedback on their performance, including performance/development improvement strategies if applicable.</span></label>
+      <p class="nb-green">N.B: if one or more areas are not satisfactory the Head Teacher or Team Leader is required to discuss with their Director.</p>
+      <div class="grid3 signoff" style="margin-top:12px">
+        <label for="htName4">Name</label><label for="htSign4">Signature (type name)</label><label for="htDate4">Date</label>
+        <input type="text" id="htName4" data-k="htName" class="ht"><input type="text" id="htSign4" data-k="htSign" class="ht"><input type="date" id="htDate4" data-k="htDate" class="ht">
       </div>
     </div>
-    <div class="nav"><button class="btn" type="button" data-go="2">← Back</button><span></span></div>
+    <div class="submit-row"><button class="btn primary" type="button" id="btnPrintFull4">Print / PDF – Annual Review Form + Development Plan</button></div>
+    <div class="sub-msg" id="subMsg4" style="text-align:center"></div>
+    <div class="nav"><button class="btn" type="button" data-go="3">← Back</button><button class="btn" type="button" data-go="5">Next: Employee signature →</button></div>
+  </section>
+
+  <!-- STAGE 5: Employee signature (teacher) -->
+  <section class="stage" id="stage5">
+    <div class="lockmsg" id="lockmsg5" style="display:none"></div>
+    <p class="stage-intro">Review your Head Teacher's Annual Review Form and your Development Plan below, then complete the Employee section.</p>
+    <div class="card" id="s5form"></div>
+    <div class="card" id="s5plan"></div>
+    <div class="card">
+      <h3 class="form-h">Employee</h3>
+      <p style="margin-top:0">As an employee: <span class="req">*</span></p>
+      <label class="tick"><input type="radio" name="empSat" data-k="empSatisfied" value="yes" class="emp"><span>I am satisfied with the discussion, comments and recommendation/s and annual review development plan made with my line manager</span></label>
+      <label class="tick"><input type="radio" name="empSat" data-k="empSatisfied" value="no" class="emp"><span>I am not satisfied with the recommendation (please give your reasons in writing to your Line Manager. Your reasons shall be reviewed by an appropriate senior manager).</span></label>
+      <div class="grid3" style="margin-top:12px">
+        <label>Name</label><label for="tSign">Signature (type your name) <span class="req">*</span></label><label for="tDate">Date <span class="req">*</span></label>
+        <div class="ref" id="empNameRef"></div><input type="text" id="tSign" data-k="tSign" class="emp"><input type="date" id="tDate" data-k="tDate" class="emp">
+      </div>
+    </div>
+    <div class="submit-row"><button class="btn primary" type="button" id="btnPrintFull5">Save final PDF – Annual Review Form + Development Plan</button></div>
+    <div class="sub-msg" id="subMsg5" style="text-align:center"></div>
+    <p class="note" style="text-align:center">Then upload the PDF to People@TAFE via a KIC form (Document Type: <b>Annual Teacher Review</b>).</p>
+    <div class="nav"><button class="btn" type="button" data-go="4">← Back</button><span></span></div>
   </section>
 
   <p class="note" style="margin-top:24px">
@@ -366,7 +452,13 @@
       sel.querySelectorAll('option[data-old]').forEach(o=>o.remove());
       if(v && ![...sel.options].some(o=>o.value===v)){ const o=document.createElement('option'); o.textContent=v; o.dataset.old='1'; sel.appendChild(o); }
     });
-    document.querySelectorAll('[data-k]').forEach(el=>{ el.value = data[el.dataset.k] || ''; });
+    if(isHT()) prefillForm();
+    document.querySelectorAll('[data-k]').forEach(el=>{
+      const v = data[el.dataset.k];
+      if(el.type === 'checkbox') el.checked = !!v;
+      else if(el.type === 'radio') el.checked = (v === el.value);
+      else el.value = v || '';
+    });
     document.querySelectorAll('.ht').forEach(el=>{ el.disabled = !isHT(); });
     const locked = false; // teachers can keep editing after submitting
     document.querySelectorAll('#s1goals textarea').forEach(el=>{ el.disabled = locked; });
@@ -379,6 +471,15 @@
     updateDirtyNote();
     if(showMissing) markMissing();
     document.getElementById('lockmsg').style.display = isHT() ? 'none' : 'block';
+    document.getElementById('lockmsg4').style.display = isHT() ? 'none' : 'block';
+    ['btnRefill','btnPrintFull4'].forEach(id=>{ document.getElementById(id).disabled = !isHT(); });
+    document.getElementById('btnNext3').style.display = isHT() ? '' : 'none';
+    document.getElementById('classRef').textContent = data.designation || '—';
+    document.getElementById('locRef').textContent = data.location || '—';
+    document.getElementById('empNameRef').textContent = data.name || '—';
+    document.querySelector('#steps [data-s="4"]').classList.toggle('locked', !isHT());
+    document.querySelector('#steps [data-s="5"]').classList.toggle('locked', !canOpen(5));
+    renderReview5();
 
     // role + steps
     document.querySelectorAll('#role button').forEach(b=>b.classList.toggle('on', b.dataset.role===data.role));
@@ -394,9 +495,26 @@
     renderPrint();
   }
 
-  function canOpen(n){ return +n === 1 || isHT() || !!data.s1SubmittedAt || !!data.s1FromPdf; }
+  const s1Done = () => !!data.s1SubmittedAt || !!data.s1FromPdf;
+  const lmDone = () => !!((data.htName||'').trim() && (data.htSign||'').trim() && data.htDate);
+  function canOpen(n){
+    n = +n;
+    if(n === 1 || isHT()) return true;
+    if(n === 4) return false;                    // Annual Review Form: Head Teacher only
+    if(n === 5) return s1Done() && lmDone();     // after the Head Teacher has signed the form
+    return s1Done();
+  }
+  function lockReason(n){
+    n = +n;
+    if(n === 4) return 'The Annual Review Form (step 4) is completed by your Head Teacher.';
+    if(n === 5) return 'Step 5 opens once your Head Teacher has completed and signed the Annual Review Form. Open the PDF they send you with "Open my PDF copy".';
+    return 'Submit your Goals and Action plans first. The Progress review opens after that (usually mid-year).';
+  }
   function showStage(n, quiet){
-    if(!canOpen(n)){ subMsg('Submit your Goals and Action plans first. The Progress review opens after that (usually mid-year).', 'err'); n = 1; quiet = true; }
+    if(!canOpen(n)){
+      if(+n >= 4){ flash(lockReason(n), 7000); if(quiet) n = 1; else return; }
+      else { subMsg(lockReason(n), 'err'); n = 1; quiet = true; }
+    }
     data.stage = +n;
     document.querySelectorAll('.stage').forEach(s=>s.classList.toggle('on', s.id==='stage'+n));
     document.querySelectorAll('#steps button').forEach(b=>b.classList.toggle('on', b.dataset.s==n));
@@ -432,10 +550,10 @@
         <p>For support: <a href="https://tafehelp.tafensw.edu.au/staff_portal?id=kb_article&amp;sysparm_article=KB00008093">Knowledge Article-KIC form – Uploading a Qualification, Licence, VCTM or other document</a></p>
         <p>(Please note, if you are not on campus, you will need to <a href="https://tafensw.service-now.com/staff_portal?id=kb_article&amp;sysparm_article=KB00008405">connect to a VPN</a> or <a href="https://tafensw.service-now.com/staff_portal?id=kb_article&amp;sysparm_article=KB00003026">TAFE Virtual Desktop</a> to access this link).&nbsp; Select <b>Annual Teacher Review</b> from the <b>Document Type</b> dropdown list.&nbsp; Note:&nbsp; Signatures not required when uploaded and approved as a KIC form.</p>
       </div></div>`;
-    document.getElementById('printView').innerHTML = `
+    document.getElementById('printView').innerHTML = (fullPrint ? formSheet() : '') + `
     <div class="pv">
       <div class="pv-top">
-        <div class="pv-data">ARDPDATA:${encodeData()}:ARDPEND</div>
+        <div class="pv-data">${("ARDPDATA:" + encodeData() + ":ARDPEND").match(/.{1,300}/g).map(l=>`<div>${l}</div>`).join("")}</div>
         <img class="pv-abs pv-logo" src="${logo}" alt="">
         <div class="pv-abs pv-title"><span>ANNUAL REVIEW DEVELOPMENT PLAN</span></div>
         <div class="pv-abs" style="left:11.2mm;top:30.6mm">Teacher/Related</div>
@@ -467,11 +585,166 @@
     </div>`;
   }
 
+  // ---------- Step 4: prefill employee details from the plan ----------
+  function splitName(n){ const p = (n||'').trim().split(/\s+/).filter(Boolean); return p.length < 2 ? {first:p[0]||'', last:''} : {first:p.slice(0,-1).join(' '), last:p[p.length-1]}; }
+  function prefillForm(force){
+    const sp = splitName(data.name);
+    if(force || !data.firstName) data.firstName = sp.first;
+    if(force || !data.lastName) data.lastName = sp.last;
+    if(!data.lmYear) data.lmYear = String(new Date().getFullYear());
+  }
+  document.getElementById('btnRefill').onclick = ()=>{ if(!isHT()) return; prefillForm(true); save(); render(); flash('Employee details re-imported from the plan', 3000); };
+
+  // ---------- Step 5: read-only review of the form and the plan ----------
+  function renderReview5(){
+    const tick = v => v ? '☑' : '☐';
+    const f = document.getElementById('s5form'), p = document.getElementById('s5plan');
+    if(!f) return;
+    f.innerHTML = `<h3 class="form-h">Annual Review Form <span class="note" style="font-weight:normal">(completed by your Head Teacher)</span></h3>
+      <ul class="rv-list">
+        <li><b>Employee:</b> ${esc([data.firstName, data.lastName].filter(Boolean).join(' ') || data.name || '—')} · Emp I.D. ${esc(data.empId||'—')} · ${esc(data.designation||'—')} · ${esc(data.location||'—')}</li>
+        <li><b>Review year:</b> ${esc(data.lmYear||'—')}</li>
+        <li>${tick(data.lmWork)} Satisfactory work performance and professional development</li>
+        <li>${tick(data.lmConduct)} Satisfactory conduct</li>
+        ${(data.lmExplain||'').trim()?`<li><b>Explanation:</b> ${esc(data.lmExplain)}</li>`:''}
+        <li>${tick(data.lmSick)} Satisfactory sick leave record</li>
+        <li>${tick(data.lmPlan)} A professional development plan has been developed with the staff member</li>
+        <li>${tick(data.lmFeedback)} Feedback on performance has been provided</li>
+        <li><b>Line Manager:</b> ${esc(data.htName||'—')} · ${esc(fmtDate(data.htDate)||'—')}</li>
+      </ul>`;
+    p.innerHTML = `<h3 class="form-h">Annual Review Development Plan</h3>` + data.goals.map((g,i)=>`
+      <div class="rv-goal"><b>${esc(title(g,i))}</b>
+        <div><b>Area to be developed:</b> ${esc(g.area||'—')}</div>
+        <div><b>Action strategies:</b> ${esc(g.action||'—')}</div>
+        <div><b>Review strategies:</b> ${esc(g.review||'—')}</div>
+        <div><b>Mid-year Review:</b> ${esc([g.status, g.progress].filter(x=>(x||'').trim()).join(' – ')||'—')}</div>
+        <div><b>Final Review:</b> ${esc([g.outcome, g.htComment].filter(x=>(x||'').trim()).join(' – ')||'—')}</div>
+      </div>`).join('') + ((data.htOverall||'').trim()?`<div class="rv-goal"><b>Overall comments:</b><div>${esc(data.htOverall)}</div></div>`:'');
+  }
+  function fmtDate(v){ const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v||''); return m ? `${m[3]}/${m[2]}/${m[1]}` : (v||''); }
+
+  // ---------- Print: Annual Review Form (portrait) + full Development Plan (landscape) ----------
+  let fullPrint = false;
+  function msgIn(id, t, cls){ const m = document.getElementById(id); m.textContent = t; m.className = 'sub-msg' + (cls?' '+cls:''); }
+  function printFull(fromStage){
+    const missing = [];
+    if(fromStage === 4){
+      if(!isHT()) return;
+      if(!(data.htName||'').trim()) missing.push('Name');
+      if(!(data.htSign||'').trim()) missing.push('Signature');
+      if(!data.htDate) missing.push('Date');
+      if((!data.lmWork || !data.lmConduct) && !(data.lmExplain||'').trim()) missing.push('an explanation (work performance or conduct not ticked)');
+      if(missing.length){ msgIn('subMsg4', 'Please fill in: ' + missing.join(', ') + '.', 'err'); return; }
+      msgIn('subMsg4', 'Save the PDF and send it to the teacher. They open it with "Open my PDF copy" and sign at step 5.', 'ok');
+    } else {
+      if(!data.empSatisfied) missing.push('satisfied / not satisfied');
+      if(!(data.tSign||'').trim()) missing.push('Signature');
+      if(!data.tDate) missing.push('Date');
+      if(missing.length){ msgIn('subMsg5', 'Please complete: ' + missing.join(', ') + '.', 'err'); return; }
+      msgIn('subMsg5', 'Save the PDF, then upload it to People@TAFE via a KIC form.', 'ok');
+    }
+    fullPrint = true; renderPrint(); document.body.classList.add('print-full');
+    const t = document.title, who = (data.name||'').trim();
+    document.title = 'Annual Review' + (who ? ' - ' + who : '') + (fromStage === 5 ? ' - signed' : '');
+    const done = ()=>{ fullPrint = false; document.body.classList.remove('print-full'); document.title = t; renderPrint(); window.removeEventListener('afterprint', done); };
+    window.addEventListener('afterprint', done);
+    window.print();
+    setTimeout(()=>{ if(fullPrint) done(); }, 3000);
+  }
+  document.getElementById('btnPrintFull4').onclick = ()=>printFull(4);
+  document.getElementById('btnPrintFull5').onclick = ()=>printFull(5);
+
+  function formSheet(){
+    const d = data;
+    const A = (x, y, html, st) => `<div class="pf-a" style="left:${x}mm;top:${y}mm;${st||''}">${html}</div>`;
+    const box = (x, y, on) => `<div class="pf-box" style="left:${x}mm;top:${y}mm">${on?'✓':''}</div>`;
+    const H = (x1, x2, y, w) => `<div class="pf-l" style="left:${x1}mm;top:${y}mm;width:${x2-x1}mm;height:0;border-top-width:${w||.5}pt"></div>`;
+    const V = (x, y1, y2) => `<div class="pf-l" style="left:${x}mm;top:${y1}mm;width:0;height:${y2-y1}mm;border-left-width:.5pt"></div>`;
+    const R = (x1, y1, x2, y2) => `<div class="pf-l" style="left:${x1}mm;top:${y1}mm;width:${x2-x1}mm;height:${y2-y1}mm;border-width:.5pt"></div>`;
+    const v = x => esc(x||'');
+    const yr = (d.lmYear||'').trim() || '&lt;insert year&gt;';
+    const sig = x => x ? `<span class="pf-sig">${esc(x)}</span>` : '';
+    const logo = document.querySelector('header.top img').src;
+    return `<div class="pf">
+      <img src="${logo}" alt="" style="position:absolute;left:4.1mm;top:2.4mm;width:44.2mm;height:12.6mm">
+      ${A(34.0, 17.6, '<span class="pf-t">Teachers and Related Employees Assessment –</span>', 'line-height:7.3mm')}
+      ${A(88.4, 24.9, '<span class="pf-t">Annual Review</span>', 'line-height:7.3mm')}
+      ${A(12.6, 36.2, '<b><i>This form is used to report the Annual Review for TAFE teachers and related employees.</i></b>', 'font-size:9pt')}
+      ${A(14.1, 43.8, '<b>Employee details</b>')}
+      ${R(11.9, 48.9, 199.5, 66.4)}${H(11.9, 199.5, 57.5)}${V(84.5, 48.9, 57.5)}${V(159.5, 48.9, 57.5)}${V(114.4, 57.5, 66.4)}
+      ${A(14.0, 50.9, 'Last name: ' + v(d.lastName))}
+      ${A(86.5, 50.9, 'First name: ' + v(d.firstName))}
+      ${A(161.5, 50.9, 'Emp I.D.: ' + v(d.empId))}
+      ${A(14.0, 59.6, 'Classification: ' + v(d.designation))}
+      ${A(116.5, 59.6, 'Location: ' + v(d.location))}
+      ${A(12.6, 66.4, '<b>Line Manager</b>')}
+      ${A(12.6, 71.0, '<b>Please tick the appropriate box</b>', 'font-size:8pt')}
+      ${R(11.9, 74.4, 199.5, 198.1)}
+      ${A(13.3, 78.6, 'I certify that I have reviewed the employee\'s performance during the TAFE Teachers and Related')}
+      ${A(14.1, 83.0, 'Employees Annual Review for the year ' + yr + '.')}
+      ${A(13.1, 91.9, 'I have found the employee to be demonstrating:')}
+      ${box(14.1, 97.5, d.lmWork)}${A(21.3, 97.4, 'Satisfactory work performance and professional development')}
+      ${box(14.1, 103.6, d.lmConduct)}${A(21.3, 103.4, 'Satisfactory conduct')}
+      ${A(14.1, 113.2, 'You are required to provide an explanation if the employee is not demonstrating satisfactory work', 'width:183mm;text-align:justify;text-align-last:justify')}
+      ${A(14.1, 117.6, 'performance, professional development or conduct.')}
+      <div class="pf-a pf-explain" style="left:14.6mm;top:122.4mm;width:180mm">${v(d.lmExplain)}</div>
+      ${H(14.1, 195.4, 127.3)}${H(14.1, 195.4, 132.8)}${H(14.1, 195.4, 138.6, .75)}
+      ${box(14.1, 144.8, d.lmSick)}${A(21.3, 144.4, 'Satisfactory sick leave record (i.e. is not on Medical Certificate requirement)')}
+      ${A(21.8, 149.8, 'N.B: where sick leave is approaching unsatisfactory the process for unsatisfactory sick leave must be')}
+      ${A(22.8, 154.3, 'applied')}
+      ${box(14.1, 159.9, d.lmPlan)}${A(21.3, 159.6, 'I certify that a <span class="pf-link">professional development plan</span> has been developed in conjunction with the staff member')}
+      ${box(14.1, 165.9, d.lmFeedback)}${A(21.2, 165.6, 'I further certify that the above employee has been provided with feedback on their performance,')}
+      ${A(14.1, 171.0, 'including performance/development improvement strategies if applicable.')}
+      ${A(14.1, 179.6, '<b>N.B: if one or more areas are not satisfactory the Head Teacher or Team Leader is required to</b>', 'color:#00CC66')}
+      ${A(14.1, 184.0, '<b>discuss with their Director.</b>', 'color:#00CC66')}
+      ${H(11.9, 199.5, 189.5)}${V(72.4, 189.5, 198.1)}${V(135.9, 189.5, 198.1)}
+      ${A(14.1, 191.5, 'Name: ' + v(d.htName))}
+      ${A(74.6, 191.5, 'Signature: ' + sig(d.htSign))}
+      ${A(138.1, 191.5, 'Date: ' + v(fmtDate(d.htDate)))}
+      ${A(12.6, 202.1, '<b>Employee</b>')}
+      ${R(11.9, 206.9, 199.5, 274.2)}
+      ${A(14.1, 206.7, 'As an employee:')}
+      ${box(14.3, 216.6, d.empSatisfied==='yes')}${A(21.5, 216.4, 'I am satisfied with the discussion, comments and recommendation/s and annual review development')}
+      ${A(14.1, 221.7, 'plan made with my line manager')}
+      ${box(14.1, 227.1, d.empSatisfied==='no')}${A(21.3, 226.8, 'I am not satisfied with the recommendation (please give your reasons in writing to your Line Manager.')}
+      ${A(14.1, 232.2, 'Your reasons shall be reviewed by an appropriate senior manager).')}
+      ${H(11.9, 199.5, 240.9)}${V(72.4, 240.9, 249.7)}${V(135.9, 240.9, 249.7)}
+      ${A(14.1, 242.9, 'Name: ' + v(d.name))}
+      ${A(74.6, 242.9, 'Signature: ' + sig(d.tSign))}
+      ${A(138.1, 242.9, 'Date: ' + v(fmtDate(d.tDate)))}
+      ${H(11.9, 199.5, 249.7)}
+      <div class="pf-a pf-kic" style="left:14.1mm;top:249.5mm">
+        <div>Teacher/Related Employee to upload Annual Review to People@TAFE via a KIC form.&nbsp; For support: <span class="pf-link">Knowledge Article - KIC form – Uploading a</span></div>
+        <div><span class="pf-link">Qualification, Licence, VCTM or other document</span> <mark>(Please note, if you are not on campus, you will need to <b class="pf-link">connect to a VPN</b> or <b class="pf-link">TAFE Virtual</b></mark></div>
+        <div><mark><b class="pf-link">Desktop</b> to access this link).</mark> Select <b>Annual Teacher Review</b> from the <b>Document Type</b> dropdown list.</div>
+        <div>Note: Signatures not required when uploaded and approved as a KIC form.</div>
+      </div>
+      ${H(11.9, 199.5, 265.0)}${V(104.9, 265.0, 274.2)}
+      ${A(14.1, 264.9, '<b>Line Manager</b>')}
+      ${A(10.1, 280.6, 'Teachers and Related Employees Assessment – Annual Review', 'font-size:8pt')}
+      ${A(10.1, 283.9, 'Owner: People &amp; Culture', 'font-size:8pt')}
+      ${A(10.1, 287.2, '.', 'font-size:8pt')}
+      ${A(124.2, 280.6, 'Version 10.1', 'font-size:8pt')}
+      ${A(168.3, 280.6, 'Page 1 of 1', 'font-size:8pt')}
+      ${A(166.9, 283.9, 'Last Updated: 30/05/2025', 'font-size:8pt')}
+      ${A(97.9, 289.8, 'OFFICIAL', 'font-size:8pt')}
+    </div>`;
+  }
+
   // ---------- events ----------
+  document.addEventListener('change', e=>{
+    const el = e.target;
+    if(el.dataset && el.dataset.k && (el.type==='checkbox' || el.type==='radio')) el.dispatchEvent(new Event('input', {bubbles:true}));
+  });
   document.addEventListener('input', e=>{
     const el = e.target;
     if(el.dataset.g !== undefined){ data.goals[+el.dataset.g][el.dataset.f] = el.value; }
-    else if(el.dataset.k){ data[el.dataset.k] = el.value; }
+    else if(el.dataset.k){
+      const k = el.dataset.k;
+      data[k] = el.type === 'checkbox' ? el.checked : el.value;
+      if(el.type !== 'radio') document.querySelectorAll(`[data-k="${k}"]`).forEach(o=>{ if(o!==el){ if(o.type==='checkbox') o.checked = el.checked; else o.value = el.value; } });
+      if(k==='htName'||k==='htSign'||k==='htDate') document.querySelector('#steps [data-s="5"]').classList.toggle('locked', !canOpen(5));
+    }
     else return;
     save(); renderPrint(); updateDirtyNote();
     if(showMissing && el.matches('#name,#designation,#location,#s1goals textarea')) el.classList.toggle('missing', !(el.value||'').trim());
@@ -534,7 +807,10 @@
   function encodeData(){
     const keep = {v:1, name:data.name||'', designation:data.designation||'', location:data.location||'',
       tSign:data.tSign||'', tDate:data.tDate||'', htName:data.htName||'', htSign:data.htSign||'', htDate:data.htDate||'', htOverall:data.htOverall||'',
-      s1SubmittedAt:data.s1SubmittedAt||'', goals:data.goals};
+      s1SubmittedAt:data.s1SubmittedAt||'', goals:data.goals,
+      lastName:data.lastName||'', firstName:data.firstName||'', empId:data.empId||'', lmYear:data.lmYear||'',
+      lmWork:!!data.lmWork, lmConduct:!!data.lmConduct, lmExplain:data.lmExplain||'', lmSick:!!data.lmSick, lmPlan:!!data.lmPlan, lmFeedback:!!data.lmFeedback,
+      empSatisfied:data.empSatisfied||'', version:data.version||'', htModifiedAt:data.htModifiedAt||''};
     return btoa(unescape(encodeURIComponent(JSON.stringify(keep))));
   }
   function applyLoaded(obj){
@@ -581,7 +857,9 @@
     flash('Opening…', 60000);
     try{
       const obj = /\.pdf$/i.test(f.name) || f.type==='application/pdf' ? await readPdf(f) : JSON.parse(await f.text());
-      applyLoaded(obj); flash(data.s1FromPdf ? 'Opened — check your goals, then click Next' : 'Opened — you can keep editing', 5000);
+      applyLoaded(obj);
+      flash(lmDone() && !isHT() ? 'Opened — your Head Teacher has signed the Annual Review Form. Go to step 5 to review and sign.'
+        : data.s1FromPdf ? 'Opened — check your goals, then click Next' : 'Opened — you can keep editing', 7000);
     }catch(err){ flash('', 1); window.alert(err.message || 'Could not open that file.'); }
   };
   function confirmSafe(msg){ try{ return window.confirm(msg); }catch(e){ return true; } }
