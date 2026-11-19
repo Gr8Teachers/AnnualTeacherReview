@@ -203,8 +203,12 @@
   <!-- Employee details -->
   <section class="card">
     <div class="grid3">
-      <label for="name">Teacher name <span class="req">*</span></label><label for="designation">Designation <span class="req">*</span></label><label for="location">Location <span class="req">*</span></label>
-      <input type="text" id="name" data-k="name"><select id="designation" data-k="designation"><option value="">— select —</option><option>Teacher ESOL - Full Time</option><option>Teacher ESOL - Part Time</option><option>Teacher ESOL - Casual</option></select><select id="location" data-k="location"><option value="">— select —</option><option>St Leonards</option><option>Campsie</option></select>
+      <label for="lastName">Last name <span class="req">*</span></label><label for="firstName">First name <span class="req">*</span></label><label for="empId">Emp I.D.</label>
+      <input type="text" id="lastName" data-k="lastName" autocomplete="family-name"><input type="text" id="firstName" data-k="firstName" autocomplete="given-name"><input type="text" id="empId" data-k="empId" inputmode="numeric">
+    </div>
+    <div class="grid3" style="margin-top:12px">
+      <label for="designation">Designation <span class="req">*</span></label><label for="location">Location <span class="req">*</span></label><span></span>
+      <select id="designation" data-k="designation"><option value="">— select —</option><option>Teacher ESOL - Full Time</option><option>Teacher ESOL - Part Time</option><option>Teacher ESOL - Casual</option></select><select id="location" data-k="location"><option value="">— select —</option><option>St Leonards</option><option>Campsie</option></select><span></span>
     </div>
   </section>
 
@@ -253,18 +257,17 @@
   <!-- STAGE 4: Annual Review Form (Head Teacher only) -->
   <section class="stage" id="stage4">
     <div class="lockmsg" id="lockmsg4">This stage is completed by the Head Teacher. Click <b>Head Teacher</b> at the top and enter the password to fill it in.</div>
-    <p class="stage-intro">Teachers and Related Employees Assessment – Annual Review. Employee details come from the plan; check them and add the Emp I.D.</p>
+    <p class="stage-intro">Teachers and Related Employees Assessment – Annual Review. Employee details come from the plan (the teacher's name, Emp I.D., designation and location); add the Emp I.D. here if the teacher left it blank.</p>
     <div class="card">
       <h3 class="form-h">Employee details</h3>
       <div class="grid3">
-        <label for="lastName">Last name</label><label for="firstName">First name</label><label for="empId">Emp I.D.</label>
-        <input type="text" id="lastName" data-k="lastName" class="ht"><input type="text" id="firstName" data-k="firstName" class="ht"><input type="text" id="empId" data-k="empId" class="ht" inputmode="numeric">
+        <label>Last name</label><label>First name</label><label for="empId4">Emp I.D.</label>
+        <div class="ref" id="lastRef"></div><div class="ref" id="firstRef"></div><input type="text" id="empId4" data-k="empId" class="ht" inputmode="numeric">
       </div>
       <div class="grid3" style="margin-top:12px">
         <label>Classification <span class="hint" style="display:inline">(same as Designation)</span></label><label>Location</label><span></span>
         <div class="ref" id="classRef"></div><div class="ref" id="locRef"></div><span></span>
       </div>
-      <button class="btn" type="button" id="btnRefill" style="margin-top:12px">↻ Re-import from the plan</button>
     </div>
 
     <div class="card lm-page">
@@ -372,6 +375,7 @@
     try{ const s = localStorage.getItem(KEY); if(s){ data = Object.assign(data, JSON.parse(s)); } }catch(e){}
     if(!Array.isArray(data.goals)) data.goals = [];
     while(data.goals.length < 4) data.goals.push(blankGoal());
+    syncName();
   }
   let t;
   function save(){
@@ -452,7 +456,7 @@
       sel.querySelectorAll('option[data-old]').forEach(o=>o.remove());
       if(v && ![...sel.options].some(o=>o.value===v)){ const o=document.createElement('option'); o.textContent=v; o.dataset.old='1'; sel.appendChild(o); }
     });
-    if(isHT()) prefillForm();
+    syncName();
     document.querySelectorAll('[data-k]').forEach(el=>{
       const v = data[el.dataset.k];
       if(el.type === 'checkbox') el.checked = !!v;
@@ -463,7 +467,7 @@
     const locked = false; // teachers can keep editing after submitting
     document.querySelectorAll('#s1goals textarea').forEach(el=>{ el.disabled = locked; });
     document.querySelectorAll('#s1goals [data-del]').forEach(el=>{ el.style.display = locked ? 'none' : ''; });
-    ['addGoal','name','designation','location'].forEach(id=>{ document.getElementById(id).disabled = locked; });
+    ['addGoal','lastName','firstName','designation','location'].forEach(id=>{ document.getElementById(id).disabled = locked; });
     document.getElementById('btnSubmit1').textContent = data.s1SubmittedAt ? 'Resubmit Goals and Action plans' : 'Submit Goals and Action plans';
     document.getElementById('btnSubmit1').disabled = locked;
     document.getElementById('btnClear').disabled = locked && !isHT();
@@ -472,7 +476,9 @@
     if(showMissing) markMissing();
     document.getElementById('lockmsg').style.display = isHT() ? 'none' : 'block';
     document.getElementById('lockmsg4').style.display = isHT() ? 'none' : 'block';
-    ['btnRefill','btnPrintFull4'].forEach(id=>{ document.getElementById(id).disabled = !isHT(); });
+    document.getElementById('btnPrintFull4').disabled = !isHT();
+    document.getElementById('lastRef').textContent = data.lastName || '—';
+    document.getElementById('firstRef').textContent = data.firstName || '—';
     document.getElementById('btnNext3').style.display = isHT() ? '' : 'none';
     document.getElementById('classRef').textContent = data.designation || '—';
     document.getElementById('locRef').textContent = data.location || '—';
@@ -587,13 +593,12 @@
 
   // ---------- Step 4: prefill employee details from the plan ----------
   function splitName(n){ const p = (n||'').trim().split(/\s+/).filter(Boolean); return p.length < 2 ? {first:p[0]||'', last:''} : {first:p.slice(0,-1).join(' '), last:p[p.length-1]}; }
-  function prefillForm(force){
-    const sp = splitName(data.name);
-    if(force || !data.firstName) data.firstName = sp.first;
-    if(force || !data.lastName) data.lastName = sp.last;
-    if(!data.lmYear) data.lmYear = String(new Date().getFullYear());
+  // Teacher name = First + Last. Older saved plans only had one name box: split it once.
+  function syncName(){
+    if(!data.firstName && !data.lastName && (data.name||'').trim()){ const sp = splitName(data.name); data.firstName = sp.first; data.lastName = sp.last; }
+    data.name = [data.firstName, data.lastName].map(x=>(x||'').trim()).filter(Boolean).join(' ');
+    if(isHT() && !data.lmYear) data.lmYear = String(new Date().getFullYear());
   }
-  document.getElementById('btnRefill').onclick = ()=>{ if(!isHT()) return; prefillForm(true); save(); render(); flash('Employee details re-imported from the plan', 3000); };
 
   // ---------- Step 5: read-only review of the form and the plan ----------
   function renderReview5(){
@@ -743,11 +748,12 @@
       const k = el.dataset.k;
       data[k] = el.type === 'checkbox' ? el.checked : el.value;
       if(el.type !== 'radio') document.querySelectorAll(`[data-k="${k}"]`).forEach(o=>{ if(o!==el){ if(o.type==='checkbox') o.checked = el.checked; else o.value = el.value; } });
+      if(k==='firstName'||k==='lastName'){ syncName(); document.getElementById('empNameRef').textContent = data.name || '—'; document.getElementById('lastRef').textContent = data.lastName || '—'; document.getElementById('firstRef').textContent = data.firstName || '—'; }
       if(k==='htName'||k==='htSign'||k==='htDate') document.querySelector('#steps [data-s="5"]').classList.toggle('locked', !canOpen(5));
     }
     else return;
     save(); renderPrint(); updateDirtyNote();
-    if(showMissing && el.matches('#name,#designation,#location,#s1goals textarea')) el.classList.toggle('missing', !(el.value||'').trim());
+    if(showMissing && el.matches('#lastName,#firstName,#designation,#location,#s1goals textarea')) el.classList.toggle('missing', !(el.value||'').trim());
   });
   document.addEventListener('click', e=>{
     const b = e.target.closest('button'); if(!b) return;
@@ -818,6 +824,7 @@
     data = Object.assign({stage:1, goals:[]}, obj); delete data.v; data.role = role;
     data.goals = (data.goals||[]).map(g=>Object.assign(blankGoal(), g));
     while(data.goals.length<4) data.goals.push(blankGoal());
+    syncName();
     // A complete plan reopened from the teacher's PDF unlocks the Progress review (teacher clicks Next)
     const complete = s1Missing().length === 0;
     data.s1Hash = s1Snapshot();   // treat the reopened PDF as what is on the list
@@ -953,7 +960,8 @@
   const FIELD_NAMES = {area:'area to be developed', action:'action strategies', review:'review strategies'};
   function s1Missing(){
     const missing = [];
-    if(!(data.name||'').trim()) missing.push('Teacher name');
+    if(!(data.lastName||'').trim()) missing.push('Last name');
+    if(!(data.firstName||'').trim()) missing.push('First name');
     if(!['Teacher ESOL - Full Time','Teacher ESOL - Part Time','Teacher ESOL - Casual'].includes(data.designation||'')) missing.push('Designation');
     if(!['St Leonards','Campsie'].includes(data.location||'')) missing.push('Location');
     data.goals.forEach((g,i)=>{
@@ -965,7 +973,7 @@
   let showMissing = false;
   function markMissing(){
     showMissing = true;
-    document.querySelectorAll('#name,#designation,#location,#s1goals textarea').forEach(el=>{
+    document.querySelectorAll('#lastName,#firstName,#designation,#location,#s1goals textarea').forEach(el=>{
       el.classList.toggle('missing', showMissing && !(el.value||'').trim());
     });
   }

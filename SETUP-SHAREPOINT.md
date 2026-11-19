@@ -196,7 +196,7 @@ In Head Teacher mode the **Save modified plan** button (under the goals) does tw
 
 ## 7. Steps 4 and 5: Annual Review Form and employee signature
 
-**Step 4 – Annual Review Form (Head Teacher only).** Employee details are filled in from the plan (first/last name are split from Teacher Name; Classification = Designation; Location). Add the Emp I.D., tick the Line Manager boxes, add an explanation if work performance or conduct is not ticked, then Name / Signature / Date. **Print / PDF – Annual Review Form + Development Plan** saves one PDF: the form on a portrait page (laid out like the official Word form) followed by the full plan in landscape. Send it to the teacher.
+**Step 4 – Annual Review Form (Head Teacher only).** Employee details come from the top of the form (Last name, First name, Emp I.D.; Classification = Designation; Location). Add the Emp I.D. if the teacher left it blank, tick the Line Manager boxes, add an explanation if work performance or conduct is not ticked, then Name / Signature / Date. **Print / PDF – Annual Review Form + Development Plan** saves one PDF: the form on a portrait page (laid out like the official Word form) followed by the full plan in landscape. Send it to the teacher.
 
 **Step 5 – Employee signature (teacher).** The teacher opens that PDF with **Open my PDF copy**, goes to step 5, reviews the form and plan, ticks satisfied / not satisfied, signs and dates, then clicks **Save final PDF** and uploads it to People@TAFE via a KIC form.
 
