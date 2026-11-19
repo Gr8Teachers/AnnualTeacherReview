@@ -100,6 +100,7 @@
   .rv-goal{border-top:1px solid var(--line);padding:10px 0;font-size:14px}
   .rv-goal:first-of-type{border-top:0}
   .rv-goal div{white-space:pre-wrap;margin:2px 0 6px}
+  select.gtype{font:inherit;font-weight:bold;font-size:14px;padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);width:auto!important;height:auto!important;display:inline-block;max-width:70vw;vertical-align:middle;margin-left:4px}
   .sub-msg{font-size:13px;margin-top:8px;min-height:18px}
   .sub-msg.err{color:var(--accent)} .sub-msg.ok{color:var(--ok)}
   /* print-only table */
@@ -390,22 +391,34 @@
   const esc = s => String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const opts = (list, v) => list.map(o=>`<option value="${esc(o)}"${o===v?' selected':''}>${o||'— select —'}</option>`).join('');
   const isHT = () => data.role === 'ht';
-  const GOAL_NAMES = ['Teaching [1]', 'Teaching [2]', 'Section Contribution', 'Personal Development [Work related]'];
-  const AREA_HINTS = [
-    'What do you want to improve in classroom teaching? Something you haven\'t done before, e.g. a new technology, a new way of teaching a skill, a new way of collaborating with your colleagues, a new addition to your classroom teaching, etc.',
-    'What do you want to improve in classroom teaching? Something you haven\'t done before, e.g. a new technology, a new way of teaching a skill, a new way of collaborating with your colleagues, a new addition to your classroom teaching, etc.',
-    'What do you want to do to make a contribution to the section? e.g. section duties like tidying up the resource room / archive room, organising section events, supporting colleagues with technology or assessing, sharing resources / ideas, conducting PD sessions, etc.',
-    'What do you want to learn / improve to better do your job? e.g. IT skills, teaching low / high levels, how to incorporate games into my teaching, how to keep students engaged, etc.'
-  ];
-  const areaHint = i => AREA_HINTS[i] || 'What do you want to improve?';
-  const title = (g,i) => `Goal ${i+1}` + (GOAL_NAMES[i] ? ` - ${GOAL_NAMES[i]}` : '');
+  // Goal types: the Head Teacher can change each goal's type; teachers just see the result
+  const GOAL_TYPES = {teaching:'Teaching', section:'Section Contribution', personal:'Personal Development [Work related]', other:'Other'};
+  const DEFAULT_TYPES = ['teaching','teaching','section','personal'];
+  const TYPE_HINTS = {
+    teaching: 'What do you want to improve in classroom teaching? Something you haven\'t done before, e.g. a new technology, a new way of teaching a skill, a new way of collaborating with your colleagues, a new addition to your classroom teaching, etc.',
+    section:  'What do you want to do to make a contribution to the section? e.g. section duties like tidying up the resource room / archive room, organising section events, supporting colleagues with technology or assessing, sharing resources / ideas, conducting PD sessions, etc.',
+    personal: 'What do you want to learn / improve to better do your job? e.g. IT skills, teaching low / high levels, how to incorporate games into my teaching, how to keep students engaged, etc.',
+    other:    'What do you want to improve?'
+  };
+  const goalType = (g,i) => (g && GOAL_TYPES[g.type]) ? g.type : (DEFAULT_TYPES[i] || 'other');
+  // Teaching goals are numbered in order: Teaching [1], Teaching [2], ...
+  const teachingNo = i => { let n = 0; for(let j=0; j<=i; j++){ if(j===i || goalType(data.goals[j], j)==='teaching') n++; } return n; };
+  const typeLabel = (t,i) => t === 'teaching' ? `Teaching [${teachingNo(i)}]` : GOAL_TYPES[t];
+  const areaHint = i => TYPE_HINTS[goalType(data.goals[i], i)];
+  const title = (g,i) => `Goal ${i+1} - ${typeLabel(goalType(g,i), i)}`;
+  const GOAL_NAMES = DEFAULT_TYPES;   // the first four goals can't be removed
+  function typePicker(g,i){
+    const cur = goalType(g,i);
+    return `Goal ${i+1} - <select class="gtype" data-gtype="${i}" aria-label="Type of goal ${i+1}">` +
+      Object.keys(GOAL_TYPES).map(t=>`<option value="${t}"${t===cur?' selected':''}>${esc(typeLabel(t,i))}</option>`).join('') + `</select>`;
+  }
 
   // ---------- render ----------
   function render(){
     // stage 1
     document.getElementById('s1goals').innerHTML = data.goals.map((g,i)=>`
       <div class="goal">
-        <div class="goal-h"><span>${title(g,i)}</span>${i>=GOAL_NAMES.length?`<button class="x" type="button" data-del="${i}">Remove</button>`:''}</div>
+        <div class="goal-h"><span>${isHT() ? typePicker(g,i) : esc(title(g,i))}</span>${i>=GOAL_NAMES.length?`<button class="x" type="button" data-del="${i}">Remove</button>`:''}</div>
         <div class="goal-b cols3">
           <label>Area to be developed <span class="req">*</span></label>
           <label>Action strategies <span class="req">*</span> <span class="hint">(what, when, who responsible)</span></label>
@@ -732,6 +745,10 @@
   // ---------- events ----------
   document.addEventListener('change', e=>{
     const el = e.target;
+    if(el.dataset && el.dataset.gtype !== undefined){
+      if(!isHT()) return;
+      data.goals[+el.dataset.gtype].type = el.value; save(); render(); return;
+    }
     if(el.dataset && el.dataset.k && (el.type==='checkbox' || el.type==='radio')) el.dispatchEvent(new Event('input', {bubbles:true}));
   });
   document.addEventListener('input', e=>{
@@ -783,8 +800,8 @@
     const payload = {
       teacherName: data.name.trim(), designation: data.designation||'', location: data.location||'',
       stage: HT_STAGE, submittedOn: now,
-      goal1: goalText(data.goals[0]), goal2: goalText(data.goals[1]), goal3: goalText(data.goals[2]), goal4: goalText(data.goals[3]),
-      otherGoals: data.goals.slice(4).map((g,i)=>`Goal ${i+5}\n`+goalText(g)).join('\n\n----\n\n'),
+      goal1: goalText(data.goals[0],0), goal2: goalText(data.goals[1],1), goal3: goalText(data.goals[2],2), goal4: goalText(data.goals[3],3),
+      otherGoals: data.goals.slice(4).map((g,i)=>goalText(g,i+4)).join('\n\n----\n\n'),
       planJson: JSON.stringify(Object.assign({}, data, {role:'teacher', version:'v2', htModifiedAt: now}))
     };
     let ok = false;
@@ -949,7 +966,7 @@
 
   // ---------- Submit Step 1 ----------
   function subMsg(t, cls){ const m=document.getElementById('subMsg'); m.textContent=t; m.className='sub-msg'+(cls?' '+cls:''); }
-  function goalText(g){ return `Area to be developed:\n${g.area||''}\n\nAction strategies:\n${g.action||''}\n\nReview strategies:\n${g.review||''}`; }
+  function goalText(g, i){ return (i !== undefined ? title(g,i) + '\n\n' : '') + `Area to be developed:\n${g.area||''}\n\nAction strategies:\n${g.action||''}\n\nReview strategies:\n${g.review||''}`; }
   const FIELD_NAMES = {area:'area to be developed', action:'action strategies', review:'review strategies'};
   function s1Missing(){
     const missing = [];
@@ -981,8 +998,8 @@
     const payload = {
       teacherName: data.name.trim(), designation: data.designation||'', location: data.location||'',
       stage: 'Goals and Action plans', submittedOn: now,
-      goal1: goalText(data.goals[0]), goal2: goalText(data.goals[1]), goal3: goalText(data.goals[2]), goal4: goalText(data.goals[3]),
-      otherGoals: data.goals.slice(4).map((g,i)=>`Goal ${i+5}\n`+goalText(g)).join('\n\n----\n\n'),
+      goal1: goalText(data.goals[0],0), goal2: goalText(data.goals[1],1), goal3: goalText(data.goals[2],2), goal4: goalText(data.goals[3],3),
+      otherGoals: data.goals.slice(4).map((g,i)=>goalText(g,i+4)).join('\n\n----\n\n'),
       planJson: JSON.stringify(Object.assign({}, data, {role:'teacher', s1SubmittedAt: now}))
     };
     try{
@@ -1002,7 +1019,7 @@
 
   // ---------- Unsubmitted changes to the Goals and Action plans ----------
   function s1Snapshot(){
-    return JSON.stringify([data.name||'', data.designation||'', data.location||'', data.goals.map(g=>[g.area||'', g.action||'', g.review||''])]);
+    return JSON.stringify([data.name||'', data.designation||'', data.location||'', data.goals.map((g,i)=>[g.area||'', g.action||'', g.review||'', goalType(g,i)])]);
   }
   function updateDirtyNote(){
     const el = document.getElementById('dirtyNote'); if(!el) return;
