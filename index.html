@@ -92,7 +92,27 @@
   .sub-msg.err{color:var(--accent)} .sub-msg.ok{color:var(--ok)}
   /* print-only table */
   #printView{display:none}
-  @media (max-width:760px){.grid3,.grid3.signoff,.goal-b.cols3,.goal-b.cols2{grid-template-columns:1fr}.steps{flex-direction:column}.steps button{border-right:0;border-bottom:1px solid var(--line)}}
+  @media (max-width:760px){
+    .grid3,.grid3.signoff,.goal-b.cols3,.goal-b.cols2{grid-template-columns:1fr}
+    .steps{flex-direction:column}.steps button{border-right:0;border-bottom:1px solid var(--line)}
+    /* one column: put each heading directly above its own box */
+    .goal-b.cols3>:nth-child(1),.grid3>:nth-child(1){order:1}
+    .goal-b.cols3>:nth-child(4),.grid3>:nth-child(4){order:2}
+    .goal-b.cols3>:nth-child(2),.grid3>:nth-child(2){order:3}
+    .goal-b.cols3>:nth-child(5),.grid3>:nth-child(5){order:4}
+    .goal-b.cols3>:nth-child(3),.grid3>:nth-child(3){order:5}
+    .goal-b.cols3>:nth-child(6),.grid3>:nth-child(6){order:6}
+    /* 2-column cards: left (read-only) column first, then the boxes to fill in */
+    .goal-b.cols2>:nth-child(1){order:1}.goal-b.cols2>:nth-child(3){order:2}
+    .goal-b.cols2>:nth-child(5){order:3}.goal-b.cols2>:nth-child(7){order:4}
+    .goal-b.cols2>:nth-child(2){order:5}.goal-b.cols2>:nth-child(4){order:6}
+    .goal-b.cols2>:nth-child(6){order:7}.goal-b.cols2>:nth-child(8){order:8}
+    .goal-b>textarea,.goal-b>.ref,.goal-b>select{margin-bottom:16px!important}
+    .goal-b>:last-child,.goal-b.cols3>:nth-child(6),.goal-b.cols2>:nth-child(8){margin-bottom:0!important}
+    .grid3>input,.grid3>select{margin-bottom:14px}
+    .grid3>span:empty{display:none}
+    .toolbar{flex-direction:column;align-items:stretch}
+  }
   @media print{
     @page{size:A4 landscape;margin:12mm 0 5mm 0}
     @page :first{margin:0}
