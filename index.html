@@ -319,7 +319,7 @@
     document.querySelectorAll('#role button').forEach(b=>b.classList.toggle('on', b.dataset.role===data.role));
     document.querySelector('#steps [data-s="3"]').classList.toggle('locked', !isHT());
     // Progress review only opens once the Goals and Action plans have been submitted (HT can always open)
-    const s1done = !!data.s1SubmittedAt;
+    const s1done = !!data.s1SubmittedAt || !!data.s1FromPdf;
     document.querySelector('#steps [data-s="2"]').classList.toggle('locked', !canOpen(2));
     document.getElementById('btnNext1').style.display = s1done ? '' : 'none';
     if(!canOpen(data.stage)) data.stage = 1;
@@ -327,7 +327,7 @@
     renderPrint();
   }
 
-  function canOpen(n){ return +n === 1 || isHT() || !!data.s1SubmittedAt; }
+  function canOpen(n){ return +n === 1 || isHT() || !!data.s1SubmittedAt || !!data.s1FromPdf; }
   function showStage(n, quiet){
     if(!canOpen(n)){ subMsg('Submit your Goals and Action plans first. The Progress review opens after that (usually mid-year).', 'err'); n = 1; quiet = true; }
     data.stage = +n;
@@ -437,8 +437,12 @@
     data = Object.assign({stage:1, goals:[]}, obj); delete data.v; data.role = role;
     data.goals = (data.goals||[]).map(g=>Object.assign(blankGoal(), g));
     while(data.goals.length<4) data.goals.push(blankGoal());
-    if(!canOpen(data.stage)) data.stage = 1;
+    // A complete plan reopened from the teacher's PDF unlocks the Progress review and goes straight to it
+    const complete = data.goals.slice(0,4).every(g=>(g.area||'').trim() && (g.action||'').trim());
+    if(complete){ data.s1FromPdf = true; data.stage = 2; }
+    else if(!canOpen(data.stage)) data.stage = 1;
     save(); render();
+    window.scrollTo({top:document.getElementById('steps').offsetTop-10, behavior:'smooth'});
   }
   let pdfjsReady;
   function loadPdfJs(){
@@ -471,7 +475,7 @@
     flash('Opening…', 60000);
     try{
       const obj = /\.pdf$/i.test(f.name) || f.type==='application/pdf' ? await readPdf(f) : JSON.parse(await f.text());
-      applyLoaded(obj); flash('Opened — you can keep editing', 4000);
+      applyLoaded(obj); flash(data.stage===2 ? 'Opened — carry on with your Progress review' : 'Opened — you can keep editing', 5000);
     }catch(err){ flash('', 1); window.alert(err.message || 'Could not open that file.'); }
   };
   function confirmSafe(msg){ try{ return window.confirm(msg); }catch(e){ return true; } }
