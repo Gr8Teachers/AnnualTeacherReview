@@ -139,6 +139,6 @@ The header is required: without it the form can't read the reply and will show "
 
 ## How it behaves in the form
 
-- Submit checks that Teacher Name, Location, and the area + action strategies for Goals 1–4 are filled in.
+- Submit checks that every field in Goals and Action plans is filled in (name, designation, location, and area / action / review strategies for every goal).
 - After submitting, teachers can keep editing their Goals and Action plans and click **Resubmit Goals and Action plans**. Their row in the list is updated (no duplicate).
 - Until `SUBMIT_URL` is set, the button tells teachers to use **Save a PDF copy for me** and email it instead.

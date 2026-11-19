@@ -83,6 +83,8 @@
   .sub-banner{border:1px solid #b7dcc8;background:#eef8f2;color:#165c3a;border-radius:8px;padding:10px 14px;font-size:14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
   .submit-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:36px}
   .submit-row .btn{padding:11px 18px;font-size:14px}
+  .req{color:var(--accent);font-weight:bold}
+  .missing{border-color:var(--accent)!important;background:#fff6f7!important}
   .sub-msg{font-size:13px;margin-top:8px;min-height:18px}
   .sub-msg.err{color:var(--accent)} .sub-msg.ok{color:var(--ok)}
   /* print-only table */
@@ -150,7 +152,7 @@
   <!-- Employee details -->
   <section class="card">
     <div class="grid3">
-      <label for="name">Teacher name</label><label for="designation">Designation</label><label for="location">Location</label>
+      <label for="name">Teacher name <span class="req">*</span></label><label for="designation">Designation <span class="req">*</span></label><label for="location">Location <span class="req">*</span></label>
       <input type="text" id="name" data-k="name"><select id="designation" data-k="designation"><option value="">— select —</option><option>Teacher ESOL - Full Time</option><option>Teacher ESOL - Part Time</option><option>Teacher ESOL - Casual</option></select><select id="location" data-k="location"><option value="">— select —</option><option>St Leonards</option><option>Campsie</option></select>
     </div>
   </section>
@@ -272,9 +274,9 @@
       <div class="goal">
         <div class="goal-h"><span>${title(g,i)}</span>${i>=GOAL_NAMES.length?`<button class="x" type="button" data-del="${i}">Remove</button>`:''}</div>
         <div class="goal-b cols3">
-          <label>Area to be developed</label>
-          <label>Action strategies <span class="hint">(what, when, who responsible)</span></label>
-          <label>Review strategies <span class="hint">(how and when to be reviewed)</span></label>
+          <label>Area to be developed <span class="req">*</span></label>
+          <label>Action strategies <span class="req">*</span> <span class="hint">(what, when, who responsible)</span></label>
+          <label>Review strategies <span class="req">*</span> <span class="hint">(how and when to be reviewed)</span></label>
           <textarea data-g="${i}" data-f="area" placeholder="${esc(areaHint(i))}">${esc(g.area)}</textarea>
           <textarea data-g="${i}" data-f="action">${esc(g.action)}</textarea>
           <textarea data-g="${i}" data-f="review">${esc(g.review)}</textarea>
@@ -332,6 +334,7 @@
     document.getElementById('btnClear').disabled = locked && !isHT();
     document.getElementById('s1banner').innerHTML = data.s1SubmittedAt ? `<div class="sub-banner"><span>✓ Goals and Action plans submitted on ${esc(new Date(data.s1SubmittedAt).toLocaleString('en-AU',{dateStyle:'medium',timeStyle:'short'}))}. You can still make changes and click Resubmit.</span></div>` : '';
     updateDirtyNote();
+    if(showMissing) markMissing();
     document.getElementById('lockmsg').style.display = isHT() ? 'none' : 'block';
 
     // role + steps
@@ -417,6 +420,7 @@
     else if(el.dataset.k){ data[el.dataset.k] = el.value; }
     else return;
     save(); renderPrint(); updateDirtyNote();
+    if(showMissing && el.matches('#name,#designation,#location,#s1goals textarea')) el.classList.toggle('missing', !(el.value||'').trim());
   });
   document.addEventListener('click', e=>{
     const b = e.target.closest('button'); if(!b) return;
@@ -457,7 +461,7 @@
     data.goals = (data.goals||[]).map(g=>Object.assign(blankGoal(), g));
     while(data.goals.length<4) data.goals.push(blankGoal());
     // A complete plan reopened from the teacher's PDF unlocks the Progress review (teacher clicks Next)
-    const complete = data.goals.slice(0,4).every(g=>(g.area||'').trim() && (g.action||'').trim());
+    const complete = s1Missing().length === 0;
     data.s1Hash = s1Snapshot();   // treat the reopened PDF as what is on the list
     if(complete) data.s1FromPdf = true;   // unlocks Next / Progress review
     data.stage = 1;                        // always land on Goals and Action plans first
@@ -517,12 +521,28 @@
   // ---------- Submit Step 1 ----------
   function subMsg(t, cls){ const m=document.getElementById('subMsg'); m.textContent=t; m.className='sub-msg'+(cls?' '+cls:''); }
   function goalText(g){ return `Area to be developed:\n${g.area||''}\n\nAction strategies:\n${g.action||''}\n\nReview strategies:\n${g.review||''}`; }
-  async function submitStep1(skipConfirm){
+  const FIELD_NAMES = {area:'area to be developed', action:'action strategies', review:'review strategies'};
+  function s1Missing(){
     const missing = [];
     if(!(data.name||'').trim()) missing.push('Teacher name');
     if(!['Teacher ESOL - Full Time','Teacher ESOL - Part Time','Teacher ESOL - Casual'].includes(data.designation||'')) missing.push('Designation');
     if(!['St Leonards','Campsie'].includes(data.location||'')) missing.push('Location');
-    data.goals.slice(0,4).forEach((g,i)=>{ if(!(g.area||'').trim() || !(g.action||'').trim()) missing.push(`Goal ${i+1} area and action strategies`); });
+    data.goals.forEach((g,i)=>{
+      const gaps = ['area','action','review'].filter(f=>!(g[f]||'').trim()).map(f=>FIELD_NAMES[f]);
+      if(gaps.length) missing.push(`Goal ${i+1} (${gaps.join(', ')})`);
+    });
+    return missing;
+  }
+  let showMissing = false;
+  function markMissing(){
+    showMissing = true;
+    document.querySelectorAll('#name,#designation,#location,#s1goals textarea').forEach(el=>{
+      el.classList.toggle('missing', showMissing && !(el.value||'').trim());
+    });
+  }
+  async function submitStep1(skipConfirm){
+    const missing = s1Missing();
+    markMissing();
     if(missing.length){ subMsg('Please fill in: ' + missing.join(', ') + '.', 'err'); return false; }
     if(!SUBMIT_URL){ subMsg('Submitting isn\'t set up yet. Use Save a PDF copy for me and email it to your Head Teacher for now.', 'err'); return false; }
     if(skipConfirm !== true && !confirmSafe('Submit your Goals and Action plans to your Head Teacher?')) return false;
