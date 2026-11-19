@@ -81,6 +81,8 @@
   .modal-box .err{color:var(--accent);font-size:13px;min-height:18px;margin:6px 0 10px}
   .modal-box .row{display:flex;gap:8px;justify-content:flex-end}
   .sub-banner{border:1px solid #b7dcc8;background:#eef8f2;color:#165c3a;border-radius:8px;padding:10px 14px;font-size:14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .submit-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:36px}
+  .submit-row .btn{padding:11px 18px;font-size:14px}
   .sub-msg{font-size:13px;margin-top:8px;min-height:18px}
   .sub-msg.err{color:var(--accent)} .sub-msg.ok{color:var(--ok)}
   /* print-only table */
@@ -166,8 +168,9 @@
     <p class="stage-intro">Set out each goal you want to develop, what you'll do about it, and how it will be reviewed.</p>
     <div id="s1goals"></div>
     <button class="btn" type="button" id="addGoal">+ Add another goal</button>
-    <div class="nav"><span style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="button" id="btnSubmit1">Submit Goals and Action plans</button><button class="btn" type="button" id="btnPdf1">Save a PDF copy for me</button></span><button class="btn" type="button" data-go="2" id="btnNext1">Next: Progress review →</button></div>
-    <div class="sub-msg" id="subMsg"></div>
+    <div class="submit-row"><button class="btn primary" type="button" id="btnSubmit1">Submit Goals and Action plans</button><button class="btn" type="button" id="btnPdf1">Save a PDF copy for me</button></div>
+    <div class="sub-msg" id="subMsg" style="text-align:center"></div>
+    <div class="nav"><span></span><button class="btn" type="button" data-go="2" id="btnNext1">Next: Progress review →</button></div>
   </section>
 
   <!-- STAGE 2 -->
