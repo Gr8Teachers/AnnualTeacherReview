@@ -29,9 +29,11 @@
   :disabled{background:#f1f1f1;color:#888;cursor:not-allowed}
 
   .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:18px}
-  .role{display:flex;gap:0;border:1px solid var(--dark);border-radius:6px;overflow:hidden}
-  .role button{border:0;background:#fff;padding:8px 14px;font:inherit;font-size:13px;cursor:pointer}
+  .role{display:inline-flex;gap:0;border:1px solid var(--dark);border-radius:6px;overflow:hidden;background:#fff}
+  .role button{-webkit-appearance:none;appearance:none;border:0;border-radius:0;background:#fff;color:var(--ink);padding:8px 14px;font:inherit;font-size:13px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .role button+button{border-left:1px solid var(--dark)}
   .role button.on{background:var(--dark);color:#fff}
+  .btn{-webkit-appearance:none;appearance:none}
   .actions{display:flex;gap:8px;flex-wrap:wrap}
   .btn{border:1px solid var(--dark);background:#fff;color:var(--dark);border-radius:6px;padding:8px 12px;font:inherit;font-size:13px;cursor:pointer}
   .btn.primary{background:var(--dark);color:#fff}
@@ -131,6 +133,12 @@
     .grid3>input,.grid3>select,.grid3>.ref{margin-bottom:14px}
     .grid3>span:empty{display:none}
     .toolbar{flex-direction:column;align-items:stretch}
+    .role{display:flex}
+    .role button{flex:1;padding:11px 10px;font-size:15px;text-align:center}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+    .actions .btn{width:100%;padding:11px 8px;font-size:14px}
+    .actions #saved{grid-column:1/-1;order:10;min-width:0;text-align:center;min-height:0}
+    .actions .btn.danger{grid-column:1/-1}
   }
   /* print layout (only #printView uses these; it is hidden on screen except while measuring) */
     .pf{page:arform;position:relative;z-index:2;background:#fff;width:210mm;height:295mm;overflow:hidden;break-after:page;break-inside:avoid;font-family:Arial,"Liberation Sans",Helvetica,sans-serif;font-size:11pt;color:#000;line-height:4.45mm}
