@@ -163,6 +163,8 @@
     .pv th{background:#D0CDED;color:#252525;font-weight:normal;text-align:center;vertical-align:middle;height:9.47mm;line-height:4.55mm}
     .pv td{font-family:"Times New Roman","Liberation Serif",Times,serif;color:#000;height:20.1mm;line-height:4.45mm;white-space:pre-wrap;word-wrap:break-word}
     .pv tr{break-inside:avoid}
+    .pv table.pv-overall{margin-top:-.5pt}
+    .pv table.pv-overall td{height:auto;min-height:0;padding:0}
     .pv-keep{break-inside:avoid;page-break-inside:avoid}
     .pv-after{position:relative;height:14.5mm;margin-top:.4mm}
     .pv-notes{margin:4.8mm 16.7mm 0 20mm}
@@ -540,7 +542,7 @@
     };
     const rows = d.goals.map(g=>`<tr><td>${cell(g.area)}</td><td>${cell(g.action)}</td><td>${cell(g.review)}</td><td>${reviewCell(g)}</td></tr>`).join('');
     const lmName = [esc(d.htName), d.htSign?`<span class="pv-sig">${esc(d.htSign)}</span>`:''].filter(Boolean).join(' &nbsp; ');
-    const hasHT = !!(d.htOverall||'').trim();   // outcomes/comments now print on page 1; page 2 only for overall comments
+    const hasHT = !!(d.htOverall||'').trim();   // overall comments print in a box directly under the plan table
     const htRows = d.goals.map((g,i)=>`<tr><td>${esc(title(g,i))}${g.area?'\n'+esc(g.area):''}</td><td>${esc(g.outcome)}</td><td>${esc(g.htComment)}</td></tr>`).join('');
     const signoff = `<div class="pv-keep">
       <div class="pv-after">
@@ -580,14 +582,8 @@
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
+      ${hasHT?`<table class="pv-overall"><tbody><tr><td><b>Overall comments (Head Teacher):</b>\n${esc(d.htOverall)}</td></tr></tbody></table>`:''}
       ${signoff}
-      ${hasHT?`<div class="pv-p2">
-        <h3>Final Review (Head Teacher)</h3>
-        <table><thead><tr><th>Overall comments</th></tr></thead>
-          <tbody><tr><td>${esc(d.htOverall)}</td></tr></tbody>
-        </table>
-        <div style="height:4mm"></div>
-        ${signoff}</div>`:''}
     </div>`;
   }
 
