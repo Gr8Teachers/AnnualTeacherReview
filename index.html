@@ -130,7 +130,7 @@
     @page :first{margin:0}
     @page arform{size:A4 portrait;margin:0}
     @page planp{size:A4 landscape;margin:0}
-    .pf{page:arform;position:relative;width:210mm;height:297mm;overflow:hidden;break-after:page;font-family:Arial,"Liberation Sans",Helvetica,sans-serif;font-size:11pt;color:#000;line-height:4.45mm}
+    .pf{page:arform;position:relative;width:210mm;height:295mm;overflow:hidden;break-after:page;break-inside:avoid;font-family:Arial,"Liberation Sans",Helvetica,sans-serif;font-size:11pt;color:#000;line-height:4.45mm}
     .pf *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .pf-a{position:absolute;white-space:nowrap}
     .pf-t{background:#9185BD;color:#fff;font-size:18pt;letter-spacing:.7pt;display:inline-block;transform:scaleX(1.05);transform-origin:0 0;line-height:7.3mm}
@@ -142,7 +142,8 @@
     .pf-kic{font-family:Calibri,Carlito,sans-serif;font-size:9pt;line-height:3.9mm}
     .pf-kic mark{background:#00FF00;color:inherit}
     body.print-full .pv{page:planp}
-    html,body{background:#fff;margin:0;padding:0}
+    html,body{background:#fff;margin:0;padding:0;height:auto!important;min-height:0!important}
+    #printView>:last-child,.pv>:last-child{margin-bottom:0!important;break-after:auto}
     .wrap{max-width:none;padding:0;margin:0}
     .wrap>*:not(#printView){display:none!important}
     #printView{display:block}
