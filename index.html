@@ -558,7 +558,10 @@
       if(!res.ok) throw new Error('HTTP ' + res.status);
       let out = await res.json();
       if(out && !Array.isArray(out)) out = out.value || out.body || [];
-      impItems = out.map(r=>({name:r.name||r.Title||'', location:r.location||r.Location||'', submittedOn:r.submittedOn||r.SubmittedOn||'', planJson:r.planJson||r.PlanJSON||''}))
+      // Accept either the Select output (name/location/submittedOn/planJson) or raw Get items rows
+      // (Title / Location / Submitted On / Plan JSON, whatever SharePoint's internal column names are).
+      const pick = (r, ...names)=>{ for(const k of Object.keys(r)){ const n = k.replace(/_x0020_/gi,'').replace(/[^a-z0-9]/gi,'').toLowerCase(); if(names.includes(n) && r[k] != null && typeof r[k] !== 'object') return String(r[k]); } return ''; };
+      impItems = out.map(r=>({name:pick(r,'name','title','teachername'), location:pick(r,'location'), submittedOn:pick(r,'submittedon'), planJson:pick(r,'planjson')}))
         .filter(r=>r.name).sort((a,b)=>a.name.localeCompare(b.name));
       impRender();
     }catch(err){

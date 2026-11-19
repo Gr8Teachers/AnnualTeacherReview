@@ -161,23 +161,17 @@ Head Teachers can click **Import from MS List** (visible in Head Teacher mode) t
 
 2. **SharePoint *Get items***
    - **Site Address / List Name:** the same Annual Teacher Review list
-   - **Top Count:** `500`
+   - **Top Count:** `500` (under *Advanced parameters* / *Show all*)
 
-3. **Data operation *Select***
-   - **From:** `value` (from Get items)
-   - Add these four rows (key → value, values picked from Get items dynamic content):
-
-   | Key | Value |
-   |---|---|
-   | `name` | Title (Teacher Name) |
-   | `location` | Location |
-   | `submittedOn` | Submitted On |
-   | `planJson` | Plan JSON |
-
-4. **Response**
+3. **Response**
+   - Click **+** under Get items → **Add an action** → search **Response** (it's under *Request*).
    - **Status Code:** `200`
-   - **Headers:** `Access-Control-Allow-Origin` = `*` and `Content-Type` = `application/json`
-   - **Body:** `Output` (from Select)
+   - **Headers:** `Access-Control-Allow-Origin` = `*`
+   - **Body:** click in the box → ⚡ lightning icon → under **Get items** choose **body/value** (shown as `value`).
+
+That's all; the form picks out Teacher Name, Location, Submitted On and Plan JSON itself.
+
+*Optional (smaller, faster reply):* if you see a **Select** action (search "Select", connector **Data Operation**), you can put it between Get items and Response, with **From** = `value` and rows `name` → Title, `location` → Location, `submittedOn` → Submitted On, `planJson` → Plan JSON, then use its **Output** as the Response body. It isn't required.
 
 **Save**, then copy the **HTTP URL** from the trigger.
 
