@@ -2,7 +2,7 @@
 
 Annual Review Development Plan form in three stages:
 
-1. Goals & action plan (teacher)
+1. Goals and Action plans (teacher)
 2. Progress review (teacher)
 3. Final review (Head Teacher only)
 

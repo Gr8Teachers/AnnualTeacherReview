@@ -153,7 +153,7 @@
   </section>
 
   <nav class="steps" id="steps">
-    <button type="button" data-s="1" class="on"><span class="n">1</span><span class="t">Goals &amp; action plan</span><span class="s">Teacher · start of year</span></button>
+    <button type="button" data-s="1" class="on"><span class="n">1</span><span class="t">Goals and Action plans</span><span class="s">Teacher · start of year</span></button>
     <button type="button" data-s="2"><span class="n">2</span><span class="t">Progress review</span><span class="s">Teacher · mid year</span></button>
     <button type="button" data-s="3" class="locked"><span class="n">3</span><span class="t">Final review</span><span class="s">Head Teacher only</span></button>
   </nav>
@@ -164,7 +164,7 @@
     <p class="stage-intro">Set out each goal you want to develop, what you'll do about it, and how it will be reviewed.</p>
     <div id="s1goals"></div>
     <button class="btn" type="button" id="addGoal">+ Add another goal</button>
-    <div class="nav"><button class="btn primary" type="button" id="btnSubmit1">Submit Step 1 to Head Teacher</button><button class="btn" type="button" data-go="2">Next: Progress review →</button></div>
+    <div class="nav"><button class="btn primary" type="button" id="btnSubmit1">Submit Goals and Action plans</button><button class="btn" type="button" data-go="2">Next: Progress review →</button></div>
     <div class="sub-msg" id="subMsg"></div>
   </section>
 
@@ -309,10 +309,10 @@
     document.querySelectorAll('#s1goals textarea').forEach(el=>{ el.disabled = locked; });
     document.querySelectorAll('#s1goals [data-del]').forEach(el=>{ el.style.display = locked ? 'none' : ''; });
     ['addGoal','name','designation','location'].forEach(id=>{ document.getElementById(id).disabled = locked; });
-    document.getElementById('btnSubmit1').textContent = data.s1SubmittedAt ? 'Resubmit Step 1' : 'Submit Step 1 to Head Teacher';
+    document.getElementById('btnSubmit1').textContent = data.s1SubmittedAt ? 'Resubmit Goals and Action plans' : 'Submit Goals and Action plans';
     document.getElementById('btnSubmit1').disabled = locked;
     document.getElementById('btnClear').disabled = locked && !isHT();
-    document.getElementById('s1banner').innerHTML = data.s1SubmittedAt ? `<div class="sub-banner"><span>✓ Step 1 submitted on ${esc(new Date(data.s1SubmittedAt).toLocaleString('en-AU',{dateStyle:'medium',timeStyle:'short'}))}. You can still make changes and click Resubmit.</span></div>` : '';
+    document.getElementById('s1banner').innerHTML = data.s1SubmittedAt ? `<div class="sub-banner"><span>✓ Goals and Action plans submitted on ${esc(new Date(data.s1SubmittedAt).toLocaleString('en-AU',{dateStyle:'medium',timeStyle:'short'}))}. You can still make changes and click Resubmit.</span></div>` : '';
     document.getElementById('lockmsg').style.display = isHT() ? 'none' : 'block';
 
     // role + steps
@@ -448,12 +448,12 @@
     data.goals.slice(0,4).forEach((g,i)=>{ if(!(g.area||'').trim() || !(g.action||'').trim()) missing.push(`Goal ${i+1} area and action strategies`); });
     if(missing.length){ subMsg('Please fill in: ' + missing.join(', ') + '.', 'err'); return; }
     if(!SUBMIT_URL){ subMsg('Submitting isn\'t set up yet. Use Save file and send it to your Head Teacher for now.', 'err'); return; }
-    if(!confirmSafe('Submit Step 1 to your Head Teacher?')) return;
+    if(!confirmSafe('Submit your Goals and Action plans to your Head Teacher?')) return;
     const btn = document.getElementById('btnSubmit1'); btn.disabled = true; subMsg('Submitting…');
     const now = new Date().toISOString();
     const payload = {
       teacherName: data.name.trim(), designation: data.designation||'', location: data.location||'',
-      stage: 'Step 1 - Goals & action plan', submittedOn: now,
+      stage: 'Goals and Action plans', submittedOn: now,
       goal1: goalText(data.goals[0]), goal2: goalText(data.goals[1]), goal3: goalText(data.goals[2]), goal4: goalText(data.goals[3]),
       otherGoals: data.goals.slice(4).map((g,i)=>`Goal ${i+5}\n`+goalText(g)).join('\n\n----\n\n'),
       planJson: JSON.stringify(Object.assign({}, data, {role:'teacher', s1SubmittedAt: now}))

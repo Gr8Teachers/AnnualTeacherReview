@@ -1,6 +1,6 @@
 # Setting up the Submit button (SharePoint list + Power Automate)
 
-When a teacher clicks **Submit Step 1 to Head Teacher**, the form sends their plan to a Power Automate flow. The flow saves it as one row per teacher in a SharePoint list. Head Teachers (and teachers) open the list to read the plans.
+When a teacher clicks **Submit Goals and Action plans**, the form sends their plan to a Power Automate flow. The flow saves it as one row per teacher in a SharePoint list. Head Teachers (and teachers) open the list to read the plans.
 
 You do this once. It takes about 20 minutes.
 
@@ -133,12 +133,12 @@ The header is required: without it the form can't read the reply and will show "
 ## 4. Test
 
 1. Open the form, fill in Teacher Name, Location and Goals 1–4 (area + action strategies).
-2. Click **Submit Step 1 to Head Teacher**. You should see *"Submitted. Your Head Teacher can now read your plan."*
+2. Click **Submit Goals and Action plans**. You should see *"Submitted. Your Head Teacher can now read your plan."*
 3. Check the SharePoint list for the new row.
 4. Submit again with the same name: the existing row should update (no duplicate).
 
 ## How it behaves in the form
 
 - Submit checks that Teacher Name, Location, and the area + action strategies for Goals 1–4 are filled in.
-- After submitting, teachers can keep editing Step 1 and click **Resubmit Step 1**. Their row in the list is updated (no duplicate).
+- After submitting, teachers can keep editing their Goals and Action plans and click **Resubmit Goals and Action plans**. Their row in the list is updated (no duplicate).
 - Until `SUBMIT_URL` is set, the button tells teachers to use **Save file** and email it instead.
