@@ -33,7 +33,7 @@ Goal 1 – Teaching [1], Goal 2 – Teaching [2], Goal 3 – Section Contributio
 
 *Tip:* hide **Plan JSON** from the default view (it's the full saved form, used for reloading a plan, and isn't meant for reading).
 
-**Permissions:** give Head Teachers read access to the list. Every row is created by the flow's account, not by the teacher, so SharePoint can't automatically limit each teacher to their own row. Either give teachers no access (they keep their own copy with **Save file** / **Print / PDF**), or give the whole team read access if everyone may see everyone's plans.
+**Permissions:** give Head Teachers read access to the list. Every row is created by the flow's account, not by the teacher, so SharePoint can't automatically limit each teacher to their own row. Either give teachers no access (they keep their own copy with **Save a PDF copy for me**), or give the whole team read access if everyone may see everyone's plans.
 
 ---
 
@@ -141,4 +141,4 @@ The header is required: without it the form can't read the reply and will show "
 
 - Submit checks that Teacher Name, Location, and the area + action strategies for Goals 1–4 are filled in.
 - After submitting, teachers can keep editing their Goals and Action plans and click **Resubmit Goals and Action plans**. Their row in the list is updated (no duplicate).
-- Until `SUBMIT_URL` is set, the button tells teachers to use **Save file** and email it instead.
+- Until `SUBMIT_URL` is set, the button tells teachers to use **Save a PDF copy for me** and email it instead.
