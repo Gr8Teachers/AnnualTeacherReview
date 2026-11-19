@@ -164,7 +164,7 @@
     <p class="stage-intro">Set out each goal you want to develop, what you'll do about it, and how it will be reviewed.</p>
     <div id="s1goals"></div>
     <button class="btn" type="button" id="addGoal">+ Add another goal</button>
-    <div class="nav"><button class="btn primary" type="button" id="btnSubmit1">Submit Goals and Action plans</button><button class="btn" type="button" data-go="2" id="btnNext1">Next: Progress review →</button></div>
+    <div class="nav"><span style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="button" id="btnSubmit1">Submit Goals and Action plans</button><button class="btn" type="button" id="btnPdf1">Save a PDF copy for me</button></span><button class="btn" type="button" data-go="2" id="btnNext1">Next: Progress review →</button></div>
     <div class="sub-msg" id="subMsg"></div>
   </section>
 
@@ -411,7 +411,16 @@
     }
   });
   document.getElementById('addGoal').onclick = ()=>{ data.goals.push(blankGoal()); save(); render(); };
-  document.getElementById('btnPrint').onclick = ()=>{ renderPrint(); window.print(); };
+  function printPdf(){
+    renderPrint();
+    const t = document.title;
+    const who = (data.name||'').trim();
+    document.title = 'Annual Review Development Plan' + (who ? ' - ' + who : '');  // suggested PDF file name
+    window.print();
+    setTimeout(()=>{ document.title = t; }, 1000);
+  }
+  document.getElementById('btnPrint').onclick = printPdf;
+  document.getElementById('btnPdf1').onclick = printPdf;
   document.getElementById('btnClear').onclick = ()=>{
     if(confirmSafe('Clear all answers on this form?')){ data = {role:data.role, stage:1, goals:[blankGoal(),blankGoal(),blankGoal(),blankGoal()]}; subMsg(''); save(); render(); }
   };
