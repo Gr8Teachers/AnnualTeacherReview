@@ -362,6 +362,7 @@
     // role + steps
     document.querySelectorAll('#role button').forEach(b=>b.classList.toggle('on', b.dataset.role===data.role));
     document.getElementById('btnImport').style.display = isHT() ? '' : 'none';
+    document.getElementById('btnPdf1').textContent = isHT() ? 'Save modified plan' : 'Save a PDF copy for me';
     document.querySelector('#steps [data-s="3"]').classList.toggle('locked', !isHT());
     // Progress review only opens once the Goals and Action plans have been submitted (HT can always open)
     const s1done = !!data.s1SubmittedAt || !!data.s1FromPdf;
@@ -462,7 +463,7 @@
     renderPrint();
     const t = document.title;
     const who = (data.name||'').trim();
-    document.title = 'Annual Review Development Plan' + (who ? ' - ' + who : '');  // suggested PDF file name
+    document.title = 'Annual Review Development Plan' + (who ? ' - ' + who : '') + (isHT() ? ' v2' : '');  // suggested PDF file name (HT copy gets v2)
     window.print();
     setTimeout(()=>{ document.title = t; }, 1000);
   }
