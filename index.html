@@ -262,8 +262,8 @@
   <!-- Employee details -->
   <section class="card">
     <div class="grid3">
-      <label for="lastName">Last name <span class="req">*</span></label><label for="firstName">First name <span class="req">*</span></label><label for="empId">Emp I.D.</label>
-      <input type="text" id="lastName" data-k="lastName" autocomplete="family-name"><input type="text" id="firstName" data-k="firstName" autocomplete="given-name"><input type="text" id="empId" data-k="empId" inputmode="numeric" placeholder="The number on your TAFE card">
+      <label for="lastName">Last name <span class="req">*</span></label><label for="firstName">First name <span class="req">*</span></label><span></span>
+      <input type="text" id="lastName" data-k="lastName" autocomplete="family-name"><input type="text" id="firstName" data-k="firstName" autocomplete="given-name"><span></span>
     </div>
     <div class="grid3" style="margin-top:12px">
       <label for="designation">Designation <span class="req">*</span></label><label for="location">Location <span class="req">*</span></label><span></span>
@@ -1364,7 +1364,7 @@
       const findPlan = r => vals(r).find(v=>/^\s*\{/.test(v) && v.includes('"goals"')) || '';
       const findLoc  = r => vals(r).find(v=>v==='St Leonards' || v==='Campsie') || '';
       const findDate = r => { for(const k of Object.keys(r)){ if(/submit/i.test(k)){ const v = norm(r[k]); if(v) return v; } } return ''; };
-      impItems = out.map(r=>({name:pick(r,'name','title','teachername'), location:pick(r,'location')||findLoc(r), submittedOn:pick(r,'submittedon')||findDate(r), planJson:pick(r,'planjson')||findPlan(r)}))
+      impItems = out.map(r=>({name:pick(r,'name','title','teachername'), location:pick(r,'location')||findLoc(r), submittedOn:pick(r,'submittedon')||findDate(r), planJson:pick(r,'planjson')||findPlan(r), empId:pick(r,'empid','employeeid','empidno')}))
         .filter(r=>r.name).sort((a,b)=>a.name.localeCompare(b.name));
       impRender();
     }catch(err){
@@ -1390,6 +1390,7 @@
     let obj; try{ obj = JSON.parse(it.planJson.replace(/[\u200b\u00a0]/g,' ')); }catch(err){ impErr.textContent = it.planJson ? 'That row\'s Plan JSON couldn\'t be read. In SharePoint, set the Plan JSON column to plain text (not rich text) and resubmit.' : 'That row has no readable plan (Plan JSON column is empty).'; return; }
     const hasWork = data.name || data.goals.some(g=>g.area||g.action||g.review||g.progress);
     if(hasWork && !confirmSafe(`Replace what is on the form now with ${it.name}'s submission?`)) return;
+    if(it.empId) obj.empId = it.empId;
     applyLoaded(obj); impClose(); flash(`Imported ${it.name}'s plan`, 5000);
   });
 

@@ -18,6 +18,7 @@ You do this once. It takes about 20 minutes.
 | Column name   | Type                                   |
 |---------------|----------------------------------------|
 | Teacher       | Person (allow people only, one person) |
+| Emp ID        | Single line of text                    |
 | Designation   | Single line of text                    |
 | Location      | Single line of text                    |
 | Stage         | Single line of text                    |
@@ -94,6 +95,7 @@ Field mapping (both actions):
 |---------------|-------------------------|
 | Teacher Name (Title) | teacherName |
 | Teacher **Claims** (Person column) | see part 8 |
+| Emp ID        | see part 8 |
 | Designation   | designation |
 | Location      | location |
 | Stage         | stage |
@@ -219,11 +221,13 @@ The **Title** (Teacher Name) column can't be changed into a Person column, so th
 | Title → rename to **Last Name** | (built-in) |
 | **First Name** | Single line of text |
 | **Staff** | Person (one person) |
+| **Emp ID** | Single line of text |
 
 Add one row per teacher, with the names spelled the way teachers will type them on the form.
 
-### 8b. Add the Person column to Annual Teacher Review
-**+ Add column → Person** → name it **Teacher** (allow one person).
+### 8b. Add columns to Annual Teacher Review
+- **+ Add column → Person** → name it **Teacher** (allow one person).
+- **+ Add column → Single line of text** → name it **Emp ID**.
 
 ### 8c. Change the submit flow
 1. **Parse JSON**: add to the schema, under `teacherName`:
@@ -238,9 +242,12 @@ Add one row per teacher, with the names spelled the way teachers will type them 
    - **Top Count:** `1`
 3. In **Update item** and **Create item**, set **Teacher Claims** to this expression:
    `first(body('Get_staff')?['value'])?['Staff']?['Claims']`
+   and set **Emp ID** to:
+   `first(body('Get_staff')?['value'])?['Emp_x0020_ID']`
 4. **Save.** The read flow doesn't change.
 
 ### Things to know
 - Matching isn't case-sensitive, but spelling must match the Staff list (e.g. *Jen* vs *Jennifer*). If there's no match, Teacher is left empty and the row still saves; fix the Staff list or pick the person by hand. If your flow errors on an empty match instead, wrap the expression: `if(empty(body('Get_staff')?['value']), null, first(body('Get_staff')?['value'])?['Staff']?['Claims'])`.
 - Rows submitted earlier stay empty until the teacher resubmits (or you pick the person by hand).
 - With Teacher filled you can filter or group by teacher, use Quick Steps, or build a *When an item is created or modified* flow that emails the Teacher when Stage changes to *v2 by HT*.
+- Teachers no longer enter their Emp I.D. When the Head Teacher uses **Import from MS List**, the Emp ID from the row is filled in automatically and appears on the Annual Review Form (step 4). The Head Teacher can still type or correct it in step 4.
