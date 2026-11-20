@@ -410,7 +410,7 @@
   // Paste the HTTP POST URL from your Power Automate flow between the quotes (see SETUP-SHAREPOINT.md).
   const SUBMIT_URL = 'https://default1953722255d7458184fbc2da6e835c.74.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/10/workflows/f1088705844148c0bcdfbdef57f575ea/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=cOyLY624l4NKlCzRe8v1Jt7aPVuPvIBujm-lLJ41mMY';
   // ------------------------------------------
-  const REVIEW_HOW = ['', 'Meeting with HT', 'Present at Staff meeting', 'Peer feedback', 'Student feedback', 'Self reflection', 'Other'];
+  const REVIEW_HOW = ['', 'Meeting with HT', 'PD at Staff meeting', 'Peer feedback', 'Student feedback', 'Self reflection', 'Other'];
   const REVIEW_BY  = ['', 'End of Term 1', 'End of Term 2', 'End of Term 3', 'End of Term 4', 'Ongoing'];
   // Review strategies are stored in three parts; g.review keeps the combined text used by the printout, list and step 5
   function composeReview(g){
@@ -419,6 +419,7 @@
     g.review = [head, note].filter(Boolean).join('\n');
   }
   function migrateReview(g){
+    if(g.reviewHow === 'Present at Staff meeting') g.reviewHow = 'PD at Staff meeting';   // renamed option
     if(g.reviewHow === undefined && g.reviewBy === undefined && g.reviewNote === undefined){
       g.reviewHow = ''; g.reviewBy = ''; g.reviewNote = g.review || '';   // older plans: keep the old text as the comment
     }
