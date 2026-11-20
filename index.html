@@ -129,6 +129,7 @@
   .rev-l{display:flex!important;flex-direction:column;gap:4px;margin:0!important}
   .rev-l select{height:38px!important;font-size:13px!important;padding:4px 6px!important;font-weight:normal;text-transform:none;letter-spacing:0}
   .rev-box textarea{min-height:70px!important;flex:1}
+  .goal-h-r{display:flex;gap:10px;align-items:center}
   .sub-msg{font-size:13px;margin-top:8px;min-height:18px}
   .sub-msg.err{color:var(--accent)} .sub-msg.ok{color:var(--ok)}
   /* print-only table */
@@ -478,7 +479,7 @@
     // stage 1
     document.getElementById('s1goals').innerHTML = data.goals.map((g,i)=>`
       <div class="goal">
-        <div class="goal-h"><span>${isHT() ? typePicker(g,i) : esc(title(g,i))}</span>${i>=GOAL_NAMES.length?`<button class="x" type="button" data-del="${i}">Remove</button>`:''}</div>
+        <div class="goal-h"><span>${isHT() ? typePicker(g,i) : esc(title(g,i))}</span><span class="goal-h-r"><button type="button" class="sugg" data-idea="${i}" title="Fill in an example goal and action strategies for this type of goal">✨ Ideas</button>${i>=GOAL_NAMES.length?`<button class="x" type="button" data-del="${i}">Remove</button>`:''}</span></div>
         <div class="goal-b cols3">
           <label>Area to be developed <span class="req">*</span></label>
           <label>Action strategies <span class="req">*</span> <span class="hint">(what, when, who responsible)</span></label>
@@ -921,6 +922,80 @@
     if(missing.length) bits.push(`choose an Outcome for ${missing.join(', ')}`);
     msgIn('subMsg3', bits.join(' · ') + '.', missing.length && !done ? 'err' : 'ok');
   };
+
+  // ---------- Teacher: example goals + matching action strategies (built in, no internet needed) ----------
+  const IDEAS = {
+    teaching: [
+      ['Improve my ESL students’ speaking accuracy through more targeted error correction (grammar and pronunciation).',
+       'Build short error-correction activities into speaking tasks every week (Terms 1–4). Keep a log of common errors and recycle them in later lessons. Discuss strategies with a colleague (me, ongoing).'],
+      ['Use digital tools (e.g. Microsoft Forms, Quizlet, Padlet) to give my learners more language practice in and out of class.',
+       'Trial one new digital tool with my class each term (me). Run a short student feedback survey at the end of each term. Share what worked at a staff meeting in Term 3.'],
+      ['Strengthen my pronunciation teaching for lower-level learners.',
+       'Plan a weekly 15-minute pronunciation focus (sounds, stress, intonation) from Term 2. Use recordings so students can hear their own progress. Ask a colleague to observe one lesson and give feedback.'],
+      ['Differentiate activities for my mixed-level ESL classes.',
+       'Prepare core and extension versions of key tasks each week (me, Terms 1–4). Group students flexibly by task. Review how this is working with my HT at the end of Term 2.'],
+      ['Develop my learners’ English writing through clearer feedback.',
+       'Introduce a simple feedback code for writing tasks from Term 1. Give students class time to redraft. Track improvement across two assessments (me, Terms 1–3).'],
+      ['Increase learner independence and use of self-study resources.',
+       'Show students how to use AMEPOnline and other self-study sites in Term 1. Set short weekly independent tasks. Check progress with students each month (me).'],
+      ['Incorporate more games and interactive activities into my lessons.',
+       'Add at least one communicative game a week linked to the unit’s language (me, Terms 1–4). Collect activities in a shared folder. Ask students which activities help them most.'],
+      ['Build learners’ confidence using English in real-life tasks (e.g. phone calls, forms, appointments).',
+       'Plan one real-life task per unit using authentic materials (me). Invite a guest speaker or plan an excursion in Term 3. Gather student feedback after each task.']
+    ],
+    section: [
+      ['Help keep the ESL resource room / archive room organised and easy to use.',
+       'Sort and label ESL resources by CSWE / EAL level once a term (me). Set up a simple sign-out list in Term 1. Let colleagues know about new readers and listening materials at staff meetings.'],
+      ['Share ESL teaching resources and ideas with colleagues.',
+       'Upload my best ESL worksheets, slides and listening tasks to the shared drive each term, sorted by level (me). Present one resource or activity at a staff meeting in Term 2 or 3.'],
+      ['Support colleagues to use technology in their ESL classes.',
+       'Run a short drop-in session on a digital tool for language practice (e.g. Forms quizzes, Padlet, AMEPOnline) in Term 2 (me). Write a one-page how-to guide for the shared drive.'],
+      ['Help organise a multicultural section event for students.',
+       'Help plan an event (e.g. Harmony Day, end-of-term celebration) with the team, building in speaking and listening tasks for students (me and colleagues). Share photos and feedback afterwards.'],
+      ['Support consistent assessing and moderation of EAL assessments.',
+       'Take part in moderation sessions each term (me). Help collect benchmark samples of student speaking and writing at each level. Share notes with the team.'],
+      ['Conduct a PD session for the ESL team.',
+       'Choose an ESL topic I can share (e.g. error correction, teaching pronunciation, using AI to make materials). Prepare a short session for a staff meeting in Term 3 (me). Collect feedback from colleagues.']
+    ],
+    personal: [
+      ['Improve my IT skills for creating ESL materials (e.g. Word, Forms, Canva, Teams).',
+       'Complete one LinkedIn Learning or TAFE online module each term (me, Terms 1–4). Use each new skill to create or improve materials for my ESL classes.'],
+      ['Learn more about teaching low-level / pre-literacy adult ESL learners.',
+       'Attend relevant PD or webinars on literacy for adult EAL learners in Terms 1–2 (me). Read two articles or resources and observe a colleague teaching a pre-literacy or Level 1 class.'],
+      ['Learn how to use AI tools safely and effectively to prepare ESL materials.',
+       'Complete a short course on AI in education in Term 1 (me). Trial AI to draft graded readers, dialogues and worksheets, and check them carefully for accuracy and level before use. Share tips with colleagues.'],
+      ['Develop strategies to keep adult ESL learners engaged and motivated.',
+       'Attend a PD session on learner engagement (me, Term 1). Trial two new strategies each term (e.g. games, real-life tasks, student choice) and reflect on what worked with my learners.'],
+      ['Build my knowledge of the EAL curriculum and assessment (e.g. 22639VIC units).',
+       'Review the unit documents and assessment tasks for my course in Term 1 (me). Attend moderation sessions and ask an experienced colleague to mentor me.'],
+      ['Teach higher-level ESL classes (e.g. EAL 3–4) with more confidence.',
+       'Observe a colleague teaching a higher-level class in Term 1. Plan and trial two new advanced activities each term, such as debates or extended writing (me). Reflect with my HT mid-year.']
+    ],
+    other: [
+      ['Improve an area of my ESL teaching or role that matters to me and my learners.',
+       'Set out the steps I will take, when I will take them and who will help (me, Terms 1–4). Check progress with my HT mid-year.'],
+      ['Try something new in my ESL teaching this year.',
+       'Plan what I will try and when (me, Term 1). Ask colleagues for ideas and support. Reflect on how my learners responded at the end of Term 2.']
+    ]
+  };
+  const lastIdea = {};
+  document.addEventListener('click', e=>{
+    const b = e.target.closest('[data-idea]'); if(!b) return;
+    e.preventDefault();
+    const i = +b.dataset.idea, g = data.goals[i];
+    if(data.s1Locked) return;
+    const list = IDEAS[goalType(g, i)] || IDEAS.other;
+    const mine = (g.area||'').trim() || (g.action||'').trim();
+    const fromIdea = lastIdea['a'+i] === g.area && lastIdea['c'+i] === g.action;
+    if(mine && !fromIdea && !confirmSafe(`Replace what you have written for ${title(g,i)} with an example idea?`)) return;
+    const start = (typeNo(goalType(g,i), i) - 1) * 2;   // Teaching [2] starts on a different idea from Teaching [1]
+    const v = ((lastIdea['v'+i] ?? (start - 1)) + 1) % list.length; lastIdea['v'+i] = v;
+    g.area = list[v][0]; g.action = list[v][1];
+    lastIdea['a'+i] = g.area; lastIdea['c'+i] = g.action;
+    ['area','action'].forEach(f=>{ const ta = document.querySelector(`#s1goals [data-g="${i}"][data-f="${f}"]`); if(ta){ ta.value = g[f]; if(showMissing) ta.classList.remove('missing'); } });
+    save(); renderPrint(); updateDirtyNote();
+    subMsg(`Example added to ${title(g,i)} – change it to suit you. Click ✨ Ideas again for another (${v+1} of ${list.length}).`, 'ok');
+  });
 
   // ---------- events ----------
   document.addEventListener('change', e=>{
