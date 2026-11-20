@@ -794,53 +794,50 @@
     t = t.replace(/[.!?;:,]+$/,'');
     return t.length <= 70 ? t : '';   // long wording isn't quoted (it would be cut off mid-sentence)
   }
+  // Third person. {N} = first name (or "The teacher" at the start of a sentence), {n} = first name (or "the teacher" mid-sentence)
   const SUGG = {
     open: {
-      'Achieved': ['Well done{, N} – this goal has been achieved.', 'Congratulations{, N}, on achieving this goal.', '{N|You} have successfully achieved this goal{, well done}.'],
-      'Partially achieved': ['Good progress{, N} – this goal has been partially achieved.', '{N|This goal}{, this goal} has been partially achieved, which reflects a solid effort.', 'Some good progress has been made on this goal{, N}, and it is partially achieved.'],
-      'Not achieved': ['{N|This goal}{, this goal} has not been achieved this year.', 'This goal was not achieved this year{, N}.', 'Unfortunately this goal has not been achieved this year{, N}.'],
-      'Carry forward to next year': ['{N|We}{, we} have agreed to carry this goal forward to next year\'s plan.', 'This goal will be carried forward to next year\'s plan{, N}.', 'Thanks{, N} – this goal will continue into next year\'s plan.']
+      'Achieved': ['{N} has achieved this goal.', '{N} has successfully achieved this goal – well done.', 'This goal has been achieved by {n}.'],
+      'Partially achieved': ['{N} has partially achieved this goal and made good progress.', 'This goal has been partially achieved, reflecting a solid effort by {n}.', '{N} has made some good progress on this goal, which is partially achieved.'],
+      'Not achieved': ['{N} has not achieved this goal this year.', 'This goal was not achieved by {n} this year.', 'Unfortunately, {n} has not achieved this goal this year.'],
+      'Carry forward to next year': ['It has been agreed that {n} will carry this goal forward to next year\'s plan.', 'This goal will be carried forward to {n}\'s plan for next year.', '{N} will continue this goal in next year\'s plan.']
     },
     focusPlain: {
-      teaching: { good: ['Your work on this goal has strengthened your classroom practice and benefited your students.', 'This has had a positive impact on your teaching.', 'Your efforts here are evident in your classroom practice.'],
-                  mixed: ['This remains a valuable focus for your classroom practice.', 'This is a worthwhile focus for your students.', 'Continuing to develop this will benefit your teaching.'] },
-      section:  { good: ['Your contribution to the section is greatly appreciated by the team.', 'The section has benefited from your work on this.', 'Thank you for this contribution to the section.'],
-                  mixed: ['This remains a valuable contribution to the section.', 'This is still a worthwhile contribution to the section.', 'The team would value your continued work on this.'] },
-      personal: { good: ['This professional learning supports you to do your job even better.', 'This has been a worthwhile investment in your professional growth.', 'The learning you have done here is valuable for your work.'],
-                  mixed: ['This remains an important part of your professional growth.', 'This is still a useful area for your professional learning.', 'Building your knowledge here will support your work.'] },
-      other:    { good: ['Your effort on this goal is recognised.', 'This has been worthwhile work.', 'Good work on this goal.'],
-                  mixed: ['This remains a worthwhile focus.', 'There is value in continuing with this.', 'This is worth continuing to work on.'] }
+      teaching: { good: ['This has strengthened their classroom practice and benefited their students.', 'It has had a positive impact on their teaching.', 'Their efforts are evident in their classroom practice.'],
+                  mixed: ['This remains a valuable focus for their classroom practice.', 'It is a worthwhile focus for their students.', 'Continuing to develop this will benefit their teaching.'] },
+      section:  { good: ['Their contribution to the section is greatly appreciated by the team.', 'The section has benefited from this work.', 'This is a valued contribution to the section.'],
+                  mixed: ['This remains a valuable contribution to the section.', 'It is still a worthwhile contribution to the section.', 'The team would value their continued work on this.'] },
+      personal: { good: ['This professional learning supports them to do their job even better.', 'It has been a worthwhile investment in their professional growth.', 'The learning they have done is valuable for their work.'],
+                  mixed: ['This remains an important part of their professional growth.', 'It is still a useful area for their professional learning.', 'Building their knowledge here will support their work.'] },
+      other:    { good: ['Their effort on this goal is recognised.', 'This has been worthwhile work.', 'This is good work.'],
+                  mixed: ['This remains a worthwhile focus.', 'There is value in continuing with this.', 'It is worth continuing to work on.'] }
     },
     focus: {
-      teaching: { good: ['Your work on “{A}” has strengthened your classroom practice and benefited your students.', 'Focusing on “{A}” has had a positive impact on your teaching.', 'Your efforts with “{A}” are evident in your classroom practice.'],
-                  mixed: ['“{A}” remains a valuable focus for your classroom practice.', 'Your focus on “{A}” is worthwhile for your students.', 'Continuing to develop “{A}” will benefit your teaching.'] },
-      section:  { good: ['Your contribution to the section – “{A}” – is greatly appreciated by the team.', 'The section has benefited from your work on “{A}”.', 'Thank you for contributing to the section through “{A}”.'],
-                  mixed: ['Contributing to the section through “{A}” remains a valuable goal.', '“{A}” is still a worthwhile contribution to the section.', 'The team would value your continued work on “{A}”.'] },
-      personal: { good: ['Your professional learning in “{A}” supports you to do your job even better.', 'Developing your skills in “{A}” has been a worthwhile investment in your growth.', 'The learning you have done in “{A}” is valuable for your work.'],
-                  mixed: ['Developing your skills in “{A}” remains an important part of your professional growth.', '“{A}” is still a useful area for your professional learning.', 'Building your knowledge in “{A}” will support your work.'] },
-      other:    { good: ['Your work on “{A}” has been worthwhile.', 'The effort you put into “{A}” is recognised.', 'Good work on “{A}”.'],
+      teaching: { good: ['Their work on “{A}” has strengthened their classroom practice and benefited their students.', 'Focusing on “{A}” has had a positive impact on their teaching.', 'Their efforts with “{A}” are evident in their classroom practice.'],
+                  mixed: ['“{A}” remains a valuable focus for their classroom practice.', 'Their focus on “{A}” is worthwhile for their students.', 'Continuing to develop “{A}” will benefit their teaching.'] },
+      section:  { good: ['Their contribution to the section – “{A}” – is greatly appreciated by the team.', 'The section has benefited from their work on “{A}”.', 'Their contribution through “{A}” is valued by the section.'],
+                  mixed: ['Contributing to the section through “{A}” remains a valuable goal.', '“{A}” is still a worthwhile contribution to the section.', 'The team would value their continued work on “{A}”.'] },
+      personal: { good: ['Their professional learning in “{A}” supports them to do their job even better.', 'Developing their skills in “{A}” has been a worthwhile investment in their growth.', 'The learning they have done in “{A}” is valuable for their work.'],
+                  mixed: ['Developing their skills in “{A}” remains an important part of their professional growth.', '“{A}” is still a useful area for their professional learning.', 'Building their knowledge in “{A}” will support their work.'] },
+      other:    { good: ['Their work on “{A}” has been worthwhile.', 'The effort they put into “{A}” is recognised.', 'Their work on “{A}” is good to see.'],
                   mixed: ['“{A}” remains a worthwhile focus.', 'There is value in continuing with “{A}”.', '“{A}” is worth continuing to work on.'] }
     },
     mid: {
-      'Achieved':                   {'Completed':'It was pleasing to see this completed by the mid-year review.', 'Ongoing':'The progress noted at the mid-year review has been built on well.', 'Scheduled':'It was good to see the scheduled work carried through after the mid-year review.', 'Not started':'Good to see the strong progress made in the second half of the year.', '':''},
-      'Partially achieved':         {'Completed':'', 'Ongoing':'Work noted at the mid-year review has continued, though there is still more to do.', 'Scheduled':'Some of the planned work has taken place since the mid-year review.', 'Not started':'Good to see work begin after the mid-year review.', '':''},
+      'Achieved':                   {'Completed':'This was completed by the mid-year review.', 'Ongoing':'The progress noted at the mid-year review has been built on well.', 'Scheduled':'The work scheduled at the mid-year review was carried through.', 'Not started':'Strong progress was made in the second half of the year.', '':''},
+      'Partially achieved':         {'Completed':'', 'Ongoing':'Work noted at the mid-year review has continued, though there is still more to do.', 'Scheduled':'Some of the planned work has taken place since the mid-year review.', 'Not started':'Work began after the mid-year review.', '':''},
       'Not achieved':               {'Completed':'', 'Ongoing':'Although work had started by the mid-year review, it has not progressed as planned.', 'Scheduled':'The work scheduled at the mid-year review did not go ahead as planned.', 'Not started':'This goal had not yet started at the mid-year review.', '':''},
-      'Carry forward to next year': {'Completed':'', 'Ongoing':'Good progress was noted at the mid-year review and there is more to build on.', 'Scheduled':'The work scheduled at the mid-year review will now take place next year.', 'Not started':'As this had not started at the mid-year review, next year will give more time to focus on it.', '':''}
+      'Carry forward to next year': {'Completed':'', 'Ongoing':'Good progress was noted at the mid-year review and there is more to build on.', 'Scheduled':'The work scheduled at the mid-year review will now take place next year.', 'Not started':'As this had not started at the mid-year review, next year will allow more time to focus on it.', '':''}
     },
     next: {
-      'Achieved': ['Consider sharing what worked with your colleagues.', 'Keep embedding this in your everyday practice.', 'You may like to build on this success in next year\'s plan.'],
-      'Partially achieved': ['Let\'s discuss what support would help you complete it.', 'Continue with the remaining strategies and we can review progress early next year.', 'Please keep working on this – I\'m happy to help with any support you need.'],
-      'Not achieved': ['Let\'s meet to discuss the barriers and agree on support or adjusted strategies.', 'We can look at what got in the way and adjust the strategies together.', 'Please let me know what support would help you move this forward.'],
-      'Carry forward to next year': ['We will review the strategies together at the start of next year.', 'Let\'s revisit the action plan early next year so it is achievable.', 'I look forward to seeing this progress next year.']
+      'Achieved': ['{N} is encouraged to share what worked with colleagues.', '{N} will continue to embed this in their everyday practice.', '{N} may build on this success in next year\'s plan.'],
+      'Partially achieved': ['Support will be discussed to help {n} complete this goal.', '{N} will continue with the remaining strategies, with progress reviewed early next year.', '{N} is encouraged to keep working on this, with support available as needed.'],
+      'Not achieved': ['The barriers will be discussed with {n} and support or adjusted strategies agreed.', 'What got in the way will be reviewed with {n} and the strategies adjusted.', 'Support will be identified to help {n} move this forward.'],
+      'Carry forward to next year': ['The strategies will be reviewed with {n} at the start of next year.', 'The action plan will be revisited early next year so it is achievable.', 'Progress on this goal will be followed up next year.']
     }
   };
   const lastSugg = {};
   function fillName(t, first){
-    // {, N} -> ", First" (or nothing);  {N|X} -> "First" or "X";  {, phrase} kept only when there IS a name for {N|..} pattern
-    t = t.replace(/\{N\|([^}]*)\}\{, ([^}]*)\}/g, (m, alt, rest) => first ? `${first}, ${rest}` : alt);
-    t = t.replace(/\{N\|([^}]*)\}/g, (m, alt) => first || alt);
-    t = t.replace(/\{, N\}/g, first ? `, ${first}` : '');
-    t = t.replace(/\{, ([^}]*)\}/g, (m, p) => first ? `, ${p}` : '');
+    t = t.replace(/\{N\}/g, first || 'The teacher').replace(/\{n\}/g, first || 'the teacher');
     return t.replace(/^\s*(.)/, c=>c.toUpperCase());
   }
   function suggestComment(i, variant){
@@ -851,12 +848,12 @@
     const type = goalType(g, i);
     const A = shortArea(g.area);
     const parts = [];
-    parts.push(fillName(pick(SUGG.open[out], variant), first));
+    parts.push(pick(SUGG.open[out], variant));
     parts.push(A ? pick(SUGG.focus[type][good ? 'good' : 'mixed'], variant + 1).replace('{A}', A) : pick(SUGG.focusPlain[type][good ? 'good' : 'mixed'], variant + 1));
     const mid = (SUGG.mid[out]||{})[g.status||''] || '';
     if(mid) parts.push(mid);
     parts.push(pick(SUGG.next[out], variant + 2));
-    return parts.join(' ');
+    return parts.map(p=>fillName(p, first)).join(' ');
   }
   function applySuggestion(i, quietIfFilled){
     const g = data.goals[i];
