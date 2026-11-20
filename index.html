@@ -130,6 +130,20 @@
   .rev-l select{height:38px!important;font-size:13px!important;padding:4px 6px!important;font-weight:normal;text-transform:none;letter-spacing:0}
   .rev-box textarea{min-height:70px!important;flex:1}
   .goal-h-r{display:flex;gap:10px;align-items:center}
+  .idea-box{width:min(760px,96vw);max-height:92vh;display:flex;flex-direction:column;padding:18px 20px}
+  .idea-head{display:flex;justify-content:space-between;align-items:center}
+  .idea-head h2{margin:0}
+  .idea-x{border:0;background:none;font-size:26px;line-height:1;cursor:pointer;color:var(--muted);padding:0 4px}
+  .idea-lab{margin-top:8px}
+  .idea-type{width:auto!important;height:36px!important;font-size:14px!important;padding:4px 8px!important}
+  .idea-list{overflow:auto;border:1px solid var(--line);border-radius:8px;flex:1 1 auto;min-height:120px;max-height:38vh}
+  .idea-opt{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:#fff;padding:10px 12px;font:inherit;font-size:14px;cursor:pointer;color:var(--ink)}
+  .idea-opt:last-child{border-bottom:0}
+  .idea-opt:hover{background:#f6fbfa}
+  .idea-opt.on{background:#d3efe8;box-shadow:inset 4px 0 0 #1f7a66}
+  .idea-opt .num{color:var(--muted);font-size:12px;margin-right:6px}
+  .idea-prev{margin-top:10px;border:1px solid #c9e9e1;background:#f4fbf9;border-radius:8px;padding:10px 12px;font-size:13.5px;white-space:pre-wrap;max-height:30vh;overflow:auto}
+  .idea-prev b{display:block;margin-bottom:4px;white-space:normal}
   .sub-msg{font-size:13px;margin-top:8px;min-height:18px}
   .sub-msg.err{color:var(--accent)} .sub-msg.ok{color:var(--ok)}
   /* print-only table */
@@ -370,6 +384,21 @@
     <a href="https://tafensw.service-now.com/staff_portal?id=kb_article&amp;sysparm_article=KB00003026" target="_blank" rel="noopener">TAFE Virtual Desktop</a> to access this link.)
     Select <b>Annual Teacher Review</b> from the <b>Document Type</b> dropdown list. Signatures not required when uploaded and approved as a KIC form.
   </p>
+
+  <div class="modal" id="ideaModal" role="dialog" aria-modal="true" aria-labelledby="ideaTitle">
+    <div class="modal-box idea-box">
+      <div class="idea-head">
+        <h2 id="ideaTitle">Ideas</h2>
+        <button type="button" class="idea-x" data-idea-close aria-label="Close">×</button>
+      </div>
+      <label for="ideaType" class="idea-lab">Show ideas for</label>
+      <select id="ideaType" class="idea-type"></select>
+      <p class="note" style="margin:10px 0 6px">1. Choose a goal &nbsp;→&nbsp; 2. Check the suggested action strategies &nbsp;→&nbsp; 3. <b>Use this goal</b></p>
+      <div class="idea-list" id="ideaList" role="listbox"></div>
+      <div class="idea-prev" id="ideaPrev"><span class="note">Choose a goal above to see its suggested action strategies.</span></div>
+      <div class="row" style="margin-top:12px"><button class="btn" type="button" data-idea-close>Cancel</button><button class="btn primary" type="button" id="ideaUse" disabled>Use this goal</button></div>
+    </div>
+  </div>
 
   <div class="modal" id="impModal" role="dialog" aria-modal="true" aria-labelledby="impTitle">
     <div class="modal-box" style="width:min(560px,94vw)">
@@ -934,7 +963,7 @@
        "Target group: my [e.g. EAL 2 / EAL 3 / BESOL] class.\nSpecific: Run short error-correction activities in speaking tasks, focusing on common grammar and pronunciation errors.\nMeasurable: At least one error-correction activity a week; keep a log of common errors to recycle.\nAchievable: 10–15 minutes within existing speaking lessons; share ideas with a colleague.\nRelevant: Learners need accurate spoken English for everyday life and work.\nTime-bound: Weekly, Term 1 to Term 4."],
       ["Use digital tools (e.g. Microsoft Forms, Quizlet, Padlet) to give my learners more language practice in and out of class.",
        "Target group: my [e.g. EAL 1 / EAL 2 / RESOL] class.\nSpecific: Use digital tools (e.g. Forms quizzes, Quizlet, Padlet) for language practice in and out of class.\nMeasurable: Introduce one new tool each term and use it at least once a week.\nAchievable: Start with free, TAFE-approved tools and short in-class demonstrations.\nRelevant: Gives learners extra practice and builds their digital skills.\nTime-bound: Terms 1–4."],
-      ["Create a set of resources for a particular unit, cohort, purpose or skill (e.g. a listening pack for Level 2, or materials for a new unit).",
+      ["Create a set of resources for a particular unit, cohort, purpose or skill (e.g. a listening pack for EAL 2, or materials for a new unit).",
        "Target group: my [e.g. Initial EAL / EAL 2 / AEFS] class, or a particular unit.\nSpecific: Develop a set of resources for [a unit / cohort / purpose / skill], e.g. a listening pack for one unit.\nMeasurable: Produce at least [8–10] activities or worksheets and use them in class.\nAchievable: Adapt existing materials; about an hour a week.\nRelevant: Fills a gap in current materials for my learners’ needs.\nTime-bound: Plan in Term 1, develop and use in Terms 2–3, finalise and share by the end of Term 3."],
       ["Strengthen my pronunciation teaching (sounds, word stress, rhythm and intonation).",
        "Target group: my [e.g. Beginner English / EAL 1 / FESOL] class.\nSpecific: Teach one pronunciation point each week (sounds, word stress, rhythm, intonation).\nMeasurable: A 15-minute pronunciation focus every week; learners record themselves twice a term.\nAchievable: Fits into existing lessons using recordings and minimal pairs.\nRelevant: Clear pronunciation helps learners be understood in daily life and at work.\nTime-bound: Weekly, Term 2 to Term 4."],
@@ -1004,23 +1033,55 @@
        "Specific: [The new thing I will try in my ESL teaching or role].\nMeasurable: [How much / how often I will do it].\nAchievable: [The support or resources I will use].\nRelevant: [How it will benefit my learners or the team].\nTime-bound: [When I will start and finish]."]
     ]
   };
-  const lastIdea = {};
-  document.addEventListener('click', e=>{
-    const b = e.target.closest('[data-idea]'); if(!b) return;
-    e.preventDefault();
-    const i = +b.dataset.idea, g = data.goals[i];
+  // Ideas pop-up: choose a goal, see its suggested action strategies, then use it
+  const ideaModal = document.getElementById('ideaModal');
+  let ideaGoal = null, ideaPick = null;
+  function openIdeas(i){
     if(data.s1Locked) return;
-    const list = IDEAS[goalType(g, i)] || IDEAS.other;
+    ideaGoal = i; ideaPick = null;
+    const sel = document.getElementById('ideaType');
+    sel.innerHTML = Object.keys(GOAL_TYPES).map(t=>`<option value="${t}">${esc(GOAL_TYPES[t])}</option>`).join('');
+    sel.value = goalType(data.goals[i], i);
+    document.getElementById('ideaTitle').textContent = 'Ideas for ' + title(data.goals[i], i);
+    renderIdeaList();
+    ideaModal.classList.add('on');
+    setTimeout(()=>{ const f = ideaModal.querySelector('.idea-opt'); if(f) f.focus(); }, 30);
+  }
+  function renderIdeaList(){
+    const t = document.getElementById('ideaType').value;
+    const list = IDEAS[t] || IDEAS.other;
+    document.getElementById('ideaList').innerHTML = list.map((it,k)=>`<button type="button" class="idea-opt" role="option" data-pick="${k}"><span class="num">${k+1}.</span>${esc(it[0])}</button>`).join('');
+    ideaPick = null;
+    document.getElementById('ideaPrev').innerHTML = '<span class="note">Choose a goal above to see its suggested action strategies.</span>';
+    document.getElementById('ideaUse').disabled = true;
+  }
+  function closeIdeas(){ ideaModal.classList.remove('on'); ideaGoal = null; }
+  document.getElementById('ideaType').addEventListener('change', renderIdeaList);
+  ideaModal.addEventListener('click', e=>{
+    if(e.target === ideaModal || e.target.closest('[data-idea-close]')){ closeIdeas(); return; }
+    const o = e.target.closest('[data-pick]'); if(!o) return;
+    const t = document.getElementById('ideaType').value; const it = (IDEAS[t]||IDEAS.other)[+o.dataset.pick];
+    ideaPick = it;
+    ideaModal.querySelectorAll('.idea-opt').forEach(x=>x.classList.toggle('on', x===o));
+    document.getElementById('ideaPrev').innerHTML = `<b>Suggested action strategies</b>${esc(it[1])}`;
+    document.getElementById('ideaUse').disabled = false;
+  });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape' && ideaModal.classList.contains('on')) closeIdeas(); });
+  document.getElementById('ideaUse').onclick = ()=>{
+    if(ideaGoal === null || !ideaPick) return;
+    const i = ideaGoal, g = data.goals[i];
     const mine = (g.area||'').trim() || (g.action||'').trim();
-    const fromIdea = lastIdea['a'+i] === g.area && lastIdea['c'+i] === g.action;
-    if(mine && !fromIdea && !confirmSafe(`Replace what you have written for ${title(g,i)} with an example idea?`)) return;
-    const start = (typeNo(goalType(g,i), i) - 1) * 2;   // Teaching [2] starts on a different idea from Teaching [1]
-    const v = ((lastIdea['v'+i] ?? (start - 1)) + 1) % list.length; lastIdea['v'+i] = v;
-    g.area = list[v][0]; g.action = list[v][1];
-    lastIdea['a'+i] = g.area; lastIdea['c'+i] = g.action;
+    if(mine && !confirmSafe(`Replace what is already written for ${title(g,i)}?`)) return;
+    g.area = ideaPick[0]; g.action = ideaPick[1];
     ['area','action'].forEach(f=>{ const ta = document.querySelector(`#s1goals [data-g="${i}"][data-f="${f}"]`); if(ta){ ta.value = g[f]; autoGrow(ta); if(showMissing) ta.classList.remove('missing'); } });
     save(); renderPrint(); updateDirtyNote();
-    subMsg(`Example added to ${title(g,i)} – change it to suit you${/\[e\.g\./.test(g.action) ? ', and replace the [brackets] with your own class' : ''}. Click ✨ Ideas again for another (${v+1} of ${list.length}).`, 'ok');
+    closeIdeas();
+    subMsg(`Idea added to ${title(g,i)} – change it to suit you${/\[e\.g\./.test(g.action) ? ', and replace the [brackets] with your own details' : ''}.`, 'ok');
+    const ta = document.querySelector(`#s1goals [data-g="${i}"][data-f="action"]`); if(ta) ta.scrollIntoView({behavior:'smooth', block:'center'});
+  };
+  document.addEventListener('click', e=>{
+    const b = e.target.closest('[data-idea]'); if(!b) return;
+    e.preventDefault(); openIdeas(+b.dataset.idea);
   });
 
   // ---------- events ----------
