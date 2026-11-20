@@ -110,6 +110,8 @@
   .approve input{width:20px;height:20px;margin:0;accent-color:#1f7a66;cursor:pointer}
   .approve.on{border-color:#1f7a66;background:#e8f6f1;color:#1f7a66}
   .approve.off{cursor:not-allowed;opacity:.75}.approve.off input{cursor:not-allowed}
+  .link-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+  .link-row input{max-width:520px;flex:1 1 280px;font-size:12px;color:var(--muted)}
   .approve-note{font-size:13px;color:var(--muted);text-align:center}
   .submit-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:18px}
   .submit-row .btn{padding:11px 18px;font-size:14px}
@@ -372,6 +374,8 @@
         <input type="text" id="htName4" data-k="htName" class="ht"><input type="text" id="htSign4" data-k="htSign" class="ht"><input type="date" id="htDate4" data-k="htDate" class="ht">
       </div>
     </div>
+    <div class="approve-row"><label class="approve" id="readyBox"><input type="checkbox" id="readySign" class="ht"><span>Ready for Employee signature</span></label><span class="approve-note" id="readyNote"></span></div>
+    <div class="link-row" id="readyLink" style="display:none"><input type="text" readonly id="readyLinkIn" aria-label="Link for the teacher"><button class="btn" type="button" id="btnCopyLink">Copy link</button><button class="btn" type="button" id="btnResend">Resend email</button></div>
     <div class="submit-row"><button class="btn primary" type="button" id="btnPrintFull4">Print / PDF – Annual Review Form + Development Plan</button></div>
     <div class="sub-msg" id="subMsg4" style="text-align:center"></div>
     <div class="nav"><button class="btn" type="button" data-go="3">← Back</button><button class="btn" type="button" data-go="5">Next: Employee signature →</button></div>
@@ -462,6 +466,8 @@
   // ---------- SUBMISSION SETTINGS ----------
   // Paste the HTTP POST URL from your Power Automate flow between the quotes (see SETUP-SHAREPOINT.md).
   const SUBMIT_URL = 'https://default1953722255d7458184fbc2da6e835c.74.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/10/workflows/f1088705844148c0bcdfbdef57f575ea/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=cOyLY624l4NKlCzRe8v1Jt7aPVuPvIBujm-lLJ41mMY';
+  // Link for the teacher to review and sign (part 9 of SETUP-SHAREPOINT.md): paste the "fetch for signing" flow URL here.
+  const SIGN_FETCH_URL = '';
   // ------------------------------------------
   const REVIEW_HOW = ['', 'Meeting with HT', 'PD at Staff meeting', 'Peer feedback', 'Student feedback', 'Self reflection', 'Other'];
   const REVIEW_BY  = ['', 'End of Term 1', 'End of Term 2', 'End of Term 3', 'End of Term 4', 'Ongoing'];
@@ -623,6 +629,7 @@
     document.getElementById('btnSubmit1').textContent = (data.s1SubmittedAt || isHT()) ? 'Resubmit Goals and Action plans' : 'Submit Goals and Action plans';
     document.getElementById('btnSubmit1').disabled = locked;
     document.getElementById('btnClear').disabled = locked && !isHT();
+    renderReady();
     document.getElementById('s1banner').innerHTML = locked ? `<div class="sub-banner"><span>✓ Approved by your Head Teacher${when?' on '+esc(when):''}. Your Goals and Action plans are now read-only.</span></div>` : data.s1SubmittedAt ? `<div class="sub-banner"><span>✓ Goals and Action plans submitted on ${esc(new Date(data.s1SubmittedAt).toLocaleString('en-AU',{dateStyle:'medium',timeStyle:'short'}))}. You can still make changes and click Resubmit.</span></div>` : '';
     updateDirtyNote();
     if(showMissing) markMissing();
@@ -807,6 +814,8 @@
       if(!data.tDate) missing.push('Date');
       if(missing.length){ msgIn('subMsg5', 'Please complete: ' + missing.join(', ') + '.', 'err'); return; }
       msgIn('subMsg5', 'Save the PDF, then upload it to People@TAFE via a KIC form.', 'ok');
+      if(data.signToken && SUBMIT_URL){ const now = new Date().toISOString(); data.signedAt = now; save();
+        postList(listPayload('Signed by employee', now, {}, {signedAt: now})).catch(()=>{}); }
     }
     fullPrint = true; renderPrint(); document.body.classList.add('print-full');
     const t = document.title, who = (data.name||'').trim();
@@ -1373,7 +1382,7 @@
     const now = new Date().toISOString();
     const payload = {
       teacherName: data.name.trim(), firstName: (data.firstName||'').trim(), lastName: (data.lastName||'').trim(), designation: data.designation||'', location: data.location||'',
-      stage: HT_STAGE, submittedOn: now,
+      stage: HT_STAGE, submittedOn: now, token: data.signToken||'', signLink: data.signToken ? signLinkFor(data.signToken) : '', sendEmail: '',
       goal1: goalText(data.goals[0],0), goal2: goalText(data.goals[1],1), goal3: goalText(data.goals[2],2), goal4: goalText(data.goals[3],3),
       otherGoals: data.goals.slice(4).map((g,i)=>goalText(g,i+4)).join('\n\n----\n\n'),
       planJson: JSON.stringify(Object.assign({}, data, {role:'teacher', version:'v2', htModifiedAt: now}))
@@ -1485,6 +1494,9 @@
     if(!res.ok) throw new Error('HTTP ' + res.status);
     let out = await res.json();
     if(out && !Array.isArray(out)) out = out.value || out.body || [];
+    return parseRows(out);
+  }
+  function parseRows(out){
     // Accept either the Select output (name/location/submittedOn/planJson) or raw Get items rows,
     // whatever SharePoint's internal column names are, rich-text (HTML) columns, or Choice columns ({Value:...}).
     const decodeHtml = v => { if(!/<[a-z][\s\S]*>|&(quot|amp|lt|gt|#\d+);/i.test(v)) return v;
@@ -1592,7 +1604,7 @@
     const now = new Date().toISOString();
     const payload = {
       teacherName: data.name.trim(), firstName: (data.firstName||'').trim(), lastName: (data.lastName||'').trim(), designation: data.designation||'', location: data.location||'',
-      stage: 'Goals and Action plans', submittedOn: now,
+      stage: 'Goals and Action plans', submittedOn: now, token: data.signToken||'', signLink: '', sendEmail: '',
       goal1: goalText(data.goals[0],0), goal2: goalText(data.goals[1],1), goal3: goalText(data.goals[2],2), goal4: goalText(data.goals[3],3),
       otherGoals: data.goals.slice(4).map((g,i)=>goalText(g,i+4)).join('\n\n----\n\n'),
       planJson: JSON.stringify(Object.assign({}, data, {role:'teacher', s1SubmittedAt: now}))
@@ -1632,9 +1644,107 @@
     showStage(n);
   }
 
+  // ---------- Step 4 → 5: "Ready for Employee signature" emails the teacher a link ----------
+  function signLinkFor(tok){ return location.href.split(/[?#]/)[0] + '?sign=' + encodeURIComponent(tok); }
+  function newToken(){
+    if(window.crypto && crypto.randomUUID) return crypto.randomUUID().replace(/-/g,'') + crypto.randomUUID().replace(/-/g,'').slice(0,8);
+    const a = new Uint8Array(20); crypto.getRandomValues(a); return Array.from(a, b=>b.toString(16).padStart(2,'0')).join('');
+  }
+  function renderReady(){
+    const box = document.getElementById('readyBox'); if(!box) return;
+    const cb = document.getElementById('readySign');
+    cb.checked = !!data.readyForSign; cb.disabled = !isHT();
+    box.classList.toggle('on', !!data.readyForSign); box.classList.toggle('off', !isHT());
+    const when = data.readyAt ? new Date(data.readyAt).toLocaleString('en-AU',{dateStyle:'medium',timeStyle:'short'}) : '';
+    const who = (data.firstName||'').trim() || 'the teacher';
+    document.getElementById('readyNote').innerHTML = data.readyForSign
+      ? `Email with the link sent to ${esc(who)}${when?' on '+esc(when):''}. They open it, go straight to step 5 and sign.`
+      : (isHT() ? `Tick when everything above is signed. ${esc(who)} gets an email with a link to review and sign.` : 'Your Head Teacher ticks this when the form is ready for you to sign.');
+    const show = isHT() && !!data.signToken;
+    document.getElementById('readyLink').style.display = show ? '' : 'none';
+    if(show) document.getElementById('readyLinkIn').value = signLinkFor(data.signToken);
+  }
+  function step4Missing(){
+    const m = [];
+    if(!(data.htName||'').trim()) m.push('Name');
+    if(!(data.htSign||'').trim()) m.push('Signature');
+    if(!data.htDate) m.push('Date');
+    if((!data.lmWork || !data.lmConduct) && !(data.lmExplain||'').trim()) m.push('an explanation (work performance or conduct not ticked)');
+    return m;
+  }
+  function listPayload(stage, now, extra, planExtra){
+    return Object.assign({
+      teacherName: data.name.trim(), firstName: (data.firstName||'').trim(), lastName: (data.lastName||'').trim(), designation: data.designation||'', location: data.location||'',
+      stage, submittedOn: now, token: data.signToken||'', signLink: data.signToken ? signLinkFor(data.signToken) : '', sendEmail: '',
+      goal1: goalText(data.goals[0],0), goal2: goalText(data.goals[1],1), goal3: goalText(data.goals[2],2), goal4: goalText(data.goals[3],3),
+      otherGoals: data.goals.slice(4).map((g,i)=>goalText(g,i+4)).join('\n\n----\n\n'),
+      planJson: JSON.stringify(Object.assign({}, data, {role:'teacher'}, planExtra||{}))
+    }, extra||{});
+  }
+  async function postList(payload){
+    const res = await fetch(SUBMIT_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(payload)});
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+  }
+  async function sendForSignature(){
+    const cb = document.getElementById('readySign');
+    const miss = step4Missing();
+    if(miss.length){ cb.checked = !!data.readyForSign; msgIn('subMsg4', 'Please fill in: ' + miss.join(', ') + '.', 'err'); return; }
+    if(!SUBMIT_URL){ cb.checked = !!data.readyForSign; msgIn('subMsg4', 'The list isn\'t connected yet, so no email can be sent.', 'err'); return; }
+    const who = data.name.trim() || 'the teacher';
+    if(!confirmSafe(`Email ${who} a link to review the Annual Review Form and plan and sign at step 5?`)){ cb.checked = !!data.readyForSign; return; }
+    const tok = data.signToken || newToken(), now = new Date().toISOString();
+    cb.disabled = true; msgIn('subMsg4', 'Sending…');
+    const keep = data.signToken; data.signToken = tok;
+    try{
+      await postList(listPayload('Ready for employee signature', now, {sendEmail:'yes'}, {readyForSign:true, readyAt:now, stage:5}));
+      data.readyForSign = true; data.readyAt = now; save(); render();
+      msgIn('subMsg4', `Sent. ${who} will get an email with the link. You can also copy the link below.`, 'ok');
+    }catch(err){
+      data.signToken = keep; cb.checked = !!data.readyForSign; cb.disabled = false;
+      msgIn('subMsg4', 'Could not send (' + err.message + '). Check the flow\'s run history (the email step needs the teacher on the Staff list).', 'err');
+    }
+  }
+  document.getElementById('readySign').addEventListener('change', e=>{
+    e.stopPropagation();
+    const cb = e.target;
+    if(!isHT()){ cb.checked = !!data.readyForSign; return; }
+    if(cb.checked) sendForSignature();
+    else if(confirmSafe('Untick Ready for Employee signature? (A link that was already emailed will still open the form.)')){ data.readyForSign = false; save(); render(); msgIn('subMsg4',''); }
+    else cb.checked = true;
+  });
+  document.getElementById('btnResend').onclick = ()=>{ if(isHT()) sendForSignature(); };
+  document.getElementById('btnCopyLink').onclick = async ()=>{
+    const v = document.getElementById('readyLinkIn').value;
+    try{ await navigator.clipboard.writeText(v); flash('Link copied'); }catch(e){ const i = document.getElementById('readyLinkIn'); i.select(); document.execCommand('copy'); flash('Link copied'); }
+  };
+  // Teacher opens the emailed link (?sign=…): load the plan from the list and go to step 5
+  async function openSignLink(tok){
+    history.replaceState(null, '', location.href.split(/[?#]/)[0]);
+    if(data.signToken === tok && (data.tSign || data.empSatisfied)){ showStage(5); return; }   // already working on it here
+    if(!SIGN_FETCH_URL){ flash('This link can\'t be opened yet (the form isn\'t connected to the list). Ask your Head Teacher for the PDF instead.', 8000); return; }
+    flash('Opening your Annual Review…', 4000);
+    try{
+      const res = await fetch(SIGN_FETCH_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify({token: tok})});
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      let out = await res.json(); if(out && !Array.isArray(out)) out = out.value || out.body || [out];
+      const row = parseRows(out).find(r=>r.planJson);
+      if(!row) throw new Error('not found');
+      const obj = JSON.parse(row.planJson.replace(/[\u200b\u00a0]/g,' '));
+      if(row.empId) obj.empId = row.empId;
+      obj.signToken = tok;
+      applyLoaded(obj);
+      showStage(5);
+      flash('Your Head Teacher has completed your Annual Review Form. Review it and the plan, then tick, sign and date below.', 8000);
+    }catch(err){
+      flash('Could not open the link (' + err.message + '). It may have expired – ask your Head Teacher to resend it.', 8000);
+    }
+  }
+
   load(); data.role = 'teacher';
   if(data.s1SubmittedAt && !data.s1Hash) data.s1Hash = s1Snapshot();
   render();  // always start locked
+  const signParam = new URLSearchParams(location.search).get('sign');
+  if(signParam) openSignLink(signParam);
 })();
 </script>
 </body>
