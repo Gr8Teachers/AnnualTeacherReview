@@ -198,6 +198,12 @@ In Head Teacher mode the **Save modified plan** button (under the goals) does tw
 1. Updates the teacher's row on the list with the Head Teacher's version. The **Stage** column changes to **Goals and Action plans - v2 by HT**, and **Submitted On** shows when the Head Teacher saved it. It uses the same submit flow, so there is nothing extra to set up.
 2. Saves a PDF named "… v2". Send this to the teacher; they open it with **Open my PDF copy** for their Progress review.
 
+**Approving a plan.** Under the goals there is an **Approved** tick box that only the Head Teacher can tick (the plan must be complete). Until it is ticked, teachers can submit and resubmit as often as they like. Once it is ticked:
+
+- In the Head Teacher's view, **Resubmit Goals and Action plans** updates the list only, and **Save modified plan** updates the list and saves the v2 PDF. Either one sets **Stage** to **Goals and Action plans - Approved by HT**.
+- When the teacher opens that PDF with **Open my PDF copy**, their Goals and Action plans are read-only: no Submit/Resubmit button, no ✨ Ideas, no adding or removing goals, and Clear is turned off. They can still go on to the Progress review.
+- Only the Head Teacher can change an approved plan. Untick **Approved** to let the teacher edit and resubmit again.
+
 ---
 
 ## 7. Steps 4 and 5: Annual Review Form and employee signature

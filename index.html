@@ -96,7 +96,13 @@
   .modal-box .err{color:var(--accent);font-size:13px;min-height:18px;margin:6px 0 10px}
   .modal-box .row{display:flex;gap:8px;justify-content:flex-end}
   .sub-banner{border:1px solid #b7dcc8;background:#eef8f2;color:#165c3a;border-radius:8px;padding:10px 14px;font-size:14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-  .submit-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:36px}
+  .approve-row{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:32px}
+  .approve{display:inline-flex;align-items:center;gap:10px;margin:0;padding:10px 22px;border:2px solid var(--line);border-radius:10px;background:#fff;font-size:15px;letter-spacing:.06em;cursor:pointer}
+  .approve input{width:20px;height:20px;margin:0;accent-color:#1f7a66;cursor:pointer}
+  .approve.on{border-color:#1f7a66;background:#e8f6f1;color:#1f7a66}
+  .approve.off{cursor:not-allowed;opacity:.75}.approve.off input{cursor:not-allowed}
+  .approve-note{font-size:13px;color:var(--muted);text-align:center}
+  .submit-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:18px}
   .submit-row .btn{padding:11px 18px;font-size:14px}
   .req{color:var(--accent);font-weight:bold}
   .missing{border-color:var(--accent)!important;background:#fff6f7!important}
@@ -288,6 +294,7 @@
     <p class="stage-intro">Set out each goal you want to develop, what you'll do about it, and how it will be reviewed.</p>
     <div id="s1goals"></div>
     <button class="btn" type="button" id="addGoal">+ Add another goal</button>
+    <div class="approve-row"><label class="approve" id="approveBox"><input type="checkbox" id="s1Approved" data-k="s1Approved" class="ht"><span>Approved</span></label><span class="approve-note" id="approveNote"></span></div>
     <div class="submit-row"><button class="btn primary" type="button" id="btnSubmit1">Submit Goals and Action plans</button><button class="btn" type="button" id="btnPdf1">Save a PDF copy for me</button></div>
     <div class="sub-msg" id="subMsg" style="text-align:center"></div>
     <div class="nav"><span></span><button class="btn" type="button" data-go="2" id="btnNext1">Next: Progress review →</button></div>
@@ -576,14 +583,24 @@
       else el.value = v || '';
     });
     document.querySelectorAll('.ht').forEach(el=>{ el.disabled = !isHT(); });
-    const locked = false; // teachers can keep editing after submitting
+    const approved = !!data.s1Approved;
+    const locked = approved && !isHT();   // after HT approval the teacher's plan is read-only; only the HT can change or resubmit it
     document.querySelectorAll('#s1goals textarea, #s1goals select[data-f]').forEach(el=>{ el.disabled = locked; });
-    document.querySelectorAll('#s1goals [data-del]').forEach(el=>{ el.style.display = locked ? 'none' : ''; });
+    document.querySelectorAll('#s1goals [data-del], #s1goals [data-idea]').forEach(el=>{ el.style.display = locked ? 'none' : ''; });
+    document.getElementById('addGoal').style.display = locked ? 'none' : '';
+    document.getElementById('btnSubmit1').style.display = locked ? 'none' : '';
+    const ab = document.getElementById('approveBox');
+    ab.classList.toggle('on', approved); ab.classList.toggle('off', !isHT());
+    ab.title = isHT() ? '' : 'Only the Head Teacher can approve';
+    const when = data.s1ApprovedAt ? new Date(data.s1ApprovedAt).toLocaleDateString('en-AU',{dateStyle:'medium'}) : '';
+    document.getElementById('approveNote').innerHTML = approved
+      ? (isHT() ? `Approved${when?' on '+esc(when):''}. Click <b>Save modified plan</b> (or Resubmit) to update the list and save the PDF for the teacher.` : `Approved by your Head Teacher${when?' on '+esc(when):''}. This plan is now read-only.`)
+      : (isHT() ? 'Tick when the plan is approved. The teacher can no longer change or resubmit it.' : 'Your Head Teacher ticks this when your plan is approved.');
     ['addGoal','lastName','firstName','designation','location'].forEach(id=>{ document.getElementById(id).disabled = locked; });
-    document.getElementById('btnSubmit1').textContent = data.s1SubmittedAt ? 'Resubmit Goals and Action plans' : 'Submit Goals and Action plans';
+    document.getElementById('btnSubmit1').textContent = (data.s1SubmittedAt || isHT()) ? 'Resubmit Goals and Action plans' : 'Submit Goals and Action plans';
     document.getElementById('btnSubmit1').disabled = locked;
     document.getElementById('btnClear').disabled = locked && !isHT();
-    document.getElementById('s1banner').innerHTML = data.s1SubmittedAt ? `<div class="sub-banner"><span>✓ Goals and Action plans submitted on ${esc(new Date(data.s1SubmittedAt).toLocaleString('en-AU',{dateStyle:'medium',timeStyle:'short'}))}. You can still make changes and click Resubmit.</span></div>` : '';
+    document.getElementById('s1banner').innerHTML = locked ? `<div class="sub-banner"><span>✓ Approved by your Head Teacher${when?' on '+esc(when):''}. Your Goals and Action plans are now read-only.</span></div>` : data.s1SubmittedAt ? `<div class="sub-banner"><span>✓ Goals and Action plans submitted on ${esc(new Date(data.s1SubmittedAt).toLocaleString('en-AU',{dateStyle:'medium',timeStyle:'short'}))}. You can still make changes and click Resubmit.</span></div>` : '';
     updateDirtyNote();
     if(showMissing) markMissing();
     document.getElementById('lockmsg').style.display = isHT() ? 'none' : 'block';
@@ -1185,6 +1202,8 @@
       data[k] = el.type === 'checkbox' ? el.checked : el.value;
       if(el.type !== 'radio') document.querySelectorAll(`[data-k="${k}"]`).forEach(o=>{ if(o!==el){ if(o.type==='checkbox') o.checked = el.checked; else o.value = el.value; } });
       if(k==='firstName'||k==='lastName'){ syncName(); document.getElementById('empNameRef').textContent = data.name || '—'; document.getElementById('lastRef').textContent = data.lastName || '—'; document.getElementById('firstRef').textContent = data.firstName || '—'; }
+      if(k==='s1Approved'){ if(!isHT()){ data.s1Approved = !el.checked; el.checked = data.s1Approved; return; } if(el.checked){ const miss = s1Missing(); if(miss.length){ data.s1Approved = false; el.checked = false; markMissing(); subMsg('Can\'t approve yet. Please fill in: ' + miss.join(', ') + '.', 'err'); return; } }
+        data.s1ApprovedAt = el.checked ? new Date().toISOString() : ''; subMsg(''); save(); render(); return; }
       if(k==='htName'||k==='htSign'||k==='htDate') document.querySelector('#steps [data-s="5"]').classList.toggle('locked', !canOpen(5));
     }
     else return;
@@ -1234,12 +1253,14 @@
   document.getElementById('btnPdf1').onclick = ()=>{ if(isHT()) saveModifiedPlan(); else printPdf(); };
 
   // ---------- Head Teacher: Save modified plan = update the teacher's row on the list + save a v2 PDF ----------
-  const HT_STAGE = 'Goals and Action plans - v2 by HT';
-  async function saveModifiedPlan(){
+  const HT_STAGE_V2 = 'Goals and Action plans - v2 by HT', HT_STAGE_OK = 'Goals and Action plans - Approved by HT';
+  async function saveModifiedPlan(withPdf){
+    if(withPdf === undefined) withPdf = true;
+    const HT_STAGE = data.s1Approved ? HT_STAGE_OK : HT_STAGE_V2;
     const missing = s1Missing();
     if(missing.length){ markMissing(); subMsg('Please fill in: ' + missing.join(', ') + '.', 'err'); return; }
-    if(!SUBMIT_URL){ subMsg('The list isn\'t connected yet, so only the v2 PDF was saved.', 'err'); printPdf(); return; }
-    const btn = document.getElementById('btnPdf1'); btn.disabled = true; subMsg('Updating the list…');
+    if(!SUBMIT_URL){ subMsg('The list isn\'t connected yet, so only the v2 PDF was saved.', 'err'); if(withPdf) printPdf(); return; }
+    const btn = document.getElementById(withPdf ? 'btnPdf1' : 'btnSubmit1'); btn.disabled = true; subMsg('Updating the list…');
     const now = new Date().toISOString();
     const payload = {
       teacherName: data.name.trim(), firstName: (data.firstName||'').trim(), lastName: (data.lastName||'').trim(), designation: data.designation||'', location: data.location||'',
@@ -1257,8 +1278,8 @@
       subMsg('The list could not be updated (' + err.message + '). The v2 PDF will still be saved; try again later to update the list.', 'err');
     }
     btn.disabled = false;
-    if(ok){ data.version = 'v2'; data.htModifiedAt = now; data.s1Hash = s1Snapshot(); save(); subMsg(`List updated (${HT_STAGE}). Now save the v2 PDF and send it to the teacher.`, 'ok'); }
-    printPdf();
+    if(ok){ data.version = 'v2'; data.htModifiedAt = now; data.s1Hash = s1Snapshot(); save(); subMsg(`List updated (${HT_STAGE}).` + (withPdf ? ' Now save the v2 PDF and send it to the teacher.' : ' Click Save modified plan to save the v2 PDF for the teacher.'), 'ok'); }
+    if(withPdf) printPdf();
   }
   document.getElementById('btnClear').onclick = ()=>{
     if(confirmSafe('Clear all answers on this form?')){ data = {role:data.role, stage:1, goals:[blankGoal(),blankGoal(),blankGoal(),blankGoal()]}; subMsg(''); save(); render(); }
@@ -1270,7 +1291,8 @@
       s1SubmittedAt:data.s1SubmittedAt||'', goals:data.goals,
       lastName:data.lastName||'', firstName:data.firstName||'', empId:data.empId||'', lmYear:data.lmYear||'',
       lmWork:!!data.lmWork, lmConduct:!!data.lmConduct, lmExplain:data.lmExplain||'', lmSick:!!data.lmSick, lmPlan:!!data.lmPlan, lmFeedback:!!data.lmFeedback,
-      empSatisfied:data.empSatisfied||'', version:data.version||'', htModifiedAt:data.htModifiedAt||''};
+      empSatisfied:data.empSatisfied||'', version:data.version||'', htModifiedAt:data.htModifiedAt||'',
+      s1Approved:!!data.s1Approved, s1ApprovedAt:data.s1ApprovedAt||''};
     return btoa(unescape(encodeURIComponent(JSON.stringify(keep))));
   }
   function applyLoaded(obj){
@@ -1436,6 +1458,7 @@
     });
   }
   async function submitStep1(skipConfirm){
+    if(data.s1Approved && !isHT()) return true;
     const missing = s1Missing();
     markMissing();
     if(missing.length){ subMsg('Please fill in: ' + missing.join(', ') + '.', 'err'); return false; }
@@ -1463,7 +1486,7 @@
       return false;
     }
   }
-  document.getElementById('btnSubmit1').onclick = ()=>submitStep1(false);
+  document.getElementById('btnSubmit1').onclick = ()=>{ if(isHT()) saveModifiedPlan(false); else if(!data.s1Approved) submitStep1(false); };
 
   // ---------- Unsubmitted changes to the Goals and Action plans ----------
   function s1Snapshot(){
@@ -1472,7 +1495,7 @@
   }
   function updateDirtyNote(){
     const el = document.getElementById('dirtyNote'); if(!el) return;
-    el.style.display = (s1Dirty() && !isHT()) ? '' : 'none';
+    el.style.display = (s1Dirty() && !isHT() && !data.s1Approved) ? '' : 'none';
   }
   function s1Dirty(){ return !!data.s1Hash && data.s1Hash !== s1Snapshot(); }
   async function navTo(n){
