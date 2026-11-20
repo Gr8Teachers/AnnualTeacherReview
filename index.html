@@ -653,6 +653,7 @@
       else { subMsg(lockReason(n), 'err'); n = 1; quiet = true; }
     }
     data.stage = +n;
+    if(+n === 4) lookupEmpId();
     document.querySelectorAll('.stage').forEach(s=>s.classList.toggle('on', s.id==='stage'+n));
     document.querySelectorAll('#steps button').forEach(b=>b.classList.toggle('on', b.dataset.s==n));
     setTimeout(growAll, 0);
@@ -1383,30 +1384,45 @@
     document.getElementById('impRows').innerHTML = rows.length ? rows.map(it=>`<button type="button" class="imp-row" data-imp="${impItems.indexOf(it)}"><span><b>${esc(it.name)}</b>${it.location?' · '+esc(it.location):''}</span><small>${esc(fmtWhen(it.submittedOn))}</small></button>`).join('')
       : `<div class="note" style="padding:12px">${impItems.length ? 'No match.' : 'No submissions on the list yet.'}</div>`;
   }
+  async function fetchListRows(){
+    const res = await fetch(getReadUrl(), {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body:'{"action":"list"}'});
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    let out = await res.json();
+    if(out && !Array.isArray(out)) out = out.value || out.body || [];
+    // Accept either the Select output (name/location/submittedOn/planJson) or raw Get items rows,
+    // whatever SharePoint's internal column names are, rich-text (HTML) columns, or Choice columns ({Value:...}).
+    const decodeHtml = v => { if(!/<[a-z][\s\S]*>|&(quot|amp|lt|gt|#\d+);/i.test(v)) return v;
+      const ta = document.createElement('textarea'); ta.innerHTML = v.replace(/<br\s*\/?>/gi,'\n').replace(/<\/(p|div)>/gi,'\n').replace(/<[^>]+>/g,''); return ta.value.trim(); };
+    const norm = v => { if(v && typeof v === 'object' && 'Value' in v) v = v.Value; return (typeof v === 'string') ? decodeHtml(v) : (typeof v === 'number' ? String(v) : ''); };
+    const pick = (r, ...names)=>{ for(const k of Object.keys(r)){ const n = k.replace(/_x00(20|5f)_/gi,'').replace(/[^a-z0-9]/gi,'').toLowerCase(); if(names.includes(n)){ const v = norm(r[k]); if(v) return v; } } return ''; };
+    const vals = r => Object.values(r).map(norm).filter(Boolean);
+    const findPlan = r => vals(r).find(v=>/^\s*\{/.test(v) && v.includes('"goals"')) || '';
+    const findLoc  = r => vals(r).find(v=>v==='St Leonards' || v==='Campsie') || '';
+    const findDate = r => { for(const k of Object.keys(r)){ if(/submit/i.test(k)){ const v = norm(r[k]); if(v) return v; } } return ''; };
+    return out.map(r=>({name:pick(r,'name','title','teachername'), location:pick(r,'location')||findLoc(r), submittedOn:pick(r,'submittedon')||findDate(r), planJson:pick(r,'planjson')||findPlan(r), empId:pick(r,'empid','employeeid','empidno')}))
+      .filter(r=>r.name).sort((a,b)=>a.name.localeCompare(b.name));
+  }
   async function impLoad(){
     impShow('list'); document.getElementById('impRows').innerHTML = '<div class="note" style="padding:12px">Loading…</div>';
     try{
-      const res = await fetch(getReadUrl(), {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body:'{"action":"list"}'});
-      if(!res.ok) throw new Error('HTTP ' + res.status);
-      let out = await res.json();
-      if(out && !Array.isArray(out)) out = out.value || out.body || [];
-      // Accept either the Select output (name/location/submittedOn/planJson) or raw Get items rows,
-      // whatever SharePoint's internal column names are, rich-text (HTML) columns, or Choice columns ({Value:...}).
-      const decodeHtml = v => { if(!/<[a-z][\s\S]*>|&(quot|amp|lt|gt|#\d+);/i.test(v)) return v;
-        const ta = document.createElement('textarea'); ta.innerHTML = v.replace(/<br\s*\/?>/gi,'\n').replace(/<\/(p|div)>/gi,'\n').replace(/<[^>]+>/g,''); return ta.value.trim(); };
-      const norm = v => { if(v && typeof v === 'object' && 'Value' in v) v = v.Value; return (typeof v === 'string') ? decodeHtml(v) : (typeof v === 'number' ? String(v) : ''); };
-      const pick = (r, ...names)=>{ for(const k of Object.keys(r)){ const n = k.replace(/_x00(20|5f)_/gi,'').replace(/[^a-z0-9]/gi,'').toLowerCase(); if(names.includes(n)){ const v = norm(r[k]); if(v) return v; } } return ''; };
-      const vals = r => Object.values(r).map(norm).filter(Boolean);
-      const findPlan = r => vals(r).find(v=>/^\s*\{/.test(v) && v.includes('"goals"')) || '';
-      const findLoc  = r => vals(r).find(v=>v==='St Leonards' || v==='Campsie') || '';
-      const findDate = r => { for(const k of Object.keys(r)){ if(/submit/i.test(k)){ const v = norm(r[k]); if(v) return v; } } return ''; };
-      impItems = out.map(r=>({name:pick(r,'name','title','teachername'), location:pick(r,'location')||findLoc(r), submittedOn:pick(r,'submittedon')||findDate(r), planJson:pick(r,'planjson')||findPlan(r), empId:pick(r,'empid','employeeid','empidno')}))
-        .filter(r=>r.name).sort((a,b)=>a.name.localeCompare(b.name));
+      impItems = await fetchListRows();
       impRender();
     }catch(err){
       document.getElementById('impRows').innerHTML = '';
       impErr.textContent = 'Could not load the list (' + err.message + '). Check the flow link (Change flow link) and that the flow has a Response with the Access-Control-Allow-Origin header.';
     }
+  }
+  // Step 4: if the Emp I.D. is still blank, look it up on the list (filled by the flow from the Staff list)
+  var empLookupBusy = false;
+  async function lookupEmpId(){
+    if(empLookupBusy || !isHT() || (data.empId||'').trim() || !getReadUrl() || !(data.name||'').trim()) return;
+    empLookupBusy = true;
+    try{
+      const want = data.name.trim().toLowerCase();
+      const row = (await fetchListRows()).find(r=>r.name.trim().toLowerCase() === want && r.empId);
+      if(row && !(data.empId||'').trim()){ data.empId = row.empId; save(); render(); flash('Emp I.D. filled in from the list', 4000); }
+    }catch(err){}
+    empLookupBusy = false;
   }
   document.getElementById('btnImport').onclick = ()=>{
     if(!isHT()) return;
