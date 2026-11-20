@@ -110,6 +110,9 @@
   .approve input{width:20px;height:20px;margin:0;accent-color:#1f7a66;cursor:pointer}
   .approve.on{border-color:#1f7a66;background:#e8f6f1;color:#1f7a66}
   .approve.off{cursor:not-allowed;opacity:.75}.approve.off input{cursor:not-allowed}
+  .next-steps{margin-top:18px;border-color:#1f7a66;background:#f3faf7}
+  .next-steps ol{margin:8px 0 10px 20px;padding:0;line-height:1.7}
+  .next-steps p{margin:0;font-weight:bold;color:#1f7a66}
   .link-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}
   .link-row input{max-width:520px;flex:1 1 280px;font-size:12px;color:var(--muted)}
   .approve-note{font-size:13px;color:var(--muted);text-align:center}
@@ -399,6 +402,19 @@
     </div>
     <div class="submit-row"><button class="btn primary" type="button" id="btnPrintFull5">Save final PDF – Annual Review Form + Development Plan</button></div>
     <div class="sub-msg" id="subMsg5" style="text-align:center"></div>
+    <div class="card next-steps" id="nextSteps5" style="display:none">
+      <h3 class="form-h">Next step – upload your Annual Teacher Review to People@TAFE</h3>
+      <ol>
+        <li>Log in to People@TAFE from the Staff Portal.</li>
+        <li>Click <b>Create New – KIC form</b>.</li>
+        <li>Choose <b>Currency Activity</b>.</li>
+        <li>Choose <b>Annual Teacher Review</b> from <b>Document Type</b>.</li>
+        <li>Complete the other information.</li>
+        <li>Attach the <b>Annual Review Form + Development Plan</b> PDF you just saved.</li>
+        <li>Send for endorsement.</li>
+      </ol>
+      <p>Thank you for another great year!</p>
+    </div>
     <p class="note" style="text-align:center">Then upload the PDF to People@TAFE via a KIC form (Document Type: <b>Annual Teacher Review</b>).</p>
     <div class="nav"><button class="btn" type="button" data-go="4">← Back</button><span></span></div>
   </section>
@@ -630,6 +646,7 @@
     document.getElementById('btnSubmit1').disabled = locked;
     document.getElementById('btnClear').disabled = locked && !isHT();
     renderReady();
+    document.getElementById('nextSteps5').style.display = data.finalSavedAt ? '' : 'none';
     document.getElementById('s1banner').innerHTML = locked ? `<div class="sub-banner"><span>✓ Approved by your Head Teacher${when?' on '+esc(when):''}. Your Goals and Action plans are now read-only.</span></div>` : data.s1SubmittedAt ? `<div class="sub-banner"><span>✓ Goals and Action plans submitted on ${esc(new Date(data.s1SubmittedAt).toLocaleString('en-AU',{dateStyle:'medium',timeStyle:'short'}))}. You can still make changes and click Resubmit.</span></div>` : '';
     updateDirtyNote();
     if(showMissing) markMissing();
@@ -813,7 +830,9 @@
       if(!(data.tSign||'').trim()) missing.push('Signature');
       if(!data.tDate) missing.push('Date');
       if(missing.length){ msgIn('subMsg5', 'Please complete: ' + missing.join(', ') + '.', 'err'); return; }
-      msgIn('subMsg5', 'Save the PDF, then upload it to People@TAFE via a KIC form.', 'ok');
+      msgIn('subMsg5', 'Save the PDF, then upload it to People@TAFE (steps below).', 'ok');
+      data.finalSavedAt = new Date().toISOString(); save();
+      const ns = document.getElementById('nextSteps5'); ns.style.display = '';
       if(data.signToken && SUBMIT_URL){ const now = new Date().toISOString(); data.signedAt = now; save();
         postList(listPayload('Signed by employee', now, {}, {signedAt: now})).catch(()=>{}); }
     }
