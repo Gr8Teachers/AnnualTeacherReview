@@ -314,7 +314,9 @@
   <!-- STAGE 2 -->
   <section class="stage" id="stage2">
     <p class="stage-intro">Comment on progress for each goal, based on your discussion.</p>
+    <div class="sugg-bar"><span>Choose each goal's <b>Progress review</b> status and a draft comment is written for you. Edit it to add your own details.</span></div>
     <div id="s2goals"></div>
+    <div class="sub-msg" id="subMsg2" style="text-align:center"></div>
     <div class="nav"><button class="btn" type="button" data-go="1">← Back</button><button class="btn primary" type="button" data-go="3">Next: Final review →</button></div>
   </section>
 
@@ -566,7 +568,7 @@
           <div class="s2col">
             <label>Progress review</label>
             <select data-g="${i}" data-f="status">${opts(STATUS, g.status)}</select>
-            <label>Progress review comments <span class="hint">(comments based on discussion)</span></label>
+            <label class="lab-sugg"><span>Progress review comments <span class="hint">(comments based on discussion)</span></span><button type="button" class="sugg" data-psugg="${i}" title="Write a draft comment from the status">✨ Suggest comment</button></label>
             <textarea data-g="${i}" data-f="progress">${esc(g.progress)}</textarea>
           </div>
         </div>
@@ -945,6 +947,74 @@
     }
   };
   const lastSugg = {};
+  // Progress review (teacher, first person). Keyed by the mid-year status.
+  const PSUGG = {
+    open: {
+      'Not started': ['I haven\'t started this goal yet.', 'Work on this goal hasn\'t started yet.', 'I have not yet begun the action strategies for this goal.'],
+      'In progress': ['I have started this goal and it is in progress.', 'This goal is in progress.', 'I am currently working on this goal.'],
+      'Ongoing':     ['This goal is ongoing and I am continuing to work on it.', 'I am working on this goal throughout the year.', 'This is ongoing work that I am building into my regular practice.'],
+      'Scheduled':   ['The work for this goal is scheduled for later in the year.', 'I have planned and scheduled the activities for this goal.', 'This goal is scheduled for the coming terms.'],
+      'Completed':   ['I have completed this goal.', 'This goal has been completed.', 'I have finished the action strategies for this goal.']
+    },
+    focus: {
+      teaching: { done: ['Working on “{A}” has improved my classroom practice and my learners have benefited.', 'Focusing on “{A}” has had a positive effect in my classes.', 'My learners have responded well to my work on “{A}”.'],
+                  going:['So far, my work on “{A}” is having a positive effect in my classes.', 'I am already seeing some benefits of “{A}” for my learners.', 'My learners are responding well to what I have tried so far with “{A}”.'],
+                  later:['“{A}” is still an important focus for my teaching.', '“{A}” remains a worthwhile goal for my learners.', 'I still see “{A}” as valuable for my classes.'] },
+      section:  { done: ['My work on “{A}” has been a useful contribution to the section.', 'Colleagues have benefited from my work on “{A}”.', 'I am pleased to have contributed to the section through “{A}”.'],
+                  going:['My work on “{A}” is already helping the section.', 'I have had positive feedback from colleagues on “{A}” so far.', 'Contributing to the section through “{A}” is going well.'],
+                  later:['“{A}” is still a contribution I would like to make to the section.', 'I still plan to support the section through “{A}”.', '“{A}” remains a worthwhile contribution to the section.'] },
+      personal: { done: ['Developing my skills in “{A}” has helped me do my job better.', 'My learning in “{A}” has been worthwhile for my work.', 'I now feel more confident with “{A}”.'],
+                  going:['I am building my skills in “{A}” and can already use some of what I have learned.', 'My confidence with “{A}” is growing.', 'The learning I have done so far in “{A}” is useful in my work.'],
+                  later:['“{A}” is still an important area for my professional learning.', 'Developing my skills in “{A}” remains a priority for me.', 'I still plan to build my knowledge in “{A}”.'] },
+      other:    { done: ['My work on “{A}” has been worthwhile.', 'I am pleased with what I achieved on “{A}”.', 'Working on “{A}” has been valuable.'],
+                  going:['My work on “{A}” is going well so far.', 'I am making good progress on “{A}”.', 'I am happy with my progress on “{A}” so far.'],
+                  later:['“{A}” is still a worthwhile focus for me.', '“{A}” remains a goal I want to work on.', 'I still plan to work on “{A}”.'] }
+    },
+    focusPlain: {
+      teaching: { done:['This has improved my classroom practice and my learners have benefited.'], going:['So far it is having a positive effect in my classes.'], later:['It is still an important focus for my teaching.'] },
+      section:  { done:['This has been a useful contribution to the section.'], going:['It is already helping the section.'], later:['It is still a contribution I would like to make to the section.'] },
+      personal: { done:['This has helped me do my job better.'], going:['My confidence is growing and I can already use some of what I have learned.'], later:['It is still an important area for my professional learning.'] },
+      other:    { done:['This has been worthwhile.'], going:['It is going well so far.'], later:['It is still a worthwhile focus for me.'] }
+    },
+    next: {
+      'Not started': ['I plan to start the action strategies next term{B}.', 'I will begin this next term and discuss any support I need with my Head Teacher{B}.', 'I may need more time or support to get started, which I will discuss with my Head Teacher{B}.'],
+      'In progress': ['Next, I will continue with the remaining action strategies{B}.', 'I will keep working on this in the second half of the year{B}.', 'I will continue with this and reflect on what is working{B}.'],
+      'Ongoing':     ['I will continue this for the rest of the year{B}.', 'I will keep building this into my practice{B}.', 'I will continue and reflect on what is working best{B}.'],
+      'Scheduled':   ['I will carry out the planned activities later in the year{B}.', 'The planned activities will take place in the coming terms{B}.', 'I will complete the scheduled work and reflect on how it went{B}.'],
+      'Completed':   ['I will keep using what I have learned in my everyday work.', 'I am happy to share what worked with colleagues.', 'I may build on this in next year\'s plan.']
+    }
+  };
+  const lastPSugg = {};
+  function suggestProgress(i, variant){
+    const g = data.goals[i], st = g.status;
+    if(!PSUGG.open[st]) return null;
+    const band = st === 'Completed' ? 'done' : (st === 'In progress' || st === 'Ongoing') ? 'going' : 'later';
+    const type = goalType(g, i), A = shortArea(g.area);
+    const by = (g.reviewBy && g.reviewBy !== 'Ongoing') ? ', and review my progress by the ' + g.reviewBy.replace(/^End/, 'end') : '';
+    const parts = [pick(PSUGG.open[st], variant),
+      A ? pick(PSUGG.focus[type][band], variant + 1).replace('{A}', A) : pick(PSUGG.focusPlain[type][band], variant + 1),
+      pick(PSUGG.next[st], variant + 2).replace('{B}', by)];
+    return parts.join(' ');
+  }
+  function applyProgress(i, quietIfFilled){
+    const g = data.goals[i];
+    if(!g.status) return 'noStatus';
+    const has = (g.progress||'').trim() && g.progress !== lastPSugg['t'+i];
+    if(has && quietIfFilled) return 'skipped';
+    if(has && !confirmSafe(`Replace your comment for ${title(g,i)} with a suggested one?`)) return 'kept';
+    const v = (lastPSugg['v'+i] ?? -1) + 1; lastPSugg['v'+i] = v;
+    const text = suggestProgress(i, v); if(!text) return 'noStatus';
+    g.progress = text; lastPSugg['t'+i] = text;
+    const ta = document.querySelector(`#s2goals [data-g="${i}"][data-f="progress"]`); if(ta) ta.value = text;
+    return 'ok';
+  }
+  document.addEventListener('click', e=>{
+    const b = e.target.closest('[data-psugg]'); if(!b) return;
+    e.preventDefault();
+    const i = +b.dataset.psugg, r = applyProgress(i, false);
+    if(r === 'noStatus') msgIn('subMsg2', `Choose a Progress review status for ${title(data.goals[i], i)} first.`, 'err');
+    else { msgIn('subMsg2', r === 'ok' ? 'Draft added – edit it to add your own details. Click again for different wording.' : '', 'ok'); save(); renderPrint(); }
+  });
   function fillName(t, first){
     t = t.replace(/\{N\}/g, first || 'The teacher').replace(/\{n\}/g, first || 'the teacher');
     return t.replace(/^\s*(.)/, c=>c.toUpperCase());
@@ -1212,6 +1282,11 @@
       if(/^review(How|By|Note)$/.test(el.dataset.f)){
         const g = data.goals[+el.dataset.g]; composeReview(g);
         if(el.dataset.f === 'reviewHow'){ const ta = document.querySelector(`#s1goals [data-g="${el.dataset.g}"][data-f="reviewNote"]`); if(ta) ta.placeholder = el.value === 'Other' ? 'Required for Other – explain how it will be reviewed' : 'Comment (optional), e.g. who will be involved'; }
+      }
+      // choosing a status drafts the teacher's progress comment (never overwrites their own words)
+      if(el.dataset.f === 'status' && el.value){
+        const r = applyProgress(+el.dataset.g, true);
+        msgIn('subMsg2', r === 'ok' ? `Comment drafted for ${title(data.goals[+el.dataset.g], +el.dataset.g)} – edit it to add your own details.` : r === 'skipped' ? 'Your own comment was kept. Click ✨ Suggest comment to replace it.' : '', 'ok');
       }
       // choosing an Outcome drafts the Head Teacher comment (never overwrites a comment the HT wrote)
       if(el.dataset.f === 'outcome' && isHT() && el.value){
