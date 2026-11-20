@@ -17,6 +17,8 @@ You do this once. It takes about 20 minutes.
 
 | Column name   | Type                                   |
 |---------------|----------------------------------------|
+| Teacher       | Person (allow people only, one person) |
+| Teacher Email | Single line of text                    |
 | Designation   | Single line of text                    |
 | Location      | Single line of text                    |
 | Stage         | Single line of text                    |
@@ -54,6 +56,7 @@ Go to **make.powerautomate.com → Create → Instant cloud flow → Skip**, the
   "type": "object",
   "properties": {
     "teacherName": { "type": "string" },
+    "teacherEmail": { "type": "string" },
     "designation": { "type": "string" },
     "location":    { "type": "string" },
     "stage":       { "type": "string" },
@@ -90,6 +93,8 @@ Field mapping (both actions):
 | List column   | Value from *Parse JSON* |
 |---------------|-------------------------|
 | Teacher Name (Title) | teacherName |
+| Teacher **Claims** (Person column) | teacherEmail |
+| Teacher Email | teacherEmail |
 | Designation   | designation |
 | Location      | location |
 | Stage         | stage |
@@ -201,3 +206,23 @@ In Head Teacher mode the **Save modified plan** button (under the goals) does tw
 **Step 5 – Employee signature (teacher).** The teacher opens that PDF with **Open my PDF copy**, goes to step 5, reviews the form and plan, ticks satisfied / not satisfied, signs and dates, then clicks **Save final PDF** and uploads it to People@TAFE via a KIC form.
 
 Mixed portrait + landscape pages print correctly in **Chrome and Edge**; use one of those for these PDFs.
+
+---
+
+## 8. Teacher as a Person column (for Quick Steps, rules and flows)
+
+The **Title** (Teacher Name) column can't be changed into a Person column, so the plan adds a separate **Teacher** Person column. The form asks every teacher for their **TAFE email** (required in Goals and Action plans), sends it as `teacherEmail`, and the flow uses it to fill the Person column.
+
+**If your list and flow are already set up:**
+
+1. In the list: **+ Add column → Person** → name it **Teacher** (leave *Allow multiple selections* off). Optionally also add **Teacher Email** (Single line of text) as a plain-text backup.
+2. In the flow, **Parse JSON**: add `"teacherEmail": { "type": "string" },` under `teacherName` in the schema (or click *Use sample payload* again with a payload that includes it).
+3. In **Update item** and **Create item**: open *Advanced parameters*/*Show all*, find **Teacher Claims** and set it to `teacherEmail` from Parse JSON. Set **Teacher Email** to `teacherEmail` too if you added it.
+4. **Save.** No change is needed in the read flow; the email also travels inside Plan JSON.
+
+**Things to know**
+
+- The email must belong to someone in your TAFE Microsoft 365 directory, or Create/Update item fails and the teacher sees "Could not submit". If that happens, check the email on the row's Plan JSON or ask the teacher to correct it and resubmit.
+- Rows submitted before this change have an empty Teacher column until that teacher resubmits (or you pick them in the list by hand).
+- Once Teacher is filled you can, for example: group or filter the list view by Teacher, add a **When an item is created or modified** flow that emails `Teacher Email` (or the Teacher's email) when the Stage changes to *v2 by HT*, or set up a list **rule** (*Automate → Rules*) to notify someone when a new plan arrives.
+
