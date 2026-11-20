@@ -18,7 +18,6 @@ You do this once. It takes about 20 minutes.
 | Column name   | Type                                   |
 |---------------|----------------------------------------|
 | Teacher       | Person (allow people only, one person) |
-| Teacher Email | Single line of text                    |
 | Designation   | Single line of text                    |
 | Location      | Single line of text                    |
 | Stage         | Single line of text                    |
@@ -56,7 +55,8 @@ Go to **make.powerautomate.com → Create → Instant cloud flow → Skip**, the
   "type": "object",
   "properties": {
     "teacherName": { "type": "string" },
-    "teacherEmail": { "type": "string" },
+    "firstName":   { "type": "string" },
+    "lastName":    { "type": "string" },
     "designation": { "type": "string" },
     "location":    { "type": "string" },
     "stage":       { "type": "string" },
@@ -93,8 +93,7 @@ Field mapping (both actions):
 | List column   | Value from *Parse JSON* |
 |---------------|-------------------------|
 | Teacher Name (Title) | teacherName |
-| Teacher **Claims** (Person column) | teacherEmail |
-| Teacher Email | teacherEmail |
+| Teacher **Claims** (Person column) | see part 8 |
 | Designation   | designation |
 | Location      | location |
 | Stage         | stage |
@@ -211,18 +210,37 @@ Mixed portrait + landscape pages print correctly in **Chrome and Edge**; use one
 
 ## 8. Teacher as a Person column (for Quick Steps, rules and flows)
 
-The **Title** (Teacher Name) column can't be changed into a Person column, so the plan adds a separate **Teacher** Person column. The form asks every teacher for their **TAFE email** (required in Goals and Action plans), sends it as `teacherEmail`, and the flow uses it to fill the Person column.
+The **Title** (Teacher Name) column can't be changed into a Person column, so the list gets a separate **Teacher** Person column. Teachers don't enter an email: the flow looks them up in a **Staff** list that you keep, using the first and last name they type (the form sends `firstName` and `lastName`).
 
-**If your list and flow are already set up:**
+### 8a. Create the Staff lookup list (same site)
 
-1. In the list: **+ Add column → Person** → name it **Teacher** (leave *Allow multiple selections* off). Optionally also add **Teacher Email** (Single line of text) as a plain-text backup.
-2. In the flow, **Parse JSON**: add `"teacherEmail": { "type": "string" },` under `teacherName` in the schema (or click *Use sample payload* again with a payload that includes it).
-3. In **Update item** and **Create item**: open *Advanced parameters*/*Show all*, find **Teacher Claims** and set it to `teacherEmail` from Parse JSON. Set **Teacher Email** to `teacherEmail` too if you added it.
-4. **Save.** No change is needed in the read flow; the email also travels inside Plan JSON.
+| Column | Type |
+|---|---|
+| Title → rename to **Last Name** | (built-in) |
+| **First Name** | Single line of text |
+| **Staff** | Person (one person) |
 
-**Things to know**
+Add one row per teacher, with the names spelled the way teachers will type them on the form.
 
-- The email must belong to someone in your TAFE Microsoft 365 directory, or Create/Update item fails and the teacher sees "Could not submit". If that happens, check the email on the row's Plan JSON or ask the teacher to correct it and resubmit.
-- Rows submitted before this change have an empty Teacher column until that teacher resubmits (or you pick them in the list by hand).
-- Once Teacher is filled you can, for example: group or filter the list view by Teacher, add a **When an item is created or modified** flow that emails `Teacher Email` (or the Teacher's email) when the Stage changes to *v2 by HT*, or set up a list **rule** (*Automate → Rules*) to notify someone when a new plan arrives.
+### 8b. Add the Person column to Annual Teacher Review
+**+ Add column → Person** → name it **Teacher** (allow one person).
 
+### 8c. Change the submit flow
+1. **Parse JSON**: add to the schema, under `teacherName`:
+   ```
+   "firstName": { "type": "string" },
+   "lastName":  { "type": "string" },
+   ```
+2. **New step after Parse JSON: SharePoint *Get items*** – rename it **Get staff**.
+   - **List Name:** Staff
+   - **Filter Query:** `Title eq '@{replace(body('Parse_JSON')?['lastName'], '''', '''''')}' and First_x0020_Name eq '@{replace(body('Parse_JSON')?['firstName'], '''', '''''')}'`
+     (`Title` is the Last Name column. If First Name's internal name differs, copy it from the column's settings URL: `…Field=First_x0020_Name`.)
+   - **Top Count:** `1`
+3. In **Update item** and **Create item**, set **Teacher Claims** to this expression:
+   `first(body('Get_staff')?['value'])?['Staff']?['Claims']`
+4. **Save.** The read flow doesn't change.
+
+### Things to know
+- Matching isn't case-sensitive, but spelling must match the Staff list (e.g. *Jen* vs *Jennifer*). If there's no match, Teacher is left empty and the row still saves; fix the Staff list or pick the person by hand. If your flow errors on an empty match instead, wrap the expression: `if(empty(body('Get_staff')?['value']), null, first(body('Get_staff')?['value'])?['Staff']?['Claims'])`.
+- Rows submitted earlier stay empty until the teacher resubmits (or you pick the person by hand).
+- With Teacher filled you can filter or group by teacher, use Quick Steps, or build a *When an item is created or modified* flow that emails the Teacher when Stage changes to *v2 by HT*.

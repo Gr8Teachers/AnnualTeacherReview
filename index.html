@@ -72,7 +72,7 @@
   .goal-b.cols3>:nth-last-child(-n+3){margin-bottom:0}
   .goal-b.cols2>:nth-last-child(-n+2){margin-bottom:0}
   .goal-b textarea{min-height:120px}
-  #empId::placeholder,#empId4::placeholder,#email::placeholder{font-style:italic;font-size:13px}
+  #empId::placeholder,#empId4::placeholder{font-style:italic;font-size:13px}
   .goal-b textarea::placeholder{font-size:11.5px;line-height:1.35;font-style:italic}
   .hint{display:block;text-transform:none;font-weight:normal;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .goal-b>label,.goal-b>.lab{white-space:nowrap}
@@ -266,8 +266,8 @@
       <input type="text" id="lastName" data-k="lastName" autocomplete="family-name"><input type="text" id="firstName" data-k="firstName" autocomplete="given-name"><input type="text" id="empId" data-k="empId" inputmode="numeric" placeholder="The number on your TAFE card">
     </div>
     <div class="grid3" style="margin-top:12px">
-      <label for="designation">Designation <span class="req">*</span></label><label for="location">Location <span class="req">*</span></label><label for="email">TAFE email <span class="req">*</span></label>
-      <select id="designation" data-k="designation"><option value="">— select —</option><option>Teacher ESOL - Full Time</option><option>Teacher ESOL - Part Time</option><option>Teacher ESOL - Casual</option></select><select id="location" data-k="location"><option value="">— select —</option><option>St Leonards</option><option>Campsie</option></select><input type="email" id="email" data-k="email" autocomplete="email" placeholder="Your TAFE email address">
+      <label for="designation">Designation <span class="req">*</span></label><label for="location">Location <span class="req">*</span></label><span></span>
+      <select id="designation" data-k="designation"><option value="">— select —</option><option>Teacher ESOL - Full Time</option><option>Teacher ESOL - Part Time</option><option>Teacher ESOL - Casual</option></select><select id="location" data-k="location"><option value="">— select —</option><option>St Leonards</option><option>Campsie</option></select><span></span>
     </div>
   </section>
 
@@ -577,7 +577,7 @@
     const locked = false; // teachers can keep editing after submitting
     document.querySelectorAll('#s1goals textarea, #s1goals select[data-f]').forEach(el=>{ el.disabled = locked; });
     document.querySelectorAll('#s1goals [data-del]').forEach(el=>{ el.style.display = locked ? 'none' : ''; });
-    ['addGoal','lastName','firstName','designation','location','email'].forEach(id=>{ document.getElementById(id).disabled = locked; });
+    ['addGoal','lastName','firstName','designation','location'].forEach(id=>{ document.getElementById(id).disabled = locked; });
     document.getElementById('btnSubmit1').textContent = data.s1SubmittedAt ? 'Resubmit Goals and Action plans' : 'Submit Goals and Action plans';
     document.getElementById('btnSubmit1').disabled = locked;
     document.getElementById('btnClear').disabled = locked && !isHT();
@@ -1187,7 +1187,7 @@
     }
     else return;
     save(); renderPrint(); updateDirtyNote();
-    if(showMissing && el.matches('#lastName,#firstName,#designation,#location,#email,#s1goals [data-f="area"],#s1goals [data-f="action"],#s1goals [data-f="reviewHow"],#s1goals [data-f="reviewBy"]')) el.classList.toggle('missing', !(el.value||'').trim());
+    if(showMissing && el.matches('#lastName,#firstName,#designation,#location,#s1goals [data-f="area"],#s1goals [data-f="action"],#s1goals [data-f="reviewHow"],#s1goals [data-f="reviewBy"]')) el.classList.toggle('missing', !(el.value||'').trim());
     if(showMissing && el.matches('#s1goals [data-f="reviewHow"],#s1goals [data-f="reviewNote"]')) markMissing();
   });
   document.addEventListener('click', e=>{
@@ -1240,7 +1240,7 @@
     const btn = document.getElementById('btnPdf1'); btn.disabled = true; subMsg('Updating the list…');
     const now = new Date().toISOString();
     const payload = {
-      teacherName: data.name.trim(), teacherEmail: (data.email||'').trim(), designation: data.designation||'', location: data.location||'',
+      teacherName: data.name.trim(), firstName: (data.firstName||'').trim(), lastName: (data.lastName||'').trim(), designation: data.designation||'', location: data.location||'',
       stage: HT_STAGE, submittedOn: now,
       goal1: goalText(data.goals[0],0), goal2: goalText(data.goals[1],1), goal3: goalText(data.goals[2],2), goal4: goalText(data.goals[3],3),
       otherGoals: data.goals.slice(4).map((g,i)=>goalText(g,i+4)).join('\n\n----\n\n'),
@@ -1266,7 +1266,7 @@
     const keep = {v:1, name:data.name||'', designation:data.designation||'', location:data.location||'',
       tSign:data.tSign||'', tDate:data.tDate||'', htName:data.htName||'', htSign:data.htSign||'', htDate:data.htDate||'',
       s1SubmittedAt:data.s1SubmittedAt||'', goals:data.goals,
-      lastName:data.lastName||'', firstName:data.firstName||'', empId:data.empId||'', email:data.email||'', lmYear:data.lmYear||'',
+      lastName:data.lastName||'', firstName:data.firstName||'', empId:data.empId||'', lmYear:data.lmYear||'',
       lmWork:!!data.lmWork, lmConduct:!!data.lmConduct, lmExplain:data.lmExplain||'', lmSick:!!data.lmSick, lmPlan:!!data.lmPlan, lmFeedback:!!data.lmFeedback,
       empSatisfied:data.empSatisfied||'', version:data.version||'', htModifiedAt:data.htModifiedAt||''};
     return btoa(unescape(encodeURIComponent(JSON.stringify(keep))));
@@ -1416,7 +1416,6 @@
     if(!(data.firstName||'').trim()) missing.push('First name');
     if(!['Teacher ESOL - Full Time','Teacher ESOL - Part Time','Teacher ESOL - Casual'].includes(data.designation||'')) missing.push('Designation');
     if(!['St Leonards','Campsie'].includes(data.location||'')) missing.push('Location');
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((data.email||'').trim())) missing.push('TAFE email');
     data.goals.forEach((g,i)=>{
       const need = ['area','action','reviewHow','reviewBy'].concat(g.reviewHow === 'Other' ? ['reviewNote'] : []);
       const gaps = need.filter(f=>!(g[f]||'').trim()).map(f=>FIELD_NAMES[f]);
@@ -1427,7 +1426,7 @@
   let showMissing = false;
   function markMissing(){
     showMissing = true;
-    document.querySelectorAll('#lastName,#firstName,#designation,#location,#email,#s1goals [data-f="area"],#s1goals [data-f="action"],#s1goals [data-f="reviewHow"],#s1goals [data-f="reviewBy"]').forEach(el=>{
+    document.querySelectorAll('#lastName,#firstName,#designation,#location,#s1goals [data-f="area"],#s1goals [data-f="action"],#s1goals [data-f="reviewHow"],#s1goals [data-f="reviewBy"]').forEach(el=>{
       el.classList.toggle('missing', showMissing && !(el.value||'').trim());
     });
     data.goals.forEach((g,i)=>{ const ta = document.querySelector(`#s1goals [data-g="${i}"][data-f="reviewNote"]`); if(ta) ta.classList.toggle('missing', showMissing && g.reviewHow==='Other' && !(g.reviewNote||'').trim());
@@ -1442,7 +1441,7 @@
     const btn = document.getElementById('btnSubmit1'); btn.disabled = true; subMsg('Submitting…');
     const now = new Date().toISOString();
     const payload = {
-      teacherName: data.name.trim(), teacherEmail: (data.email||'').trim(), designation: data.designation||'', location: data.location||'',
+      teacherName: data.name.trim(), firstName: (data.firstName||'').trim(), lastName: (data.lastName||'').trim(), designation: data.designation||'', location: data.location||'',
       stage: 'Goals and Action plans', submittedOn: now,
       goal1: goalText(data.goals[0],0), goal2: goalText(data.goals[1],1), goal3: goalText(data.goals[2],2), goal4: goalText(data.goals[3],3),
       otherGoals: data.goals.slice(4).map((g,i)=>goalText(g,i+4)).join('\n\n----\n\n'),
@@ -1466,7 +1465,7 @@
   // ---------- Unsubmitted changes to the Goals and Action plans ----------
   function s1Snapshot(){
     data.goals.forEach(composeReview);
-    return JSON.stringify([data.name||'', data.email||'', data.designation||'', data.location||'', data.goals.map((g,i)=>[g.area||'', g.action||'', g.review||'', goalType(g,i)])]);
+    return JSON.stringify([data.name||'', data.designation||'', data.location||'', data.goals.map((g,i)=>[g.area||'', g.action||'', g.review||'', goalType(g,i)])]);
   }
   function updateDirtyNote(){
     const el = document.getElementById('dirtyNote'); if(!el) return;
