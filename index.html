@@ -475,7 +475,7 @@
       g.reviewHow = ''; g.reviewBy = ''; g.reviewNote = g.review || '';   // older plans: keep the old text as the comment
     }
   }
-  const STATUS = ['', 'Not started', 'Ongoing', 'Scheduled', 'Completed'];
+  const STATUS = ['', 'Not started', 'In progress', 'Ongoing', 'Scheduled', 'Completed'];
   const OUTCOME = ['', 'Achieved', 'Partially achieved', 'Not achieved', 'Carry forward to next year'];
   const blankGoal = () => ({area:'', action:'', review:'', progress:'', status:'', outcome:'', htComment:''});
 
@@ -932,10 +932,10 @@
                   mixed: ['“{A}” remains a worthwhile focus.', 'There is value in continuing with “{A}”.', '“{A}” is worth continuing to work on.'] }
     },
     mid: {
-      'Achieved':                   {'Completed':'This was completed by the mid-year review.', 'Ongoing':'The progress noted at the mid-year review has been built on well.', 'Scheduled':'The work scheduled at the mid-year review was carried through.', 'Not started':'Strong progress was made in the second half of the year.', '':''},
-      'Partially achieved':         {'Completed':'', 'Ongoing':'Work noted at the mid-year review has continued, though there is still more to do.', 'Scheduled':'Some of the planned work has taken place since the mid-year review.', 'Not started':'Work began after the mid-year review.', '':''},
-      'Not achieved':               {'Completed':'', 'Ongoing':'Although work had started by the mid-year review, it has not progressed as planned.', 'Scheduled':'The work scheduled at the mid-year review did not go ahead as planned.', 'Not started':'This goal had not yet started at the mid-year review.', '':''},
-      'Carry forward to next year': {'Completed':'', 'Ongoing':'Good progress was noted at the mid-year review and there is more to build on.', 'Scheduled':'The work scheduled at the mid-year review will now take place next year.', 'Not started':'As this had not started at the mid-year review, next year will allow more time to focus on it.', '':''}
+      'Achieved':                   {'Completed':'This was completed by the mid-year review.', 'Ongoing':'The progress noted at the mid-year review has been built on well.', 'In progress':'The work that was in progress at the mid-year review has been carried through well.', 'Scheduled':'The work scheduled at the mid-year review was carried through.', 'Not started':'Strong progress was made in the second half of the year.', '':''},
+      'Partially achieved':         {'Completed':'', 'Ongoing':'Work noted at the mid-year review has continued, though there is still more to do.', 'In progress':'The work in progress at the mid-year review has moved forward, though there is still more to do.', 'Scheduled':'Some of the planned work has taken place since the mid-year review.', 'Not started':'Work began after the mid-year review.', '':''},
+      'Not achieved':               {'Completed':'', 'Ongoing':'Although work had started by the mid-year review, it has not progressed as planned.', 'In progress':'Although this was in progress at the mid-year review, it has not progressed as planned.', 'Scheduled':'The work scheduled at the mid-year review did not go ahead as planned.', 'Not started':'This goal had not yet started at the mid-year review.', '':''},
+      'Carry forward to next year': {'Completed':'', 'Ongoing':'Good progress was noted at the mid-year review and there is more to build on.', 'In progress':'This was in progress at the mid-year review and there is more to build on next year.', 'Scheduled':'The work scheduled at the mid-year review will now take place next year.', 'Not started':'As this had not started at the mid-year review, next year will allow more time to focus on it.', '':''}
     },
     next: {
       'Achieved': ['{N} is encouraged to share what worked with colleagues.', '{N} will continue to embed this in their everyday practice.', '{N} may build on this success in next year\'s plan.'],
