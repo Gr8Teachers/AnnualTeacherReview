@@ -79,6 +79,15 @@
   .hint{display:block;text-transform:none;font-weight:normal;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .goal-b>label,.goal-b>.lab{white-space:nowrap}
   .goal-b.cols3{grid-template-columns:repeat(3,1fr)}
+  .s2b{padding:12px 14px;display:grid;grid-template-columns:1fr 1fr;column-gap:14px}
+  .s2col{display:flex;flex-direction:column;min-width:0}
+  .s2col>.lab,.s2col>label{margin:10px 0 4px}
+  .s2col>:first-child{margin-top:0}
+  .s2col .ref{font-size:13px;padding:6px 9px;min-height:0;line-height:1.4}
+  .s2col .s2hb+.ref{margin-top:6px}
+  .s2hb{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .s2col>select{height:38px}
+  .s2col>textarea{flex:1 1 auto;min-height:90px;font-size:13px}
   .goal-b.cols2{grid-template-columns:1fr 1fr}
   .ref{font-size:14px;background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:10px;white-space:pre-wrap;min-height:42px}
   .ref.empty{color:#999;font-style:italic}
@@ -157,7 +166,8 @@
   /* print-only table */
   #printView{display:none}
   @media (max-width:760px){
-    .grid3,.grid3.signoff,.goal-b.cols3,.goal-b.cols2{grid-template-columns:1fr}
+    .grid3,.grid3.signoff,.goal-b.cols3,.goal-b.cols2,.s2b{grid-template-columns:1fr}
+    .s2col+.s2col{margin-top:12px}
     .steps{flex-direction:column}.steps button{border-right:0;border-bottom:1px solid var(--line)}
     /* one column: put each heading directly above its own box */
     .goal-b.cols3>:nth-child(1),.grid3>:nth-child(1){order:1}
@@ -540,15 +550,25 @@
     document.getElementById('s2goals').innerHTML = data.goals.map((g,i)=>`
       <div class="goal">
         <div class="goal-h"><span>${title(g,i)}</span></div>
-        <div class="goal-b cols2">
-          <span class="lab">Area to be developed</span>
-          <label>Progress review <span class="hint">(comments based on discussion)</span></label>
-          <div class="ref${g.area?'':' empty'}">${g.area?esc(g.area):'Not filled in at Stage 1'}</div>
-          <textarea data-g="${i}" data-f="progress">${esc(g.progress)}</textarea>
-          <span class="lab">Action strategies</span>
-          <label>Status</label>
-          <div class="ref${g.action?'':' empty'}">${g.action?esc(g.action):'—'}</div>
-          <select data-g="${i}" data-f="status">${opts(STATUS, g.status)}</select>
+        <div class="s2b">
+          <div class="s2col">
+            <span class="lab">Area to be developed</span>
+            <div class="ref${g.area?'':' empty'}">${g.area?esc(g.area):'Not filled in at Stage 1'}</div>
+            <span class="lab">Action strategies</span>
+            <div class="ref${g.action?'':' empty'}">${g.action?esc(g.action):'—'}</div>
+            <span class="lab">Review strategies</span>
+            <div class="s2hb">
+              <div class="ref${g.reviewHow?'':' empty'}"><b>How:</b> ${esc(g.reviewHow||'—')}</div>
+              <div class="ref${g.reviewBy?'':' empty'}"><b>By:</b> ${esc(g.reviewBy||'—')}</div>
+            </div>
+            ${(g.reviewNote||'').trim() ? `<div class="ref">${esc(g.reviewNote)}</div>` : ''}
+          </div>
+          <div class="s2col">
+            <label>Progress review</label>
+            <select data-g="${i}" data-f="status">${opts(STATUS, g.status)}</select>
+            <label>Progress review comments <span class="hint">(comments based on discussion)</span></label>
+            <textarea data-g="${i}" data-f="progress">${esc(g.progress)}</textarea>
+          </div>
         </div>
       </div>`).join('');
 
