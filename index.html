@@ -109,6 +109,11 @@
   .rv-goal:first-of-type{border-top:0}
   .rv-goal div{white-space:pre-wrap;margin:2px 0 6px}
   select.gtype{font:inherit;font-weight:bold;font-size:14px;padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);width:auto!important;height:auto!important;display:inline-block;max-width:70vw;vertical-align:middle;margin-left:4px}
+  #s3goals .goal-b.cols2>label,#s3goals .goal-b.cols2>.lab{align-self:end}
+  .lab-sugg{display:flex!important;justify-content:space-between;align-items:flex-end;gap:8px;white-space:normal!important}
+  .sugg{-webkit-appearance:none;appearance:none;border:1px solid #b9b2e6;background:#f3f1fd;color:#3d3480;border-radius:999px;padding:3px 10px;font:inherit;font-size:12px;font-weight:bold;text-transform:none;letter-spacing:0;cursor:pointer;white-space:nowrap}
+  .sugg:hover{background:#e8e4fb}
+  .sugg-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:#f3f1fd;border:1px solid #d9d4f5;border-radius:8px;padding:10px 14px;font-size:14px;margin-bottom:14px}
   .sub-msg{font-size:13px;margin-top:8px;min-height:18px}
   .sub-msg.err{color:var(--accent)} .sub-msg.ok{color:var(--ok)}
   /* print-only table */
@@ -267,6 +272,8 @@
   <section class="stage" id="stage3">
     <div class="lockmsg" id="lockmsg">This stage is completed by the Head Teacher. Click <b>Head Teacher</b> at the top and enter the password to fill it in.</div>
     <p class="stage-intro">Head Teacher's final review of each goal, then sign-off.</p>
+    <div class="sugg-bar" id="suggBar"><span>Choose each goal's <b>Outcome</b>, then let the form draft your comments. You can edit them afterwards.</span><button type="button" class="btn" id="btnSuggAll">✨ Suggest for all goals</button></div>
+    <div class="sub-msg" id="subMsg3"></div>
     <div id="s3goals"></div>
     <div class="card">
       <div class="grid3 signoff">
@@ -480,7 +487,7 @@
           <div class="ref${g.area?'':' empty'}">${g.area?esc(g.area):'—'}</div>
           <select data-g="${i}" data-f="outcome" class="ht"${dis}>${opts(OUTCOME, g.outcome)}</select>
           <span class="lab">Teacher's progress review</span>
-          <label>Head Teacher comments</label>
+          <label class="lab-sugg">Head Teacher comments ${isHT()?`<button type="button" class="sugg" data-sugg="${i}" title="Write a draft comment from the outcome and mid-year status">✨ Suggest comment</button>`:''}</label>
           <div class="ref${g.progress?'':' empty'}">${g.progress?esc(g.progress):'Not filled in at Stage 2'}</div>
           <textarea data-g="${i}" data-f="htComment" class="ht"${dis}>${esc(g.htComment)}</textarea>
         </div>
@@ -514,6 +521,7 @@
     document.getElementById('lockmsg').style.display = isHT() ? 'none' : 'block';
     document.getElementById('lockmsg4').style.display = isHT() ? 'none' : 'block';
     document.getElementById('btnPrintFull4').disabled = !isHT();
+    document.getElementById('suggBar').style.display = isHT() ? '' : 'none';
     document.getElementById('lastRef').textContent = data.lastName || '—';
     document.getElementById('firstRef').textContent = data.firstName || '—';
     document.getElementById('btnNext3').style.display = isHT() ? '' : 'none';
@@ -778,6 +786,109 @@
     </div></div>`;
   }
 
+  // ---------- Head Teacher: draft final-review comments (built in, no internet needed) ----------
+  const pick = (arr, i) => arr[((i % arr.length) + arr.length) % arr.length];
+  function shortArea(t){
+    t = (t||'').replace(/\s+/g,' ').trim(); if(!t) return '';
+    const m = /^(.+?[.!?])(\s|$)/.exec(t); if(m && m[1].length >= 20) t = m[1];
+    t = t.replace(/[.!?;:,]+$/,'');
+    return t.length <= 70 ? t : '';   // long wording isn't quoted (it would be cut off mid-sentence)
+  }
+  const SUGG = {
+    open: {
+      'Achieved': ['Well done{, N} – this goal has been achieved.', 'Congratulations{, N}, on achieving this goal.', '{N|You} have successfully achieved this goal{, well done}.'],
+      'Partially achieved': ['Good progress{, N} – this goal has been partially achieved.', '{N|This goal}{, this goal} has been partially achieved, which reflects a solid effort.', 'Some good progress has been made on this goal{, N}, and it is partially achieved.'],
+      'Not achieved': ['{N|This goal}{, this goal} has not been achieved this year.', 'This goal was not achieved this year{, N}.', 'Unfortunately this goal has not been achieved this year{, N}.'],
+      'Carry forward to next year': ['{N|We}{, we} have agreed to carry this goal forward to next year\'s plan.', 'This goal will be carried forward to next year\'s plan{, N}.', 'Thanks{, N} – this goal will continue into next year\'s plan.']
+    },
+    focusPlain: {
+      teaching: { good: ['Your work on this goal has strengthened your classroom practice and benefited your students.', 'This has had a positive impact on your teaching.', 'Your efforts here are evident in your classroom practice.'],
+                  mixed: ['This remains a valuable focus for your classroom practice.', 'This is a worthwhile focus for your students.', 'Continuing to develop this will benefit your teaching.'] },
+      section:  { good: ['Your contribution to the section is greatly appreciated by the team.', 'The section has benefited from your work on this.', 'Thank you for this contribution to the section.'],
+                  mixed: ['This remains a valuable contribution to the section.', 'This is still a worthwhile contribution to the section.', 'The team would value your continued work on this.'] },
+      personal: { good: ['This professional learning supports you to do your job even better.', 'This has been a worthwhile investment in your professional growth.', 'The learning you have done here is valuable for your work.'],
+                  mixed: ['This remains an important part of your professional growth.', 'This is still a useful area for your professional learning.', 'Building your knowledge here will support your work.'] },
+      other:    { good: ['Your effort on this goal is recognised.', 'This has been worthwhile work.', 'Good work on this goal.'],
+                  mixed: ['This remains a worthwhile focus.', 'There is value in continuing with this.', 'This is worth continuing to work on.'] }
+    },
+    focus: {
+      teaching: { good: ['Your work on “{A}” has strengthened your classroom practice and benefited your students.', 'Focusing on “{A}” has had a positive impact on your teaching.', 'Your efforts with “{A}” are evident in your classroom practice.'],
+                  mixed: ['“{A}” remains a valuable focus for your classroom practice.', 'Your focus on “{A}” is worthwhile for your students.', 'Continuing to develop “{A}” will benefit your teaching.'] },
+      section:  { good: ['Your contribution to the section – “{A}” – is greatly appreciated by the team.', 'The section has benefited from your work on “{A}”.', 'Thank you for contributing to the section through “{A}”.'],
+                  mixed: ['Contributing to the section through “{A}” remains a valuable goal.', '“{A}” is still a worthwhile contribution to the section.', 'The team would value your continued work on “{A}”.'] },
+      personal: { good: ['Your professional learning in “{A}” supports you to do your job even better.', 'Developing your skills in “{A}” has been a worthwhile investment in your growth.', 'The learning you have done in “{A}” is valuable for your work.'],
+                  mixed: ['Developing your skills in “{A}” remains an important part of your professional growth.', '“{A}” is still a useful area for your professional learning.', 'Building your knowledge in “{A}” will support your work.'] },
+      other:    { good: ['Your work on “{A}” has been worthwhile.', 'The effort you put into “{A}” is recognised.', 'Good work on “{A}”.'],
+                  mixed: ['“{A}” remains a worthwhile focus.', 'There is value in continuing with “{A}”.', '“{A}” is worth continuing to work on.'] }
+    },
+    mid: {
+      'Achieved':                   {'Completed':'It was pleasing to see this completed by the mid-year review.', 'Ongoing':'The progress noted at the mid-year review has been built on well.', 'Scheduled':'It was good to see the scheduled work carried through after the mid-year review.', 'Not started':'Good to see the strong progress made in the second half of the year.', '':''},
+      'Partially achieved':         {'Completed':'', 'Ongoing':'Work noted at the mid-year review has continued, though there is still more to do.', 'Scheduled':'Some of the planned work has taken place since the mid-year review.', 'Not started':'Good to see work begin after the mid-year review.', '':''},
+      'Not achieved':               {'Completed':'', 'Ongoing':'Although work had started by the mid-year review, it has not progressed as planned.', 'Scheduled':'The work scheduled at the mid-year review did not go ahead as planned.', 'Not started':'This goal had not yet started at the mid-year review.', '':''},
+      'Carry forward to next year': {'Completed':'', 'Ongoing':'Good progress was noted at the mid-year review and there is more to build on.', 'Scheduled':'The work scheduled at the mid-year review will now take place next year.', 'Not started':'As this had not started at the mid-year review, next year will give more time to focus on it.', '':''}
+    },
+    next: {
+      'Achieved': ['Consider sharing what worked with your colleagues.', 'Keep embedding this in your everyday practice.', 'You may like to build on this success in next year\'s plan.'],
+      'Partially achieved': ['Let\'s discuss what support would help you complete it.', 'Continue with the remaining strategies and we can review progress early next year.', 'Please keep working on this – I\'m happy to help with any support you need.'],
+      'Not achieved': ['Let\'s meet to discuss the barriers and agree on support or adjusted strategies.', 'We can look at what got in the way and adjust the strategies together.', 'Please let me know what support would help you move this forward.'],
+      'Carry forward to next year': ['We will review the strategies together at the start of next year.', 'Let\'s revisit the action plan early next year so it is achievable.', 'I look forward to seeing this progress next year.']
+    }
+  };
+  const lastSugg = {};
+  function fillName(t, first){
+    // {, N} -> ", First" (or nothing);  {N|X} -> "First" or "X";  {, phrase} kept only when there IS a name for {N|..} pattern
+    t = t.replace(/\{N\|([^}]*)\}\{, ([^}]*)\}/g, (m, alt, rest) => first ? `${first}, ${rest}` : alt);
+    t = t.replace(/\{N\|([^}]*)\}/g, (m, alt) => first || alt);
+    t = t.replace(/\{, N\}/g, first ? `, ${first}` : '');
+    t = t.replace(/\{, ([^}]*)\}/g, (m, p) => first ? `, ${p}` : '');
+    return t.replace(/^\s*(.)/, c=>c.toUpperCase());
+  }
+  function suggestComment(i, variant){
+    const g = data.goals[i]; const out = g.outcome;
+    if(!SUGG.open[out]) return null;
+    const first = (data.firstName||'').trim();
+    const good = out === 'Achieved';
+    const type = goalType(g, i);
+    const A = shortArea(g.area);
+    const parts = [];
+    parts.push(fillName(pick(SUGG.open[out], variant), first));
+    parts.push(A ? pick(SUGG.focus[type][good ? 'good' : 'mixed'], variant + 1).replace('{A}', A) : pick(SUGG.focusPlain[type][good ? 'good' : 'mixed'], variant + 1));
+    const mid = (SUGG.mid[out]||{})[g.status||''] || '';
+    if(mid) parts.push(mid);
+    parts.push(pick(SUGG.next[out], variant + 2));
+    return parts.join(' ');
+  }
+  function applySuggestion(i, quietIfFilled){
+    const g = data.goals[i];
+    if(!g.outcome){ return 'noOutcome'; }
+    const has = (g.htComment||'').trim() && g.htComment !== lastSugg['t'+i];
+    if(has && quietIfFilled) return 'skipped';
+    if(has && !confirmSafe(`Replace your comment for ${title(g,i)} with a suggested one?`)) return 'kept';
+    const v = (lastSugg['v'+i] ?? -1) + 1; lastSugg['v'+i] = v;
+    const text = suggestComment(i, v); if(!text) return 'noOutcome';
+    g.htComment = text; lastSugg['t'+i] = text;
+    const ta = document.querySelector(`#s3goals [data-g="${i}"][data-f="htComment"]`); if(ta) ta.value = text;
+    return 'ok';
+  }
+  document.addEventListener('click', e=>{
+    const b = e.target.closest('[data-sugg]'); if(!b || !isHT()) return;
+    e.preventDefault();
+    const r = applySuggestion(+b.dataset.sugg, false);
+    if(r === 'noOutcome') msgIn('subMsg3', `Choose an Outcome for ${title(data.goals[+b.dataset.sugg], +b.dataset.sugg)} first.`, 'err');
+    else { msgIn('subMsg3', r === 'ok' ? 'Draft added – edit it as you like. Click again for different wording.' : '', 'ok'); save(); renderPrint(); }
+  });
+  document.getElementById('btnSuggAll').onclick = ()=>{
+    if(!isHT()) return;
+    let done = 0, missing = [], skipped = 0;
+    data.goals.forEach((g,i)=>{ const r = applySuggestion(i, true); if(r==='ok') done++; else if(r==='noOutcome') missing.push(`Goal ${i+1}`); else if(r==='skipped') skipped++; });
+    save(); renderPrint();
+    const bits = [];
+    if(done) bits.push(`${done} comment${done>1?'s':''} drafted`);
+    if(skipped) bits.push(`${skipped} kept (already written)`);
+    if(missing.length) bits.push(`choose an Outcome for ${missing.join(', ')}`);
+    msgIn('subMsg3', bits.join(' · ') + '.', missing.length && !done ? 'err' : 'ok');
+  };
+
   // ---------- events ----------
   document.addEventListener('change', e=>{
     const el = e.target;
@@ -789,7 +900,14 @@
   });
   document.addEventListener('input', e=>{
     const el = e.target;
-    if(el.dataset.g !== undefined){ data.goals[+el.dataset.g][el.dataset.f] = el.value; }
+    if(el.dataset.g !== undefined){
+      data.goals[+el.dataset.g][el.dataset.f] = el.value;
+      // choosing an Outcome drafts the Head Teacher comment (never overwrites a comment the HT wrote)
+      if(el.dataset.f === 'outcome' && isHT() && el.value){
+        const r = applySuggestion(+el.dataset.g, true);
+        msgIn('subMsg3', r === 'ok' ? `Comment drafted for ${title(data.goals[+el.dataset.g], +el.dataset.g)} – edit it as you like.` : r === 'skipped' ? 'Your own comment was kept. Click ✨ Suggest comment to replace it.' : '', 'ok');
+      }
+    }
     else if(el.dataset.k){
       const k = el.dataset.k;
       data[k] = el.type === 'checkbox' ? el.checked : el.value;
