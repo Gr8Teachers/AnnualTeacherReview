@@ -206,7 +206,7 @@
     .pv-top{position:relative;height:18.5mm}
     .pv thead tr.pv-gap td{height:26mm;border:0!important;padding:0;background:none}
     .pv tfoot{display:table-footer-group}
-    .pv tfoot tr.pv-gap td{height:6mm;border:0!important;border-top:.5pt solid #000!important;padding:0;background:none}
+    .pv tfoot tr.pv-gap td{height:10mm;border:0!important;border-top:.5pt solid #000!important;padding:0;background:none}
     .pv-data{position:absolute;left:60mm;top:2mm;width:225mm;overflow:visible;color:#fff;font:1pt/1.1 Arial,sans-serif;white-space:nowrap}
     .pv-abs{position:absolute;white-space:nowrap}
     .pv-logo{left:8mm;top:8mm;width:48.37mm;height:13.76mm}
@@ -223,6 +223,7 @@
     .pv tr{break-inside:auto}
     .pv thead{display:table-header-group}
     .pv-keep{break-inside:avoid;page-break-inside:avoid}
+    .pv-keep.pv-newpage{break-before:page;page-break-before:always;padding-top:34mm}
     .pv-push{height:0}
     .pv-after{position:relative;height:14.5mm;margin-top:-5.6mm}
     .pv-notes{margin:4.8mm 16.7mm 0 20mm}
@@ -1230,14 +1231,25 @@
   function pinSignoff(){
     const pv = document.querySelector('#printView .pv'); if(!pv) return;
     const push = pv.querySelector('.pv-push'); if(!push) return;
+    const keep = pv.querySelector('.pv-keep');
     const view = document.getElementById('printView');
     const old = view.getAttribute('style') || '';
-    push.style.height = '0';
+    push.style.height = '0'; if(keep) keep.classList.remove('pv-newpage');
     view.setAttribute('style', 'display:block;position:absolute;left:-30000px;top:0;visibility:hidden');
-    const total = pv.getBoundingClientRect().height * 25.4 / 96;   // mm
+    const mm = el => el ? el.getBoundingClientRect().height * 25.4 / 96 : 0;
+    const total = mm(pv);
+    const topH = mm(pv.querySelector('.pv-top')), headH = mm(pv.querySelector('thead')), footH = mm(pv.querySelector('tfoot'));
+    let rest = [...pv.querySelectorAll('tbody tr')].reduce((t,r)=>t + mm(r), 0);
+    const keepH = mm(keep);
     view.setAttribute('style', old);
     const spare = 205 - total;                                       // 5 mm safety below the 210 mm page
-    if(spare > 0) push.style.height = spare + 'mm';
+    if(spare > 0){ push.style.height = spare + 'mm'; return; }
+    // Longer plans: work out where the table ends. If the signature block + KIC note won't fit
+    // comfortably under it, start them on a new page below the logo instead of under the logo.
+    let start = topH, room = 210 - start - headH - footH;
+    while(rest > room){ rest -= room; start = 0; room = 210 - headH - footH; }
+    const left = 210 - (start + headH + rest + footH);
+    if(keep && left < keepH + 12) keep.classList.add('pv-newpage');
   }
   window.addEventListener('beforeprint', pinSignoff);
 
