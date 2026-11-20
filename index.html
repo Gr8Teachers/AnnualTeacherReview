@@ -605,6 +605,7 @@
     data.stage = +n;
     document.querySelectorAll('.stage').forEach(s=>s.classList.toggle('on', s.id==='stage'+n));
     document.querySelectorAll('#steps button').forEach(b=>b.classList.toggle('on', b.dataset.s==n));
+    setTimeout(growAll, 0);
     if(!quiet){ save(); render(); window.scrollTo({top:document.getElementById('steps').offsetTop-10, behavior:'smooth'}); }
   }
 
@@ -923,81 +924,84 @@
     msgIn('subMsg3', bits.join(' · ') + '.', missing.length && !done ? 'err' : 'ok');
   };
 
+  // Goal text boxes grow to fit their content
+  function autoGrow(el){ if(!el || !el.offsetParent) return; el.style.height = 'auto'; el.style.height = (el.scrollHeight + 4) + 'px'; }
+  function growAll(){ document.querySelectorAll('.stage.on .goal-b textarea').forEach(autoGrow); }
   // ---------- Teacher: example goals + matching action strategies (built in, no internet needed) ----------
   const IDEAS = {
     teaching: [
-      ['Improve my ESL students’ speaking accuracy through more targeted error correction (grammar and pronunciation).',
-       'Target group: my [e.g. EAL 2 / EAL 3 / BESOL] class. Build short error-correction activities into speaking tasks every week (Terms 1–4). Keep a log of common errors and recycle them in later lessons. Discuss strategies with a colleague (me, ongoing).'],
-      ['Use digital tools (e.g. Microsoft Forms, Quizlet, Padlet) to give my learners more language practice in and out of class.',
-       'Target group: my [e.g. EAL 1 / EAL 2 / RESOL] class. Trial one new digital tool with my class each term (me). Run a short student feedback survey at the end of each term. Share what worked at a staff meeting in Term 3.'],
-      ['Create a set of resources for a particular unit, cohort, purpose or skill (e.g. a listening pack for Level 2, or materials for a new unit).',
-       'Target group: my [e.g. Initial EAL / EAL 2 / AEFS] class, or a particular unit. Identify the unit or cohort and the gaps in current materials in Term 1 (me). Develop and trial the resources in Terms 2–3, adjusting them after student feedback. Share the finished set on the shared drive.'],
-      ['Strengthen my pronunciation teaching (sounds, word stress, rhythm and intonation).',
-       'Target group: my [e.g. Beginner English / EAL 1 / FESOL] class. Plan a weekly 15-minute pronunciation focus from Term 2 (me). Use recordings so students can hear their own progress. Ask a colleague to observe one lesson and give feedback.'],
-      ['Use explicit phonics to build reading and spelling for low-level / pre-literacy learners.',
-       'Target group: my [e.g. Initial EAL / Beginner English / FESOL] learners. Plan short, regular phonics activities (letter–sound links, blending, decodable texts) from Term 1 (me). Track progress with a simple checklist each term. Share activities with colleagues teaching low levels.'],
-      ['Differentiate activities for my mixed-level ESL classes.',
-       'Target group: my mixed-level [e.g. Initial EAL–EAL 1 / BESOL] class. Prepare core and extension versions of key tasks each week (me, Terms 1–4). Group students flexibly by task. Review how this is working with my HT at the end of Term 2.'],
-      ['Develop my learners’ English writing through clearer feedback.',
-       'Target group: my [e.g. EAL 2 / EAL 3 / EFS] class. Introduce a simple feedback code for writing tasks from Term 1. Give students class time to redraft. Track improvement across two assessments (me, Terms 1–3).'],
-      ['Increase learner independence through AMEPOnline and other self-study resources.',
-       'Target group: my [e.g. EAL 1 / EAL 2] learners. Show students how to use AMEPOnline and other self-study sites in Term 1. Set short weekly independent tasks. Check progress with students each month (me).'],
-      ['Incorporate more games and interactive activities into my lessons.',
-       'Target group: my [e.g. Beginner English / EAL 1 / FESOL] class. Add at least one communicative game a week linked to the unit’s language (me, Terms 1–4). Collect activities in a shared folder. Ask students which activities help them most.'],
-      ['Build learners’ confidence using English in real-life tasks (e.g. phone calls, forms, appointments).',
-       'Target group: my [e.g. Initial EAL / EAL 1 / BESOL] class. Plan one real-life task per unit using authentic materials (me). Role-play the task before students try it for real. Gather student feedback after each task.'],
-      ['Build settlement English into my lessons (e.g. Centrelink, Medicare, renting, health, schools, transport).',
-       'Target group: my [e.g. Initial EAL / EAL 1 / RESOL] learners. Link each unit to a settlement topic my learners need (me, Terms 1–4). Use authentic forms, letters and websites. Ask students at the start of each term which topics matter most to them.'],
-      ['Build practical real-life skills into my classroom teaching (e.g. digital literacy, emails, job applications, workplace communication).',
-       'Target group: my [e.g. EAL 3 / EFS / AEFS] class. Include one practical skill per unit, such as using a government app, writing an email or preparing for an interview (me). Gather student feedback and adjust each term.'],
-      ['Explore learning opportunities outside the classroom (e.g. excursions, library visits, community events, guest speakers).',
-       'Target group: my [e.g. EAL 1 / EAL 2 / RESOL] class. Plan at least one excursion or guest speaker per term linked to the unit (me, with HT approval). Prepare pre- and post-activities so students practise the language they need. Collect student feedback.'],
-      ['Strengthen my teaching of reading (e.g. graded readers, skimming and scanning, reading for detail).',
-       'Target group: my [e.g. EAL 1 / EAL 2 / FESOL] class. Start a graded reader program in Term 1 and teach one reading strategy each term (me). Use short comprehension tasks to check progress. Ask students which texts they found most useful.'],
-      ['Strengthen my teaching of listening using authentic audio and video.',
-       'Target group: my [e.g. EAL 2 / EAL 3 / EFS] class. Add a weekly listening task using authentic materials (e.g. news, podcasts, announcements, phone messages) graded to the level (me, Terms 1–4). Teach strategies such as predicting and listening for key words. Track progress with short listening checks.'],
-      ['Help my learners build their vocabulary more effectively.',
-       'Target group: my [e.g. EAL / EAL 1 / BESOL] class. Introduce topic word banks and student vocabulary notebooks in Term 1 (me). Recycle new words with spaced revision activities each week. Check retention with short vocabulary quizzes each term.'],
-      ['Teach grammar in context through meaningful tasks.',
-       'Target group: my [e.g. EAL 3 / EFS / AEFS] class. Plan grammar points around the unit’s real-life tasks rather than in isolation (me, Terms 1–4). Use guided discovery and practice in speaking and writing. Review accuracy in student work each term.'],
-      ['Prepare learners for pathways to further study, VET courses or work.',
-       'Target group: my [e.g. EAL 3 / EFS / AEFS] class. Build pathway information and skills into my lessons each term, e.g. exploring course requirements, career goals and job-search language (me). Invite a pathways or careers adviser in Term 2 or 3. Help learners set a pathway goal and review it at the end of the year.'],
-      ['Improve my teaching through peer observation.',
-       'Target group: my teaching of [e.g. EAL 2 / RESOL] classes. Arrange to observe a colleague and be observed by them once a term, each time focusing on one teaching skill (me and a colleague, Terms 1–4). Use a simple observation checklist and discuss feedback afterwards. Try one new idea from each observation.']
+      ["Improve my ESL students’ speaking accuracy through more targeted error correction (grammar and pronunciation).",
+       "Target group: my [e.g. EAL 2 / EAL 3 / BESOL] class.\nSpecific: Run short error-correction activities in speaking tasks, focusing on common grammar and pronunciation errors.\nMeasurable: At least one error-correction activity a week; keep a log of common errors to recycle.\nAchievable: 10–15 minutes within existing speaking lessons; share ideas with a colleague.\nRelevant: Learners need accurate spoken English for everyday life and work.\nTime-bound: Weekly, Term 1 to Term 4."],
+      ["Use digital tools (e.g. Microsoft Forms, Quizlet, Padlet) to give my learners more language practice in and out of class.",
+       "Target group: my [e.g. EAL 1 / EAL 2 / RESOL] class.\nSpecific: Use digital tools (e.g. Forms quizzes, Quizlet, Padlet) for language practice in and out of class.\nMeasurable: Introduce one new tool each term and use it at least once a week.\nAchievable: Start with free, TAFE-approved tools and short in-class demonstrations.\nRelevant: Gives learners extra practice and builds their digital skills.\nTime-bound: Terms 1–4."],
+      ["Create a set of resources for a particular unit, cohort, purpose or skill (e.g. a listening pack for Level 2, or materials for a new unit).",
+       "Target group: my [e.g. Initial EAL / EAL 2 / AEFS] class, or a particular unit.\nSpecific: Develop a set of resources for [a unit / cohort / purpose / skill], e.g. a listening pack for one unit.\nMeasurable: Produce at least [8–10] activities or worksheets and use them in class.\nAchievable: Adapt existing materials; about an hour a week.\nRelevant: Fills a gap in current materials for my learners’ needs.\nTime-bound: Plan in Term 1, develop and use in Terms 2–3, finalise and share by the end of Term 3."],
+      ["Strengthen my pronunciation teaching (sounds, word stress, rhythm and intonation).",
+       "Target group: my [e.g. Beginner English / EAL 1 / FESOL] class.\nSpecific: Teach one pronunciation point each week (sounds, word stress, rhythm, intonation).\nMeasurable: A 15-minute pronunciation focus every week; learners record themselves twice a term.\nAchievable: Fits into existing lessons using recordings and minimal pairs.\nRelevant: Clear pronunciation helps learners be understood in daily life and at work.\nTime-bound: Weekly, Term 2 to Term 4."],
+      ["Use explicit phonics to build reading and spelling for low-level / pre-literacy learners.",
+       "Target group: my [e.g. Initial EAL / Beginner English / FESOL] learners.\nSpecific: Teach letter–sound links, blending and decodable texts to build reading and spelling.\nMeasurable: Three short phonics activities a week; progress tracked on a phonics checklist.\nAchievable: 10–15 minutes a lesson using simple, ready-made resources.\nRelevant: Learners with limited literacy need decoding skills to read everyday texts.\nTime-bound: Terms 1–4."],
+      ["Differentiate activities for my mixed-level ESL classes.",
+       "Target group: my mixed-level [e.g. Initial EAL–EAL 1 / BESOL] class.\nSpecific: Prepare core and extension versions of key tasks so every learner is challenged.\nMeasurable: Differentiated versions of at least two key tasks each week.\nAchievable: Adapt existing tasks rather than write new ones; use flexible grouping.\nRelevant: Learners at different levels can progress at their own pace.\nTime-bound: Weekly, Terms 1–4."],
+      ["Develop my learners’ English writing through clearer feedback.",
+       "Target group: my [e.g. EAL 2 / EAL 3 / EFS] class.\nSpecific: Introduce a simple feedback code for writing and give class time for redrafting.\nMeasurable: Use the code on all writing tasks; learners redraft at least one task a fortnight.\nAchievable: The code is quick to apply and easy for learners to learn.\nRelevant: Clear feedback helps learners correct errors and improve their writing.\nTime-bound: From Term 1, ongoing to Term 4."],
+      ["Increase learner independence through AMEPOnline and other self-study resources.",
+       "Target group: my [e.g. EAL 1 / EAL 2] learners.\nSpecific: Show learners how to use AMEPOnline and other self-study sites, and set independent tasks.\nMeasurable: One short self-study task a week.\nAchievable: Tasks of 15–20 minutes, demonstrated in class first.\nRelevant: Builds independence and gives extra practice between classes.\nTime-bound: Introduce in Term 1; weekly to Term 4."],
+      ["Incorporate more games and interactive activities into my lessons.",
+       "Target group: my [e.g. Beginner English / EAL 1 / FESOL] class.\nSpecific: Use communicative games and interactive activities linked to each unit’s language.\nMeasurable: At least one game or interactive activity a week; build a shared folder of [10+] activities.\nAchievable: Adapt well-known games (e.g. bingo, board races, find someone who).\nRelevant: Increases engagement and gives meaningful speaking practice.\nTime-bound: Terms 1–4."],
+      ["Build learners’ confidence using English in real-life tasks (e.g. phone calls, forms, appointments).",
+       "Target group: my [e.g. Initial EAL / EAL 1 / BESOL] class.\nSpecific: Plan real-life language tasks (e.g. phone calls, forms, appointments) using authentic materials.\nMeasurable: One real-life task per unit, rehearsed through role-play first.\nAchievable: Authentic forms and scenarios are easy to source.\nRelevant: Learners need these tasks in their daily lives.\nTime-bound: One per unit, Terms 1–4."],
+      ["Build settlement English into my lessons (e.g. Centrelink, Medicare, renting, health, schools, transport).",
+       "Target group: my [e.g. Initial EAL / EAL 1 / RESOL] learners.\nSpecific: Link each unit to a settlement topic (e.g. Centrelink, Medicare, renting, health, schools, transport).\nMeasurable: At least one settlement topic per unit using authentic forms, letters or websites.\nAchievable: Topics chosen with learners at the start of each term.\nRelevant: Helps learners settle and access services independently.\nTime-bound: Terms 1–4."],
+      ["Build practical real-life skills into my classroom teaching (e.g. digital literacy, emails, job applications, workplace communication).",
+       "Target group: my [e.g. EAL 3 / EFS / AEFS] class.\nSpecific: Teach practical skills such as using government apps, writing emails and preparing for interviews.\nMeasurable: One practical skill per unit.\nAchievable: Short, step-by-step activities built into existing units.\nRelevant: Prepares learners for everyday life, study and work.\nTime-bound: Terms 1–4."],
+      ["Explore learning opportunities outside the classroom (e.g. excursions, library visits, community events, guest speakers).",
+       "Target group: my [e.g. EAL 1 / EAL 2 / RESOL] class.\nSpecific: Organise learning outside the classroom, e.g. excursions, library visits, community events or guest speakers.\nMeasurable: At least one excursion or guest speaker per term, with pre- and post-activities.\nAchievable: Local, low-cost options, with HT approval.\nRelevant: Gives learners authentic chances to use English in the community.\nTime-bound: One per term, Terms 1–4."],
+      ["Strengthen my teaching of reading (e.g. graded readers, skimming and scanning, reading for detail).",
+       "Target group: my [e.g. EAL 1 / EAL 2 / FESOL] class.\nSpecific: Start a graded reader program and teach reading strategies (skimming, scanning, reading for detail).\nMeasurable: Learners read at least one graded reader a fortnight; one new strategy taught each term.\nAchievable: Uses readers already in the library and resource room.\nRelevant: Reading is essential for everyday texts and further study.\nTime-bound: Terms 1–4."],
+      ["Strengthen my teaching of listening using authentic audio and video.",
+       "Target group: my [e.g. EAL 2 / EAL 3 / EFS] class.\nSpecific: Add listening tasks using authentic audio and video (e.g. news, podcasts, announcements, phone messages).\nMeasurable: One authentic listening task a week; one listening strategy taught each term (e.g. predicting, key words).\nAchievable: Short, level-appropriate clips with simple tasks.\nRelevant: Learners need to understand real spoken English outside class.\nTime-bound: Weekly, Terms 1–4."],
+      ["Help my learners build their vocabulary more effectively.",
+       "Target group: my [e.g. EAL / EAL 1 / BESOL] class.\nSpecific: Introduce topic word banks and vocabulary notebooks with spaced revision.\nMeasurable: A revision activity every week; learners record at least [10] new words a week.\nAchievable: Notebooks and short revision games take little class time.\nRelevant: A wider vocabulary supports all four skills.\nTime-bound: Introduce in Term 1; weekly to Term 4."],
+      ["Teach grammar in context through meaningful tasks.",
+       "Target group: my [e.g. EAL 3 / EFS / AEFS] class.\nSpecific: Teach each unit’s grammar through its real-life tasks, using guided discovery.\nMeasurable: Key grammar for every unit taught in context and practised in speaking and writing.\nAchievable: Builds on existing unit plans.\nRelevant: Learners use grammar more accurately when it is linked to meaningful tasks.\nTime-bound: Every unit, Terms 1–4."],
+      ["Prepare learners for pathways to further study, VET courses or work.",
+       "Target group: my [e.g. EAL 3 / EFS / AEFS] class.\nSpecific: Build pathway information and skills into lessons (course requirements, career goals, job-search language).\nMeasurable: One pathways activity a term; one visit from a pathways or careers adviser; every learner sets a pathway goal.\nAchievable: Uses TAFE pathways staff and existing resources.\nRelevant: Helps learners plan their next step into further study, VET or work.\nTime-bound: Terms 1–4; adviser visit in Term 2 or 3."],
+      ["Improve my teaching through peer observation.",
+       "Target group: my teaching of [e.g. EAL 2 / RESOL] classes.\nSpecific: Observe a colleague and be observed by them, each time focusing on one teaching skill.\nMeasurable: One observation each way per term using a simple checklist; try one new idea from each.\nAchievable: Arranged with a willing colleague during existing class times.\nRelevant: Peer feedback is a practical way to improve my teaching.\nTime-bound: Once a term, Terms 1–4."]
     ],
     section: [
-      ['Help keep the ESL resource room / archive room organised and easy to use.',
-       'Sort and label ESL resources by EAL level once a term (me). Set up a simple sign-out list in Term 1. Let colleagues know about new readers and listening materials at staff meetings.'],
-      ['Share ESL teaching resources and ideas with colleagues.',
-       'Upload my best ESL worksheets, slides and listening tasks to the shared drive each term, sorted by level (me). Present one resource or activity at a staff meeting in Term 2 or 3.'],
-      ['Support colleagues to use technology in their ESL classes.',
-       'Run a short drop-in session on a digital tool for language practice (e.g. Forms quizzes, Padlet, AMEPOnline) in Term 2 (me). Write a one-page how-to guide for the shared drive.'],
-      ['Help organise a multicultural section event for students.',
-       'Help plan an event (e.g. Harmony Day, end-of-term celebration) with the team, building in speaking and listening tasks for students (me and colleagues). Share photos and feedback afterwards.'],
-      ['Support consistent assessing and moderation of EAL assessments.',
-       'Take part in moderation sessions each term (me). Help collect benchmark samples of student speaking and writing at each level. Share notes with the team.'],
-      ['Conduct a PD session for the ESL team.',
-       'Choose an ESL topic I can share (e.g. error correction, teaching pronunciation, using AI to make materials). Prepare a short session for a staff meeting in Term 3 (me). Collect feedback from colleagues.']
+      ["Help keep the ESL resource room / archive room organised and easy to use.",
+       "Specific: Sort and label ESL resources by level and set up a sign-out list.\nMeasurable: Resource room tidied once a term; sign-out list in use.\nAchievable: About an hour a term, shared with a colleague if possible.\nRelevant: Makes it easier for all teachers to find and use resources.\nTime-bound: Sign-out list by the end of Term 1; tidy every term."],
+      ["Share ESL teaching resources and ideas with colleagues.",
+       "Specific: Share my ESL worksheets, slides and listening tasks on the shared drive, sorted by level.\nMeasurable: Upload at least [5] resources a term; present one at a staff meeting.\nAchievable: Uses resources I already create.\nRelevant: Saves colleagues time and builds a shared resource bank.\nTime-bound: Every term; presentation in Term 2 or 3."],
+      ["Support colleagues to use technology in their ESL classes.",
+       "Specific: Run a drop-in session on a digital tool for ESL classes (e.g. Forms quizzes, Padlet, AMEPOnline) and write a how-to guide.\nMeasurable: One session and one one-page guide.\nAchievable: A short session in an existing meeting time.\nRelevant: Helps colleagues use technology confidently in class.\nTime-bound: Session in Term 2; guide by the end of Term 2."],
+      ["Help organise a multicultural section event for students.",
+       "Specific: Help plan a section event for students (e.g. Harmony Day, end-of-term celebration) with speaking and listening tasks.\nMeasurable: Help organise at least one event and share photos and feedback.\nAchievable: Tasks shared with the team.\nRelevant: Builds community and gives learners authentic language practice.\nTime-bound: Event date as agreed with the team."],
+      ["Support consistent assessing and moderation of EAL assessments.",
+       "Specific: Take part in moderation and help collect benchmark samples of speaking and writing at each level.\nMeasurable: Attend moderation every term; contribute samples for at least two levels.\nAchievable: Fits into scheduled moderation sessions.\nRelevant: Supports consistent, fair assessment across the section.\nTime-bound: Every term, Terms 1–4."],
+      ["Conduct a PD session for the ESL team.",
+       "Specific: Prepare and deliver a PD session for the ESL team on a topic I can share (e.g. error correction, pronunciation, AI for materials).\nMeasurable: One session at a staff meeting, with a short handout.\nAchievable: 20–30 minutes, based on my own practice.\nRelevant: Shares effective practice across the team.\nTime-bound: Prepare in Term 2; deliver in Term 3."]
     ],
     personal: [
-      ['Improve my IT skills for creating ESL materials (e.g. Word, Forms, Canva, Teams).',
-       'Complete one LinkedIn Learning or TAFE online module each term (me, Terms 1–4). Use each new skill to create or improve materials for my ESL classes.'],
-      ['Learn more about teaching low-level / pre-literacy adult ESL learners.',
-       'Attend relevant PD or webinars on literacy for adult EAL learners in Terms 1–2 (me). Read two articles or resources and observe a colleague teaching a pre-literacy or Level 1 class.'],
-      ['Learn how to use AI tools safely and effectively to prepare ESL materials.',
-       'Complete a short course on AI in education in Term 1 (me). Trial AI to draft graded readers, dialogues and worksheets, and check them carefully for accuracy and level before use. Share tips with colleagues.'],
-      ['Develop strategies to keep adult ESL learners engaged and motivated.',
-       'Attend a PD session on learner engagement (me, Term 1). Trial two new strategies each term (e.g. games, real-life tasks, student choice) and reflect on what worked with my learners.'],
-      ['Build my knowledge of the EAL curriculum and assessment (e.g. 22639VIC units).',
-       'Review the unit documents and assessment tasks for my course in Term 1 (me). Attend moderation sessions and ask an experienced colleague to mentor me.'],
-      ['Teach higher-level ESL classes (e.g. EAL 3–4) with more confidence.',
-       'Observe a colleague teaching a higher-level class in Term 1. Plan and trial two new advanced activities each term, such as debates or extended writing (me). Reflect with my HT mid-year.']
+      ["Improve my IT skills for creating ESL materials (e.g. Word, Forms, Canva, Teams).",
+       "Specific: Learn specific features I need (e.g. Word templates, Forms quizzes, Canva layouts, Teams assignments) and use them to make my ESL materials.\nMeasurable: Complete one LinkedIn Learning or TAFE online module a term and use each skill in my materials.\nAchievable: Short online modules in PD time.\nRelevant: Better materials and more efficient admin.\nTime-bound: One module a term, Terms 1–4."],
+      ["Learn more about teaching adult ESL learners with limited literacy.",
+       "Specific: Learn more about teaching adult ESL learners with limited literacy.\nMeasurable: Attend at least one PD session or webinar, read two resources and observe one low-level class.\nAchievable: Uses available PD and colleagues’ classes.\nRelevant: Better support for learners with limited literacy.\nTime-bound: Terms 1–2."],
+      ["Learn how to use AI tools safely and effectively to prepare ESL materials.",
+       "Specific: Learn to use AI tools safely to draft ESL materials (e.g. graded readers, dialogues, worksheets) and check them for accuracy and level.\nMeasurable: Complete one short course; create and use at least [5] AI-assisted resources.\nAchievable: A short course, then practice in my own lesson preparation.\nRelevant: Saves preparation time while keeping materials accurate.\nTime-bound: Course in Term 1; practice in Terms 2–3."],
+      ["Develop strategies to keep adult ESL learners engaged and motivated.",
+       "Specific: Learn and trial strategies to keep adult ESL learners engaged (e.g. games, real-life tasks, learner choice).\nMeasurable: Attend one PD session; trial two new strategies a term.\nAchievable: Strategies fit into existing lessons.\nRelevant: Engaged learners attend more and make better progress.\nTime-bound: PD in Term 1; trials Terms 1–4."],
+      ["Build my knowledge of the EAL curriculum and assessment (e.g. 22639VIC units).",
+       "Specific: Build my knowledge of the EAL curriculum and assessment (e.g. 22639VIC units).\nMeasurable: Read the unit documents and assessment tasks for my course; attend moderation; meet a mentor once a term.\nAchievable: Uses existing documents and a colleague’s support.\nRelevant: Confident, accurate assessment of my learners.\nTime-bound: Unit documents in Term 1; mentoring Terms 1–4."],
+      ["Teach higher-level ESL classes (e.g. EAL 3–4) with more confidence.",
+       "Specific: Build confidence teaching higher-level classes (e.g. EAL 3, EFS, AEFS).\nMeasurable: Observe one higher-level class; plan and use two advanced activities a term (e.g. debates, extended writing).\nAchievable: Builds on my current teaching.\nRelevant: Broadens the levels I can teach.\nTime-bound: Observation in Term 1; activities Terms 1–4."]
     ],
     other: [
-      ['Improve an area of my ESL teaching or role that matters to me and my learners.',
-       'Set out the steps I will take, when I will take them and who will help (me, Terms 1–4). Check progress with my HT mid-year.'],
-      ['Try something new in my ESL teaching this year.',
-       'Plan what I will try and when (me, Term 1). Ask colleagues for ideas and support. Reflect on how my learners responded at the end of Term 2.']
+      ["Improve an area of my ESL teaching or role that matters to me and my learners.",
+       "Specific: [What exactly I will do].\nMeasurable: [How much / how often, so I can see it has been done].\nAchievable: [Why it is realistic with my time and resources].\nRelevant: [Why it matters for my learners or my role].\nTime-bound: [When I will do it, e.g. Terms 1–4]."],
+      ["Try something new in my ESL teaching this year.",
+       "Specific: [The new thing I will try in my ESL teaching or role].\nMeasurable: [How much / how often I will do it].\nAchievable: [The support or resources I will use].\nRelevant: [How it will benefit my learners or the team].\nTime-bound: [When I will start and finish]."]
     ]
   };
   const lastIdea = {};
@@ -1014,7 +1018,7 @@
     const v = ((lastIdea['v'+i] ?? (start - 1)) + 1) % list.length; lastIdea['v'+i] = v;
     g.area = list[v][0]; g.action = list[v][1];
     lastIdea['a'+i] = g.area; lastIdea['c'+i] = g.action;
-    ['area','action'].forEach(f=>{ const ta = document.querySelector(`#s1goals [data-g="${i}"][data-f="${f}"]`); if(ta){ ta.value = g[f]; if(showMissing) ta.classList.remove('missing'); } });
+    ['area','action'].forEach(f=>{ const ta = document.querySelector(`#s1goals [data-g="${i}"][data-f="${f}"]`); if(ta){ ta.value = g[f]; autoGrow(ta); if(showMissing) ta.classList.remove('missing'); } });
     save(); renderPrint(); updateDirtyNote();
     subMsg(`Example added to ${title(g,i)} – change it to suit you${/\[e\.g\./.test(g.action) ? ', and replace the [brackets] with your own class' : ''}. Click ✨ Ideas again for another (${v+1} of ${list.length}).`, 'ok');
   });
@@ -1029,6 +1033,7 @@
     if(el.dataset && el.dataset.k && (el.type==='checkbox' || el.type==='radio')) el.dispatchEvent(new Event('input', {bubbles:true}));
   });
   document.addEventListener('input', e=>{
+    if(e.target.matches && e.target.matches('.goal-b textarea')) autoGrow(e.target);
     const el = e.target;
     if(el.dataset.g !== undefined){
       data.goals[+el.dataset.g][el.dataset.f] = el.value;
