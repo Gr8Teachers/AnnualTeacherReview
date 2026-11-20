@@ -1750,9 +1750,10 @@
       if(!row) throw new Error('not found');
       const obj = JSON.parse(row.planJson.replace(/[\u200b\u00a0]/g,' '));
       if(row.empId) obj.empId = row.empId;
-      obj.signToken = tok;
+      obj.signToken = tok; obj.s1FromPdf = true;
       applyLoaded(obj);
-      showStage(5);
+      showStage(5, true);
+      window.scrollTo({top:document.getElementById('steps').offsetTop-10});
       flash('Your Head Teacher has completed your Annual Review Form. Review it and the plan, then tick, sign and date below.', 8000);
     }catch(err){
       flash('Could not open the link (' + err.message + '). It may have expired – ask your Head Teacher to resend it.', 8000);
