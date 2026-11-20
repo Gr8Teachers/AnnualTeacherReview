@@ -268,8 +268,8 @@
   <!-- Employee details -->
   <section class="card">
     <div class="grid4">
-      <label for="lastName">Last name <span class="req">*</span></label><label for="firstName">First name <span class="req">*</span></label><label for="designation">Designation <span class="req">*</span></label><label for="location">Location <span class="req">*</span></label>
-      <input type="text" id="lastName" data-k="lastName" autocomplete="family-name"><input type="text" id="firstName" data-k="firstName" autocomplete="given-name"><select id="designation" data-k="designation"><option value="">— select —</option><option>Teacher ESOL - Full Time</option><option>Teacher ESOL - Part Time</option><option>Teacher ESOL - Casual</option></select><select id="location" data-k="location"><option value="">— select —</option><option>St Leonards</option><option>Campsie</option></select>
+      <label for="firstName">First name <span class="req">*</span></label><label for="lastName">Last name <span class="req">*</span></label><label for="designation">Designation <span class="req">*</span></label><label for="location">Location <span class="req">*</span></label>
+      <input type="text" id="firstName" data-k="firstName" autocomplete="given-name"><input type="text" id="lastName" data-k="lastName" autocomplete="family-name"><select id="designation" data-k="designation"><option value="">— select —</option><option>Teacher ESOL - Full Time</option><option>Teacher ESOL - Part Time</option><option>Teacher ESOL - Casual</option></select><select id="location" data-k="location"><option value="">— select —</option><option>St Leonards</option><option>Campsie</option></select>
     </div>
   </section>
 
@@ -1415,8 +1415,8 @@
   const FIELD_NAMES = {area:'area to be developed', action:'action strategies', reviewHow:'review – how', reviewBy:'review – by', reviewNote:'review comment (Other)'};
   function s1Missing(){
     const missing = [];
-    if(!(data.lastName||'').trim()) missing.push('Last name');
     if(!(data.firstName||'').trim()) missing.push('First name');
+    if(!(data.lastName||'').trim()) missing.push('Last name');
     if(!['Teacher ESOL - Full Time','Teacher ESOL - Part Time','Teacher ESOL - Casual'].includes(data.designation||'')) missing.push('Designation');
     if(!['St Leonards','Campsie'].includes(data.location||'')) missing.push('Location');
     data.goals.forEach((g,i)=>{
