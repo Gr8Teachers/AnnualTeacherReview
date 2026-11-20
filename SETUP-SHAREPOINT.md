@@ -19,6 +19,7 @@ You do this once. It takes about 20 minutes.
 |---------------|----------------------------------------|
 | Teacher       | Person (allow people only, one person) |
 | Emp_ID        | Single line of text                    |
+| Link Token    | Single line of text (see part 9)       |
 | Designation   | Single line of text                    |
 | Location      | Single line of text                    |
 | Stage         | Single line of text                    |
@@ -67,7 +68,10 @@ Go to **make.powerautomate.com → Create → Instant cloud flow → Skip**, the
     "goal3":       { "type": "string" },
     "goal4":       { "type": "string" },
     "otherGoals":  { "type": "string" },
-    "planJson":    { "type": "string" }
+    "planJson":    { "type": "string" },
+    "token":       { "type": "string" },
+    "signLink":    { "type": "string" },
+    "sendEmail":   { "type": "string" }
   }
 }
 ```
@@ -96,6 +100,7 @@ Field mapping (both actions):
 | Teacher Name (Title) | teacherName |
 | Teacher **Claims** (Person column) | see part 8 |
 | Emp ID        | see part 8 |
+| Link Token    | token (see part 9) |
 | Designation   | designation |
 | Location      | location |
 | Stage         | stage |
@@ -257,3 +262,44 @@ Add one row per teacher, with the names spelled the way teachers will type them 
 - Rows submitted earlier stay empty until the teacher resubmits (or you pick the person by hand).
 - With Teacher filled you can filter or group by teacher, use Quick Steps, or build a *When an item is created or modified* flow that emails the Teacher when Stage changes to *v2 by HT*.
 - Teachers no longer enter their Emp I.D. When the Head Teacher uses **Import from MS List**, the Emp ID from the row is filled in automatically and appears on the Annual Review Form (step 4). The Head Teacher can still type or correct it in step 4.
+
+---
+
+## 9. "Ready for Employee signature": email the teacher a link to sign
+
+When everything in step 4 is signed, the Head Teacher ticks **Ready for Employee signature**. The form updates the teacher's row (Stage **Ready for employee signature**) with a secret **Link Token**, and the flow emails the teacher a link like `https://gr8teachers.github.io/AnnualTeacherReview/?sign=…`.
+
+The teacher clicks the link, the completed form and plan load, and they go straight to step 5 to tick, sign and date. When they click **Save final PDF**, the row's Stage changes to **Signed by employee**. The Head Teacher also sees the link under the tick box (**Copy link**, **Resend email**).
+
+### 9a. List
+Add a column **Link Token** (Single line of text) and hide it from the view. Check its internal name (column settings → `Field=` in the address), e.g. `Link_x0020_Token`, `Link_x005f_Token` or `LinkToken`.
+
+### 9b. Submit flow
+1. **Parse JSON**: add `token`, `signLink` and `sendEmail` to the schema (see part 2, Step B).
+2. **Update item** and **Create item**: set **Link Token** to `token`.
+3. After the **Condition** (before **Response**), add another **Condition**: `sendEmail` **is equal to** `yes`.
+   - **If yes → Office 365 Outlook *Send an email (V2)***
+     - **To:** expression `first(body('Get_staff')?['value'])?['Staff']?['Email']`
+     - **Subject:** `Your Annual Review is ready to sign`
+     - **Body:** e.g. *Hi* `firstName`*, your Head Teacher has completed your Annual Review Form. Open this link, review the form and your plan, then tick, sign and date at step 5:* `signLink`
+   - **If no:** leave empty.
+
+The teacher must be on the Staff list (that's where the email address comes from), otherwise the flow fails and the form shows "Could not send".
+
+### 9c. New flow: fetch a plan for signing
+**Create → Instant cloud flow → Skip**:
+
+1. **When an HTTP request is received** – Who can trigger: **Anyone**.
+2. **Parse JSON** – Content: `Body`; Schema:
+   ```json
+   { "type": "object", "properties": { "token": { "type": "string" } } }
+   ```
+3. **Condition** – expression `length(coalesce(body('Parse_JSON')?['token'], ''))` **is greater than or equal to** `30` (stops anyone fetching rows without a real token).
+   - **If yes:**
+     - SharePoint **Get items** – List: Annual Teacher Review; **Filter Query:** `Link_x0020_Token eq '@{body('Parse_JSON')?['token']}'` (use your column's internal name); **Top Count:** `1`.
+     - **Response** – Status `200`; Header `Access-Control-Allow-Origin` = `*`; Body: `value` from Get items.
+   - **If no:**
+     - **Response** – Status `404`; Header `Access-Control-Allow-Origin` = `*`; Body: `{"ok":false}`.
+4. **Save**, copy the trigger's **HTTP POST URL**, then in `index.html` on GitHub (pencil icon) paste it between the quotes in `const SIGN_FETCH_URL = '';` and commit.
+
+Anyone with a teacher's link can open that teacher's form, so treat the email like any other private staff email. Each link only opens its own row.
