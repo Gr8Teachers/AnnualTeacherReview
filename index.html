@@ -1359,7 +1359,7 @@
       const decodeHtml = v => { if(!/<[a-z][\s\S]*>|&(quot|amp|lt|gt|#\d+);/i.test(v)) return v;
         const ta = document.createElement('textarea'); ta.innerHTML = v.replace(/<br\s*\/?>/gi,'\n').replace(/<\/(p|div)>/gi,'\n').replace(/<[^>]+>/g,''); return ta.value.trim(); };
       const norm = v => { if(v && typeof v === 'object' && 'Value' in v) v = v.Value; return (typeof v === 'string') ? decodeHtml(v) : (typeof v === 'number' ? String(v) : ''); };
-      const pick = (r, ...names)=>{ for(const k of Object.keys(r)){ const n = k.replace(/_x0020_/gi,'').replace(/[^a-z0-9]/gi,'').toLowerCase(); if(names.includes(n)){ const v = norm(r[k]); if(v) return v; } } return ''; };
+      const pick = (r, ...names)=>{ for(const k of Object.keys(r)){ const n = k.replace(/_x00(20|5f)_/gi,'').replace(/[^a-z0-9]/gi,'').toLowerCase(); if(names.includes(n)){ const v = norm(r[k]); if(v) return v; } } return ''; };
       const vals = r => Object.values(r).map(norm).filter(Boolean);
       const findPlan = r => vals(r).find(v=>/^\s*\{/.test(v) && v.includes('"goals"')) || '';
       const findLoc  = r => vals(r).find(v=>v==='St Leonards' || v==='Campsie') || '';

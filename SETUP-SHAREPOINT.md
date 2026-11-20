@@ -18,7 +18,7 @@ You do this once. It takes about 20 minutes.
 | Column name   | Type                                   |
 |---------------|----------------------------------------|
 | Teacher       | Person (allow people only, one person) |
-| Emp ID        | Single line of text                    |
+| Emp_ID        | Single line of text                    |
 | Designation   | Single line of text                    |
 | Location      | Single line of text                    |
 | Stage         | Single line of text                    |
@@ -221,7 +221,7 @@ The **Title** (Teacher Name) column can't be changed into a Person column, so th
 | Title → rename to **Last Name** | (built-in) |
 | **First Name** | Single line of text |
 | **Staff** | Person (one person) |
-| **Emp ID** | Single line of text |
+| **Emp_ID** | Single line of text |
 
 Add one row per teacher, with the names spelled the way teachers will type them on the form.
 
@@ -243,7 +243,7 @@ Add one row per teacher, with the names spelled the way teachers will type them 
 3. In **Update item** and **Create item**, set **Teacher Claims** to this expression:
    `first(body('Get_staff')?['value'])?['Staff']?['Claims']`
    and set **Emp ID** to:
-   `first(body('Get_staff')?['value'])?['Emp_x0020_ID']`
+   `first(body('Get_staff')?['value'])?['Emp_x005f_ID']`
 4. **Save.** The read flow doesn't change.
 
 ### Things to know
