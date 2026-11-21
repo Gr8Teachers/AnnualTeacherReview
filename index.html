@@ -24,9 +24,9 @@
   .grid4>label{align-self:end;white-space:nowrap}
   .grid3.signoff{grid-template-columns:1.6fr 1fr 1fr}
   label,.lab{display:block;font-size:12px;font-weight:bold;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
-  input[type=text],input[type=email],input[type=date],select,textarea{width:100%;font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
+  input[type=text],input[type=email],input[type=search],input[type=date],select,textarea{width:100%;font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
   textarea{min-height:90px;resize:vertical}
-  input[type=text],input[type=email],input[type=date],select{height:42px}
+  input[type=text],input[type=email],input[type=search],input[type=date],select{height:42px}
   input:focus,select:focus,textarea:focus{outline:2px solid #888;outline-offset:0;border-color:#888}
   :disabled{background:#f1f1f1;color:#888;cursor:not-allowed}
 
@@ -118,6 +118,10 @@
   select.lvl{width:auto!important;display:inline-block;height:30px;padding:2px 6px;margin:0 2px 0 0;font-size:inherit;vertical-align:baseline}
   .ov-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 0 4px}
   .ov-row .note.warn{color:#b3261e}
+  .idea-search{display:flex;align-items:center;gap:10px;margin-top:10px}
+  .idea-search input{flex:1;min-width:0}
+  .idea-search .note{white-space:nowrap}
+  .idea-none{padding:10px 12px;color:var(--muted);font-size:14px}
   .link-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}
   .link-row input{max-width:520px;flex:1 1 280px;font-size:12px;color:var(--muted)}
   .approve-note{font-size:13px;color:var(--muted);text-align:center}
@@ -444,6 +448,7 @@
       </div>
       <label for="ideaType" class="idea-lab">Show ideas for</label>
       <select id="ideaType" class="idea-type"></select>
+      <div class="idea-search"><input type="search" id="ideaSearch" placeholder="🔍 Search ideas, e.g. speaking, Excel, mentor" autocomplete="off" aria-label="Search ideas"><span class="note" id="ideaCount"></span></div>
       <p class="note" style="margin:10px 0 6px">1. Choose a goal &nbsp;→&nbsp; 2. Check the suggested action strategies &nbsp;→&nbsp; 3. <b>Use this goal</b></p>
       <p class="note" id="ideaStar" style="margin:0 0 6px;display:none"><b>*</b> Goals with * are subject to HT approval.</p>
       <div class="idea-list" id="ideaList" role="listbox"></div>
@@ -1414,6 +1419,7 @@
     const sel = document.getElementById('ideaType');
     sel.innerHTML = Object.keys(GOAL_TYPES).map(t=>`<option value="${t}">${esc(GOAL_TYPES[t])}</option>`).join('');
     sel.value = goalType(data.goals[i], i);
+    document.getElementById('ideaSearch').value = '';
     document.getElementById('ideaTitle').textContent = 'Ideas for ' + title(data.goals[i], i);
     renderIdeaList();
     ideaModal.classList.add('on');
@@ -1427,7 +1433,25 @@
     ideaPick = null;
     document.getElementById('ideaPrev').innerHTML = '<span class="note">Choose a goal above to see its suggested action strategies.</span>';
     document.getElementById('ideaUse').disabled = true;
+    filterIdeas();
   }
+  function filterIdeas(){
+    const q = (document.getElementById('ideaSearch').value||'').toLowerCase().trim();
+    const words = q.split(/\s+/).filter(Boolean);
+    const list = IDEAS[document.getElementById('ideaType').value] || IDEAS.other;
+    let shown = 0;
+    document.querySelectorAll('#ideaList .idea-opt').forEach(b=>{
+      const it = list[+b.dataset.pick], text = (it[0] + ' ' + it[1]).toLowerCase();
+      const ok = words.every(w=>text.includes(w));
+      b.style.display = ok ? '' : 'none'; if(ok) shown++;
+    });
+    let none = document.querySelector('#ideaList .idea-none');
+    if(!shown){ if(!none){ none = document.createElement('div'); none.className = 'idea-none'; document.getElementById('ideaList').appendChild(none); }
+      none.textContent = 'No ideas match "' + q + '" here. Try another word, or change "Show ideas for" above.'; }
+    else if(none) none.remove();
+    document.getElementById('ideaCount').textContent = words.length ? shown + ' of ' + list.length : list.length + ' ideas';
+  }
+  document.getElementById('ideaSearch').addEventListener('input', filterIdeas);
   function closeIdeas(){ ideaModal.classList.remove('on'); ideaGoal = null; }
   document.getElementById('ideaType').addEventListener('change', renderIdeaList);
   ideaModal.addEventListener('click', e=>{
