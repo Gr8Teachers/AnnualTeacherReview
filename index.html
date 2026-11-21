@@ -856,14 +856,117 @@
       if(data.signToken && SUBMIT_URL){ const now = new Date().toISOString(); data.signedAt = data.signedAt || now; save();
         postList(listPayload('Signed by employee', now, {}, {signedAt: now})).catch(()=>{}); }
     }
-    fullPrint = true; renderPrint(); document.body.classList.add('print-full');
-    const t = document.title, who = (data.name||'').trim();
-    document.title = 'Annual Review' + (who ? ' - ' + who : '') + (fromStage === 5 ? ' - signed' : '');
-    const done = ()=>{ fullPrint = false; document.body.classList.remove('print-full'); document.title = t; renderPrint(); window.removeEventListener('afterprint', done); };
-    window.addEventListener('afterprint', done);
-    window.print();
-    setTimeout(()=>{ if(fullPrint) done(); }, 3000);
+    const who = (data.name||'').trim();
+    makePdf(true, 'Annual Review' + (who ? ' - ' + who : '') + (fromStage === 5 ? ' - signed' : ''), fromStage === 5 ? null : 'subMsg4');
   }
+  // ---------- Build the PDF file directly (portrait form + landscape plan in every browser, incl. Safari / iPhone) ----------
+  let pdfLibsReady;
+  function loadScript(src){ return new Promise((res, rej)=>{ const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = ()=>rej(new Error('Could not load ' + src)); document.head.appendChild(s); }); }
+  function loadPdfLibs(){
+    if(!pdfLibsReady) pdfLibsReady = Promise.all([
+      window.html2canvas ? 0 : loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),
+      (window.jspdf && window.jspdf.jsPDF) ? 0 : loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
+    ]).catch(e=>{ pdfLibsReady = null; throw e; });
+    return pdfLibsReady;
+  }
+  async function buildPdf(withForm, fileName){
+    await loadPdfLibs();
+    const { jsPDF } = window.jspdf;
+    const PX = 96 / 25.4, S = 2, H = 210, BOT = 10, TOP2 = 26, LINE = 4.45;
+    const view = document.getElementById('printView'), oldStyle = view.getAttribute('style') || '';
+    fullPrint = withForm; renderPrint();
+    view.setAttribute('style', 'display:block;position:absolute;left:0;top:0;z-index:-1;pointer-events:none;background:#fff');
+    try{
+      const pv = view.querySelector('.pv');
+      const push = pv.querySelector('.pv-push'); if(push) push.style.height = '0';
+      const keep = pv.querySelector('.pv-keep'); if(keep) keep.classList.remove('pv-newpage');
+      if(document.fonts && document.fonts.ready) await document.fonts.ready;
+      const base = pv.getBoundingClientRect();
+      const mmY = el => (el.getBoundingClientRect().top - base.top) / PX;
+      const mmH = el => el.getBoundingClientRect().height / PX;
+      const rows = [...pv.querySelectorAll('tbody tr')];
+      const head = pv.querySelector('thead tr:not(.pv-gap)');
+      const foot = pv.querySelector('tfoot');
+      const headTop = mmY(head), headH = mmH(head);
+      const rowsTop = rows.length ? mmY(rows[0]) : headTop + headH;
+      const rowsBot = mmY(foot) + 0.6;                      // includes the table's closing line
+      const bounds = rows.map(r=>mmY(r) + mmH(r)).concat([rowsBot]);
+      const rowTops = rows.map(r=>mmY(r));
+      const keepTop = keep ? mmY(keep) : rowsBot, pvH = mmH(pv), keepH = pvH - keepTop;
+      const canvas = await window.html2canvas(pv, {scale:S, backgroundColor:'#ffffff', useCORS:true, logging:false});
+      const k = canvas.width / 297;                           // canvas px per mm
+      const slice = (y0, y1) => {
+        const c = document.createElement('canvas'); c.width = canvas.width; c.height = Math.max(1, Math.round((y1 - y0) * k));
+        c.getContext('2d').drawImage(canvas, 0, Math.round(y0 * k), canvas.width, c.height, 0, 0, canvas.width, c.height);
+        return c.toDataURL('image/jpeg', 0.88);
+      };
+      const links = (root, offY, destY, doc) => root.querySelectorAll('a[href]').forEach(a=>{
+        const r = a.getBoundingClientRect(), b0 = root === pv ? base : root.getBoundingClientRect();
+        doc.link((r.left - b0.left) / PX, destY + (r.top - b0.top) / PX - offY, r.width / PX, r.height / PX, {url: a.href});
+      });
+      const doc = new jsPDF({unit:'mm', format:'a4', orientation: withForm ? 'portrait' : 'landscape', compress:true});
+      if(withForm){
+        const pf = view.querySelector('.pf');
+        const fc = await window.html2canvas(pf, {scale:S, backgroundColor:'#ffffff', useCORS:true, logging:false});
+        doc.addImage(fc.toDataURL('image/jpeg', 0.88), 'JPEG', 0, 0, 210, 210 * fc.height / fc.width);
+        links(pf, 0, 0, doc);
+        doc.addPage('a4', 'landscape');
+      }
+      const logo = document.querySelector('header.top img').src;
+      // hidden data so "Open my PDF copy" can reopen this file
+      doc.setTextColor(255, 255, 255); doc.setFontSize(1);
+      ("ARDPDATA:" + encodeData() + ":ARDPEND").match(/.{1,300}/g).forEach((l, i)=>doc.text(l, 60, 3 + i * 0.45));
+      doc.setTextColor(0, 0, 0);
+      // page 1 of the plan: title block + column headings
+      doc.addImage(slice(0, rowsTop), 'JPEG', 0, 0, 297, rowsTop);
+      let src = rowsTop, dest = rowsTop, pages = 1;
+      const newPage = () => { doc.addPage('a4', 'landscape'); pages++; doc.addImage(logo, 'PNG', 8, 8, 48.37, 13.76); doc.addImage(slice(headTop, headTop + headH), 'JPEG', 0, TOP2, 297, headH); dest = TOP2 + headH; };
+      while(src < rowsBot - 0.01){
+        let end = Math.min(rowsBot, src + (H - BOT - dest));
+        let split = false;
+        if(end < rowsBot){
+          const b = bounds.filter(x=>x > src + 0.5 && x <= end).pop();
+          if(b) end = b;
+          else {                                                // one very long row: cut between text lines
+            const rt = rowTops.filter(t=>t <= src + 0.01).pop() ?? src;
+            const cut = rt + Math.floor((end - rt) / LINE) * LINE;
+            end = cut > src + LINE ? cut : end; split = true;
+          }
+        }
+        doc.addImage(slice(src, end), 'JPEG', 0, dest, 297, end - src);
+        if(split){ doc.setLineWidth(0.18); doc.line(9.35, dest + end - src, 9.35 + 272.86, dest + end - src); }
+        dest += end - src; src = end;
+        if(src < rowsBot - 0.01) newPage();
+      }
+      // signature block + KIC note: at the page bottom on a one-page plan, else under the table, else on a new page
+      if(keep){
+        let y;
+        if(pages === 1 && dest + 4 + keepH <= H - 5) y = H - 5 - keepH;
+        else if(dest + 4 + keepH <= H - BOT) y = dest + 4;
+        else { doc.addPage('a4', 'landscape'); pages++; doc.addImage(logo, 'PNG', 8, 8, 48.37, 13.76); y = 30; }
+        doc.addImage(slice(keepTop, pvH), 'JPEG', 0, y, 297, keepH);
+        links(keep, 0, y, doc);
+      }
+      doc.save(fileName.replace(/[\\/:*?"<>|]+/g, '') + '.pdf');
+    } finally {
+      view.setAttribute('style', oldStyle); fullPrint = false; renderPrint();
+    }
+  }
+  async function makePdf(withForm, fileName, msgId){
+    if(msgId) msgIn(msgId, 'Creating the PDF…');
+    else flash('Creating the PDF…', 20000);
+    try{
+      await buildPdf(withForm, fileName);
+      if(msgId) msgIn(msgId, 'PDF saved – check your Downloads.' + (withForm && msgId === 'subMsg5' ? ' Then upload it to People@TAFE (steps below).' : ''), 'ok');
+      else flash('PDF saved – check your Downloads.', 5000);
+    }catch(err){
+      // no internet for the PDF tools: fall back to the browser's print / Save as PDF
+      if(msgId) msgIn(msgId, ''); flash('Opening the print window instead (' + err.message + ').', 6000);
+      if(withForm){ fullPrint = true; renderPrint(); document.body.classList.add('print-full'); const done = ()=>{ fullPrint = false; document.body.classList.remove('print-full'); renderPrint(); window.removeEventListener('afterprint', done); }; window.addEventListener('afterprint', done); window.print(); }
+      else { renderPrint(); window.print(); }
+    }
+  }
+
   document.getElementById('btnPrintFull4').onclick = ()=>printFull(4);
   document.getElementById('btnPrintFull5').onclick = ()=>printFull(5);
 
@@ -1442,12 +1545,8 @@
   window.addEventListener('beforeprint', pinSignoff);
 
   function printPdf(){
-    renderPrint();
-    const t = document.title;
     const who = (data.name||'').trim();
-    document.title = 'Annual Review Development Plan' + (who ? ' - ' + who : '') + (isHT() ? ' v2' : '');  // suggested PDF file name (HT copy gets v2)
-    window.print();
-    setTimeout(()=>{ document.title = t; }, 1000);
+    makePdf(false, 'Annual Review Development Plan' + (who ? ' - ' + who : '') + (isHT() ? ' v2' : ''));
   }
   document.getElementById('btnPrint').onclick = printPdf;
   document.getElementById('btnPdf1').onclick = ()=>{ if(isHT()) saveModifiedPlan(true); else printPdf(); };
