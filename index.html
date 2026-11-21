@@ -1306,6 +1306,7 @@
   document.addEventListener('input', e=>{
     if(e.target.matches && e.target.matches('.goal-b textarea')) autoGrow(e.target);
     const el = e.target;
+    if(el.dataset && (el.dataset.g !== undefined || el.dataset.k)) data.editedAt = Date.now();
     if(el.dataset.g !== undefined){
       data.goals[+el.dataset.g][el.dataset.f] = el.value;
       if(/^review(How|By|Note)$/.test(el.dataset.f)){
@@ -1401,7 +1402,7 @@
     const now = new Date().toISOString();
     const payload = {
       teacherName: data.name.trim(), firstName: (data.firstName||'').trim(), lastName: (data.lastName||'').trim(), designation: data.designation||'', location: data.location||'',
-      stage: HT_STAGE, submittedOn: now, token: data.signToken||'', signLink: data.signToken ? signLinkFor(data.signToken) : '', sendEmail: '',
+      stage: HT_STAGE, submittedOn: now, token: ensureToken(), planLink: planLinkFor(data.signToken), signLink: signLinkFor(data.signToken), sendEmail: '',
       goal1: goalText(data.goals[0],0), goal2: goalText(data.goals[1],1), goal3: goalText(data.goals[2],2), goal4: goalText(data.goals[3],3),
       otherGoals: data.goals.slice(4).map((g,i)=>goalText(g,i+4)).join('\n\n----\n\n'),
       planJson: JSON.stringify(Object.assign({}, data, {role:'teacher', version:'v2', htModifiedAt: now}))
@@ -1415,7 +1416,7 @@
       subMsg('The list could not be updated (' + err.message + '). The v2 PDF will still be saved; try again later to update the list.', 'err');
     }
     btn.disabled = false;
-    if(ok){ data.version = 'v2'; data.htModifiedAt = now; data.s1Hash = s1Snapshot(); save(); subMsg(`List updated (${HT_STAGE}).` + (withPdf ? ' Now save the v2 PDF and send it to the teacher.' : ' Click Save modified plan to save the v2 PDF for the teacher.'), 'ok'); }
+    if(ok){ data.version = 'v2'; data.htModifiedAt = now; data.s1Hash = s1Snapshot(); markSynced(); subMsg(`List updated (${HT_STAGE}).` + (withPdf ? ' Now save the v2 PDF and send it to the teacher.' : ' Click Save modified plan to save the v2 PDF for the teacher.'), 'ok'); }
     if(withPdf) printPdf();
   }
   document.getElementById('btnClear').onclick = ()=>{
@@ -1623,7 +1624,7 @@
     const now = new Date().toISOString();
     const payload = {
       teacherName: data.name.trim(), firstName: (data.firstName||'').trim(), lastName: (data.lastName||'').trim(), designation: data.designation||'', location: data.location||'',
-      stage: 'Goals and Action plans', submittedOn: now, token: data.signToken||'', signLink: '', sendEmail: '',
+      stage: 'Goals and Action plans', submittedOn: now, token: ensureToken(), planLink: planLinkFor(data.signToken), signLink: '', sendEmail: '',
       goal1: goalText(data.goals[0],0), goal2: goalText(data.goals[1],1), goal3: goalText(data.goals[2],2), goal4: goalText(data.goals[3],3),
       otherGoals: data.goals.slice(4).map((g,i)=>goalText(g,i+4)).join('\n\n----\n\n'),
       planJson: JSON.stringify(Object.assign({}, data, {role:'teacher', s1SubmittedAt: now}))
@@ -1632,7 +1633,7 @@
       // text/plain avoids a CORS pre-flight; the flow parses it with "Parse JSON".
       const res = await fetch(SUBMIT_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(payload)});
       if(!res.ok) throw new Error('HTTP ' + res.status);
-      data.s1SubmittedAt = now; data.s1Hash = s1Snapshot(); save(); render(); btn.disabled = false;
+      data.s1SubmittedAt = now; data.s1Hash = s1Snapshot(); markSynced(); render(); btn.disabled = false;
       subMsg('Submitted. Your Head Teacher can now read your plan.', 'ok');
       return true;
     }catch(err){
@@ -1665,6 +1666,10 @@
 
   // ---------- Step 4 → 5: "Ready for Employee signature" emails the teacher a link ----------
   function signLinkFor(tok){ return location.href.split(/[?#]/)[0] + '?sign=' + encodeURIComponent(tok); }
+  function planLinkFor(tok){ return location.href.split(/[?#]/)[0] + '?plan=' + encodeURIComponent(tok); }
+  function ensureToken(){ if(!data.signToken) data.signToken = newToken(); return data.signToken; }
+  function markSynced(){ data.syncedAt = Date.now(); data.editedAt = 0; save(); }
+  function unsynced(){ return (data.editedAt||0) > (data.syncedAt||0); }
   function newToken(){
     if(window.crypto && crypto.randomUUID) return crypto.randomUUID().replace(/-/g,'') + crypto.randomUUID().replace(/-/g,'').slice(0,8);
     const a = new Uint8Array(20); crypto.getRandomValues(a); return Array.from(a, b=>b.toString(16).padStart(2,'0')).join('');
@@ -1694,7 +1699,7 @@
   function listPayload(stage, now, extra, planExtra){
     return Object.assign({
       teacherName: data.name.trim(), firstName: (data.firstName||'').trim(), lastName: (data.lastName||'').trim(), designation: data.designation||'', location: data.location||'',
-      stage, submittedOn: now, token: data.signToken||'', signLink: data.signToken ? signLinkFor(data.signToken) : '', sendEmail: '',
+      stage, submittedOn: now, token: ensureToken(), planLink: planLinkFor(data.signToken), signLink: signLinkFor(data.signToken), sendEmail: '',
       goal1: goalText(data.goals[0],0), goal2: goalText(data.goals[1],1), goal3: goalText(data.goals[2],2), goal4: goalText(data.goals[3],3),
       otherGoals: data.goals.slice(4).map((g,i)=>goalText(g,i+4)).join('\n\n----\n\n'),
       planJson: JSON.stringify(Object.assign({}, data, {role:'teacher'}, planExtra||{}))
@@ -1703,6 +1708,7 @@
   async function postList(payload){
     const res = await fetch(SUBMIT_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(payload)});
     if(!res.ok) throw new Error('HTTP ' + res.status);
+    markSynced();
   }
   async function sendForSignature(){
     const cb = document.getElementById('readySign');
@@ -1737,21 +1743,46 @@
     try{ await navigator.clipboard.writeText(v); flash('Link copied'); }catch(e){ const i = document.getElementById('readyLinkIn'); i.select(); document.execCommand('copy'); flash('Link copied'); }
   };
   // Teacher opens the emailed link (?sign=…): load the plan from the list and go to step 5
+  async function fetchByToken(tok){
+    const res = await fetch(SIGN_FETCH_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify({token: tok})});
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    let out = await res.json(); if(out && !Array.isArray(out)) out = out.value || out.body || [out];
+    const row = parseRows(out).find(r=>r.planJson);
+    if(!row) throw new Error('not found');
+    const obj = JSON.parse(row.planJson.replace(/[\u200b\u00a0]/g,' '));
+    if(row.empId) obj.empId = row.empId;
+    obj.signToken = tok;
+    return obj;
+  }
+  // "Open plan" link from the MS List (?plan=…): always loads the latest version saved on the list
+  async function openPlanLink(tok){
+    history.replaceState(null, '', location.href.split(/[?#]/)[0]);
+    if(!SIGN_FETCH_URL){ flash('This link can\'t be opened yet (the form isn\'t connected to the list).', 8000); return; }
+    flash('Opening the plan…', 4000);
+    try{
+      const obj = await fetchByToken(tok);
+      const here = (data.name||'').trim();
+      if(unsynced() && here){
+        const same = data.signToken === tok;
+        const msg = same
+          ? `This device has changes to ${here}'s plan that haven't been sent to the list yet.\n\nOK = open the version on the list (these changes are lost)\nCancel = keep working on the version on this device`
+          : `This device has changes to ${here}'s plan that haven't been sent to the list yet.\n\nOK = open ${obj.name||'the linked'} plan anyway (those changes are lost)\nCancel = stay on ${here}'s plan`;
+        if(!confirmSafe(msg)) return;
+      }
+      applyLoaded(obj); markSynced();
+      flash(`${obj.name||'Plan'} loaded from the list.` + (isHT() ? '' : ' Head Teachers: switch to Head Teacher to review it.'), 6000);
+    }catch(err){
+      flash('Could not open the plan (' + err.message + ').', 8000);
+    }
+  }
   async function openSignLink(tok){
     history.replaceState(null, '', location.href.split(/[?#]/)[0]);
     if(data.signToken === tok && (data.tSign || data.empSatisfied)){ showStage(5); return; }   // already working on it here
     if(!SIGN_FETCH_URL){ flash('This link can\'t be opened yet (the form isn\'t connected to the list). Ask your Head Teacher for the PDF instead.', 8000); return; }
     flash('Opening your Annual Review…', 4000);
     try{
-      const res = await fetch(SIGN_FETCH_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify({token: tok})});
-      if(!res.ok) throw new Error('HTTP ' + res.status);
-      let out = await res.json(); if(out && !Array.isArray(out)) out = out.value || out.body || [out];
-      const row = parseRows(out).find(r=>r.planJson);
-      if(!row) throw new Error('not found');
-      const obj = JSON.parse(row.planJson.replace(/[\u200b\u00a0]/g,' '));
-      if(row.empId) obj.empId = row.empId;
-      obj.signToken = tok; obj.s1FromPdf = true;
-      applyLoaded(obj);
+      const obj = await fetchByToken(tok); obj.s1FromPdf = true;
+      applyLoaded(obj); markSynced();
       showStage(5, true);
       window.scrollTo({top:document.getElementById('steps').offsetTop-10});
       flash('Your Head Teacher has completed your Annual Review Form. Review it and the plan, then tick, sign and date below.', 8000);
@@ -1765,6 +1796,8 @@
   render();  // always start locked
   const signParam = new URLSearchParams(location.search).get('sign');
   if(signParam) openSignLink(signParam);
+  const planParam = new URLSearchParams(location.search).get('plan');
+  if(planParam && !signParam) openPlanLink(planParam);
 })();
 </script>
 </body>

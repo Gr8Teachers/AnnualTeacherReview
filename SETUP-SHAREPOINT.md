@@ -71,6 +71,7 @@ Go to **make.powerautomate.com → Create → Instant cloud flow → Skip**, the
     "planJson":    { "type": "string" },
     "token":       { "type": "string" },
     "signLink":    { "type": "string" },
+    "planLink":    { "type": "string" },
     "sendEmail":   { "type": "string" }
   }
 }
@@ -303,3 +304,30 @@ The teacher must be on the Staff list (that's where the email address comes from
 4. **Save**, copy the trigger's **HTTP POST URL**, then in `index.html` on GitHub (pencil icon) paste it between the quotes in `const SIGN_FETCH_URL = '';` and commit.
 
 Anyone with a teacher's link can open that teacher's form, so treat the email like any other private staff email. Each link only opens its own row.
+
+---
+
+## 10. "Open plan" link on each row of the list
+
+Every submission now sends a permanent link for that teacher's plan (`planLink`), e.g. `https://gr8teachers.github.io/AnnualTeacherReview/?plan=…`. Click it from the MS List and the latest version saved on the list opens in the form; switch to **Head Teacher** to review it. (It uses the same **Sign link** flow and **Link** column as part 9, so nothing else is needed.)
+
+### 10a. List
+1. **+ Add column → Single line of text** → name it **Open plan**.
+2. Make it show as a clickable "Open plan" link: column heading ▾ → **Column settings → Format this column → Advanced mode**, paste this and **Save**:
+   ```json
+   {
+     "$schema": "https://developer.microsoft.com/json-schemas/sp/v2/column-formatting.schema.json",
+     "elmType": "a",
+     "txtContent": "=if(@currentField == '', '', 'Open plan')",
+     "attributes": { "href": "@currentField", "target": "_blank" },
+     "style": { "font-weight": "600" }
+   }
+   ```
+
+### 10b. Submit flow
+1. **Parse JSON**: add `"planLink": { "type": "string" },` to the schema.
+2. **Update item** and **Create item**: set **Open plan** to `planLink`.
+
+Rows submitted before this change get their link the next time the teacher submits, or when you click **Save modified plan**, **Resubmit** or **Ready for Employee signature** on that plan.
+
+If this device has changes that haven't been sent to the list yet (for example, Final review comments you haven't saved), the form asks before replacing them with the version on the list.
