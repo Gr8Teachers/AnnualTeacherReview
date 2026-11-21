@@ -1064,80 +1064,68 @@
   // Third person. {N} = first name (or "The teacher" at the start of a sentence), {n} = first name (or "the teacher" mid-sentence)
   const SUGG = {
     open: {
-      'Achieved': ['{N} has achieved this goal.', '{N} has successfully achieved this goal – well done.', 'This goal has been achieved by {n}.'],
-      'Partially achieved': ['{N} has partially achieved this goal and made good progress.', 'This goal has been partially achieved, reflecting a solid effort by {n}.', '{N} has made some good progress on this goal, which is partially achieved.'],
-      'Not achieved': ['{N} has not achieved this goal this year.', 'This goal was not achieved by {n} this year.', 'Unfortunately, {n} has not achieved this goal this year.'],
-      'Carry forward to next year': ['It has been agreed that {n} will carry this goal forward to next year\'s plan.', 'This goal will be carried forward to {n}\'s plan for next year.', '{N} will continue this goal in next year\'s plan.']
+      'Achieved': ['{N} has achieved this goal.', '{N} has successfully achieved this goal.', 'This goal has been achieved.'],
+      'Partially achieved': ['{N} has partially achieved this goal.', 'This goal has been partially achieved.', '{N} has made good progress on this goal, which is partially achieved.'],
+      'Not achieved': ['{N} has not achieved this goal this year.', 'This goal has not been achieved this year.', 'This goal was not achieved this year.'],
+      'Carry forward to next year': ['This goal will be carried forward to next year\'s plan.', 'It has been agreed that this goal will continue in next year\'s plan.', '{N} will continue this goal in next year\'s plan.']
     },
-    focusPlain: {
-      teaching: { good: ['This has strengthened classroom practice and benefited students.', 'It has supported students\' learning and progress.', '{N}\'s efforts are evident in the classroom.'],
-                  mixed: ['This remains a valuable focus for classroom practice.', 'It is a worthwhile focus for students.', 'Continuing to develop this will benefit students.'] },
-      section:  { good: ['{N}\'s contribution to the section is greatly appreciated by the team.', 'The section has benefited from this work.', 'This is a valued contribution to the section.'],
-                  mixed: ['This remains a valuable contribution to the section.', 'It is still a worthwhile contribution to the section.', 'The team would value continued work on this.'] },
-      personal: { good: ['This professional learning is valuable in the role.', 'It has been a worthwhile investment in professional growth.', 'The learning completed is valuable in the role.'],
-                  mixed: ['This remains an important part of professional growth.', 'It is still a useful area for professional learning.', 'Building knowledge in this area will be valuable in the role.'] },
-      other:    { good: ['{N}\'s effort on this goal is recognised.', 'This has been worthwhile work.', 'This is good work.'],
-                  mixed: ['This remains a worthwhile focus.', 'There is value in continuing with this.', 'It is worth continuing to work on.'] }
-    },
+    // good = Achieved, partial = Partially achieved, notyet = Not achieved / Carry forward
     focus: {
-      teaching: { good: ['{N}\'s work on “{A}” has strengthened classroom practice and benefited students.', 'Focusing on “{A}” has supported students\' learning and progress.', '{N}\'s efforts with “{A}” are evident in the classroom.'],
-                  mixed: ['“{A}” remains a valuable focus for classroom practice.', '{N}\'s focus on “{A}” is worthwhile for students.', 'Continuing to develop “{A}” will benefit students.'] },
-      section:  { good: ['{N}\'s contribution to the section – “{A}” – is greatly appreciated by the team.', 'The section has benefited from {n}\'s work on “{A}”.', '{N}\'s contribution through “{A}” is valued by the section.'],
-                  mixed: ['Contributing to the section through “{A}” remains a valuable goal.', '“{A}” is still a worthwhile contribution to the section.', 'The team would value continued work on “{A}”.'] },
-      personal: { good: ['{N}\'s professional learning in “{A}” is valuable in the role.', 'Developing skills in “{A}” has been a worthwhile investment in professional growth.', 'The learning completed in “{A}” is valuable in the role.'],
-                  mixed: ['Developing skills in “{A}” remains an important part of professional growth.', '“{A}” is still a useful area for professional learning.', 'Building knowledge in “{A}” will be valuable in the role.'] },
-      other:    { good: ['{N}\'s work on “{A}” has been worthwhile.', 'The effort put into “{A}” is recognised.', '{N}\'s work on “{A}” is good to see.'],
-                  mixed: ['“{A}” remains a worthwhile focus.', 'There is value in continuing with “{A}”.', '“{A}” is worth continuing to work on.'] }
+      teaching: { good:   ['Students have benefited from this work in class.', 'Students\' learning and progress have been supported by this goal.', 'Students have responded well to the strategies used.'],
+                  partial:['Students are already benefiting from the work done so far.', 'Some benefits for students are already evident in class.', 'Students have responded well to the strategies used so far.'],
+                  notyet: ['Students would still benefit from this goal.', 'This goal remains relevant to students\' learning and progress.', 'Continuing this work will benefit students.'] },
+      section:  { good:   ['Colleagues have benefited from this contribution.', 'The team has valued this contribution to the section.', 'Colleagues have found this work helpful.'],
+                  partial:['Colleagues have already benefited from the work done so far.', 'The team has found the contribution so far helpful.', 'Colleagues have responded positively to this work.'],
+                  notyet: ['Colleagues would still benefit from this contribution.', 'The section would still value this work.', 'This remains a worthwhile contribution for the team.'] },
+      personal: { good:   ['Students and colleagues will benefit from the skills developed through this goal.', 'The skills developed will benefit students and the team.', 'This professional learning will benefit students and colleagues.'],
+                  partial:['Some of the new skills are already benefiting students.', 'Students and colleagues are already benefiting from the learning so far.', 'The learning so far is already being put into practice.'],
+                  notyet: ['Students and colleagues would benefit from further learning in this area.', 'Further learning in this area would benefit students and the team.', 'This remains a worthwhile area of professional learning for the benefit of students.'] },
+      other:    { good:   ['Students and colleagues have benefited from this goal.', 'This goal has been of value to the section.', 'This work has benefited students and colleagues.'],
+                  partial:['Some benefits for the section are already evident.', 'Students and colleagues are already seeing some benefits.', 'The work so far has been of value to the section.'],
+                  notyet: ['This goal remains of value to students and colleagues.', 'The section would still benefit from this goal.', 'Continuing this goal will benefit the section.'] }
     },
+    // only where the mid-year status adds something that makes sense
     mid: {
-      'Achieved':                   {'Completed':'This was completed by the mid-year review.', 'Ongoing':'The progress noted at the mid-year review has been built on well.', 'In progress':'The work that was in progress at the mid-year review has been carried through well.', 'Scheduled':'The work scheduled at the mid-year review was carried through.', 'Not started':'Strong progress was made in the second half of the year.', '':''},
-      'Partially achieved':         {'Completed':'', 'Ongoing':'Work noted at the mid-year review has continued, though there is still more to do.', 'In progress':'The work in progress at the mid-year review has moved forward, though there is still more to do.', 'Scheduled':'Some of the planned work has taken place since the mid-year review.', 'Not started':'Work began after the mid-year review.', '':''},
-      'Not achieved':               {'Completed':'', 'Ongoing':'Although work had started by the mid-year review, it has not progressed as planned.', 'In progress':'Although this was in progress at the mid-year review, it has not progressed as planned.', 'Scheduled':'The work scheduled at the mid-year review did not go ahead as planned.', 'Not started':'This goal had not yet started at the mid-year review.', '':''},
-      'Carry forward to next year': {'Completed':'', 'Ongoing':'Good progress was noted at the mid-year review and there is more to build on.', 'In progress':'This was in progress at the mid-year review and there is more to build on next year.', 'Scheduled':'The work scheduled at the mid-year review will now take place next year.', 'Not started':'As this had not started at the mid-year review, next year will allow more time to focus on it.', '':''}
+      'Achieved':           {'Completed':'This goal had already been completed by the mid-year review.', 'In progress':'Good progress has been made since the mid-year review.', 'Ongoing':'Good progress has been made since the mid-year review.', 'Scheduled':'The planned activities in the second half of the year were completed successfully.', 'Not started':'Good progress was made in the second half of the year.'},
+      'Partially achieved': {'In progress':'Work has continued since the mid-year review.', 'Ongoing':'Work has continued since the mid-year review.', 'Scheduled':'Work on this goal began in the second half of the year.', 'Not started':'Work on this goal began in the second half of the year.'}
     },
     next: {
-      'Achieved': ['{N} is encouraged to share what worked with colleagues.', '{N} will continue to embed this in everyday practice.', '{N} may build on this success in next year\'s plan.'],
-      'Partially achieved': ['Support will be discussed to help {n} complete this goal.', '{N} will continue with the remaining strategies, with progress reviewed early next year.', '{N} is encouraged to keep working on this, with support available as needed.'],
-      'Not achieved': ['The barriers will be discussed with {n} and support or adjusted strategies agreed.', 'What got in the way will be reviewed with {n} and the strategies adjusted.', 'Support will be identified to help {n} move this forward.'],
-      'Carry forward to next year': ['The strategies will be reviewed with {n} at the start of next year.', 'The action plan will be revisited early next year so it is achievable.', 'Progress on this goal will be followed up next year.']
+      'Achieved': ['{N} is encouraged to share what worked with colleagues.', '{N} will continue to use these strategies in everyday practice.', 'This success can be built on in next year\'s plan.'],
+      'Partially achieved': ['{N} will continue with the remaining strategies next year.', 'Support will be discussed to help complete this goal.', 'The remaining steps can be included in next year\'s plan.'],
+      'Not achieved': ['The reasons will be discussed and the strategies adjusted where needed.', 'Support will be identified to help move this goal forward.', 'This goal will be reviewed to decide whether to continue it next year.'],
+      'Carry forward to next year': ['The action strategies will be reviewed at the start of next year.', 'The timeline will be adjusted so the goal is achievable next year.', 'Progress will be followed up early next year.']
     }
   };
   const lastSugg = {};
-  // Progress review (teacher, first person). Keyed by the mid-year status.
+  // Head Teacher's mid-year comment (third person). Keyed by the mid-year status.
   const PSUGG = {
     open: {
-      'Not started': ['{N} has not started this goal yet.', 'Work on this goal has not started yet.', '{N} has not yet begun the action strategies for this goal.'],
+      'Not started': ['{N} has not started this goal yet.', 'Work on this goal has not started yet.', 'This goal has not been started yet.'],
       'In progress': ['{N} has started this goal and it is in progress.', 'This goal is in progress.', '{N} is currently working on this goal.'],
-      'Ongoing':     ['This goal is ongoing and {n} is continuing to work on it.', '{N} is working on this goal throughout the year.', 'This is ongoing work that {n} is building into regular practice.'],
-      'Scheduled':   ['The work for this goal is scheduled for later in the year.', '{N} has planned and scheduled the activities for this goal.', 'This goal is scheduled for the coming terms.'],
-      'Completed':   ['{N} has completed this goal.', 'This goal has been completed.', '{N} has finished the action strategies for this goal.']
+      'Ongoing':     ['{N} is continuing to work on this goal.', 'This goal is ongoing.', 'This is ongoing work that {n} is building into regular practice.'],
+      'Scheduled':   ['The work for this goal is scheduled for later in the year.', '{N} has scheduled the activities for this goal.', 'This goal is planned for the second half of the year.'],
+      'Completed':   ['{N} has completed this goal.', 'This goal has been completed.', '{N} has completed the action strategies for this goal.']
     },
     focus: {
-      teaching: { done: ['{N}\'s work on “{A}” has strengthened classroom practice and benefited learners.', 'Focusing on “{A}” has had a positive effect in class.', 'Learners have responded well to {n}\'s work on “{A}”.'],
-                  going:['So far, {n}\'s work on “{A}” is having a positive effect in class.', 'There are already some benefits of “{A}” for learners.', 'Learners are responding well to what {n} has tried so far with “{A}”.'],
-                  later:['“{A}” is still an important teaching focus.', '“{A}” remains a worthwhile goal for learners.', '“{A}” is still a valuable focus in class.'] },
-      section:  { done: ['{N}\'s work on “{A}” has been a valued contribution to the section.', 'Colleagues have benefited from {n}\'s work on “{A}”.', '{N}\'s contribution to the section through “{A}” is appreciated.'],
-                  going:['{N}\'s work on “{A}” is already helping the section.', 'Colleagues have responded positively to {n}\'s work on “{A}” so far.', '{N}\'s contribution to the section through “{A}” is going well.'],
-                  later:['“{A}” is still a worthwhile contribution to the section.', 'The section would value work on “{A}”.', '“{A}” remains a valuable contribution to the section.'] },
-      personal: { done: ['Developing skills in “{A}” has been valuable in the role.', '{N}\'s learning in “{A}” has been worthwhile.', '{N} is now more confident with “{A}”.'],
-                  going:['{N} is building skills in “{A}” and is already applying some of the learning.', '{N}\'s confidence with “{A}” is growing.', 'The learning so far in “{A}” is already useful in the role.'],
-                  later:['“{A}” is still an important area for professional learning.', 'Developing skills in “{A}” remains a worthwhile priority.', 'Building knowledge in “{A}” will be valuable in the role.'] },
-      other:    { done: ['{N}\'s work on “{A}” has been worthwhile.', 'The effort put into “{A}” is recognised.', '{N}\'s work on “{A}” has been valuable.'],
-                  going:['{N}\'s work on “{A}” is going well so far.', '{N} is making good progress on “{A}”.', 'Progress on “{A}” is good so far.'],
-                  later:['“{A}” is still a worthwhile focus.', '“{A}” remains a worthwhile goal.', 'There is value in working on “{A}”.'] }
-    },
-    focusPlain: {
-      teaching: { done:['This has strengthened classroom practice and benefited learners.'], going:['So far it is having a positive effect in class.'], later:['It is still an important teaching focus.'] },
-      section:  { done:['This has been a valued contribution to the section.'], going:['It is already helping the section.'], later:['It is still a worthwhile contribution to the section.'] },
-      personal: { done:['This has been valuable in the role.'], going:['{N}\'s confidence is growing and some of the learning is already being applied.'], later:['It is still an important area for professional learning.'] },
-      other:    { done:['This has been worthwhile.'], going:['It is going well so far.'], later:['It is still a worthwhile focus.'] }
+      teaching: { done: ['Students have benefited from this work in class.', 'Students\' learning and progress have been supported by this goal.', 'Students have responded well to the strategies used.'],
+                  going:['Students are already responding well to the strategies.', 'Early benefits for students are already evident in class.', 'Students are benefiting from the work done so far.'],
+                  later:['Students will benefit once this work begins.', 'This goal remains relevant to students\' learning and progress.', 'Students will benefit from this work in the second half of the year.'] },
+      section:  { done: ['Colleagues have benefited from this contribution.', 'The team has valued this contribution to the section.', 'Colleagues have found this work helpful.'],
+                  going:['Colleagues are already finding this work helpful.', 'The team has responded positively so far.', 'Colleagues are already benefiting from this contribution.'],
+                  later:['Colleagues will benefit once this work begins.', 'The section will value this contribution.', 'The team will benefit from this work later in the year.'] },
+      personal: { done: ['Students and colleagues will benefit from the skills developed.', 'The skills developed will benefit students and the team.', 'This professional learning will benefit students and colleagues.'],
+                  going:['Some of the new skills are already benefiting students.', 'Students and colleagues are already benefiting from the learning so far.', 'The learning so far is already being put into practice.'],
+                  later:['Students and colleagues will benefit from this learning.', 'This learning will benefit students and the team once it is underway.', 'This remains a worthwhile area of learning for the benefit of students.'] },
+      other:    { done: ['Students and colleagues have benefited from this goal.', 'This goal has been of value to the section.', 'This work has benefited students and colleagues.'],
+                  going:['Some benefits for the section are already evident.', 'Students and colleagues are already seeing some benefits.', 'The work so far has been of value to the section.'],
+                  later:['This goal will be of value to the section.', 'Students and colleagues will benefit from this work.', 'This remains a worthwhile goal for the section.'] }
     },
     next: {
-      'Not started': ['{N} plans to start the action strategies next term{B}.', '{N} will begin this next term, with support discussed as needed{B}.', 'More time or support may be needed to get started, which will be discussed with {n}{B}.'],
-      'In progress': ['{N} will continue with the remaining action strategies{B}.', '{N} will keep working on this in the second half of the year{B}.', '{N} will continue with this and reflect on what is working{B}.'],
-      'Ongoing':     ['{N} will continue this for the rest of the year{B}.', '{N} will keep building this into everyday practice{B}.', '{N} will continue and reflect on what is working best{B}.'],
-      'Scheduled':   ['{N} will carry out the planned activities later in the year{B}.', 'The planned activities will take place in the coming terms{B}.', '{N} will complete the scheduled work and reflect on how it went{B}.'],
-      'Completed':   ['{N} will continue to apply this learning in everyday work.', '{N} is encouraged to share what worked with colleagues.', '{N} may build on this in next year\'s plan.']
+      'Not started': ['{N} plans to start the action strategies in Term 3.', 'Any support needed to get started will be discussed.', 'A start date for the action strategies will be agreed.'],
+      'In progress': ['{N} will continue with the remaining action strategies.', '{N} will keep working on this in the second half of the year.', 'The remaining steps will be completed in Terms 3 and 4.'],
+      'Ongoing':     ['{N} will continue this for the rest of the year.', '{N} will keep building this into everyday practice.', 'This will continue in Terms 3 and 4.'],
+      'Scheduled':   ['{N} will carry out the planned activities in the second half of the year.', 'The planned activities will take place in Terms 3 and 4.', 'The planned activities will be followed up once completed.'],
+      'Completed':   ['{N} is encouraged to share what worked with colleagues.', '{N} will continue to use these strategies in everyday practice.', 'This success can be built on in next year\'s plan.']
     }
   };
   // Teacher's own progress comment (first person). PSUGG above is the Head Teacher's mid-year comment (third person).
@@ -1182,11 +1170,15 @@
     const g = data.goals[i], st = g.status, S = forHT ? PSUGG : TSUGG;
     if(!S.open[st]) return null;
     const band = st === 'Completed' ? 'done' : (st === 'In progress' || st === 'Ongoing') ? 'going' : 'later';
-    const type = goalType(g, i), A = shortArea(g.area);
-    const by = (g.reviewBy && g.reviewBy !== 'Ongoing') ? (forHT ? ', with progress reviewed by the ' : ', and review my progress by the ') + g.reviewBy.replace(/^End/, 'end') : '';
-    const parts = [pick(S.open[st], variant),
-      A ? pick(S.focus[type][band], variant + 1).replace('{A}', A) : pick(S.focusPlain[type][band], variant + 1),
-      pick(S.next[st], variant + 2).replace('{B}', by)];
+    const type = goalType(g, i);
+    let parts;
+    if(forHT){
+      parts = [pick(S.open[st], variant), pick(S.focus[type][band], variant + 1), pick(S.next[st], variant + 2)];
+      if(st !== 'Completed' && /Term [34]/.test(g.reviewBy||'')) parts.push('Progress will be reviewed by the ' + g.reviewBy.replace(/^End/, 'end') + '.');
+    } else {
+      const by = (g.reviewBy && g.reviewBy !== 'Ongoing') ? ', and review my progress by the ' + g.reviewBy.replace(/^End/, 'end') : '';
+      parts = [pick(S.open[st], variant), pick(S.focusPlain[type][band], variant + 1), pick(S.next[st], variant + 2).replace('{B}', by)];
+    }
     const first = (data.firstName||'').trim();
     return parts.map(p=>forHT ? fillName(p, first) : p).join(' ');
   }
@@ -1220,12 +1212,11 @@
     const g = data.goals[i]; const out = g.outcome;
     if(!SUGG.open[out]) return null;
     const first = (data.firstName||'').trim();
-    const good = out === 'Achieved';
+    const band = out === 'Achieved' ? 'good' : out === 'Partially achieved' ? 'partial' : 'notyet';
     const type = goalType(g, i);
-    const A = shortArea(g.area);
     const parts = [];
     parts.push(pick(SUGG.open[out], variant));
-    parts.push(A ? pick(SUGG.focus[type][good ? 'good' : 'mixed'], variant + 1).replace('{A}', A) : pick(SUGG.focusPlain[type][good ? 'good' : 'mixed'], variant + 1));
+    parts.push(pick(SUGG.focus[type][band], variant + 1));
     const mid = (SUGG.mid[out]||{})[g.status||''] || '';
     if(mid) parts.push(mid);
     parts.push(pick(SUGG.next[out], variant + 2));
@@ -2107,10 +2098,10 @@
       none: ['{N} has had a productive year', '{N} has worked well throughout the year', '{N} has had a positive year']
     },
     hi: {
-      teaching: ['{N}\'s work on “{A}” has benefited learners.', '{N}\'s focus on “{A}” has strengthened classroom practice.', 'Learners have benefited from {n}\'s work on “{A}”.'],
-      section:  ['{N}\'s contribution to the section through “{A}” is appreciated.', 'Colleagues have benefited from {n}\'s work on “{A}”.', '{N}\'s work on “{A}” has supported the section.'],
-      personal: ['{N}\'s professional learning in “{A}” has strengthened professional practice.', '{N} has developed skills in “{A}”.', '{N}\'s learning in “{A}” has been valuable in the role.'],
-      other:    ['{N}\'s work on “{A}” has been worthwhile.', '{N}\'s work on “{A}” is recognised.', '{N}\'s work on “{A}” has been valuable.']
+      teaching: ['Students have benefited from the work on the teaching goals this year.', 'Students\' learning and progress have been supported by the teaching goals this year.', 'Students have responded well to the teaching strategies used this year.'],
+      section:  ['Colleagues have valued the contribution to the section this year.', 'The team has benefited from the section contribution this year.', 'Colleagues have found the section contribution this year helpful.'],
+      personal: ['Students and colleagues will benefit from the professional learning completed this year.', 'The skills developed this year will benefit students and the team.', 'The professional learning this year will benefit students and colleagues.'],
+      other:    ['Students and colleagues have benefited from the work this year.', 'The work this year has been of value to the section.', 'The section has benefited from the work this year.']
     },
     carry: ['Some goals will continue into next year\'s plan.', 'Remaining goals can be built into next year\'s plan.', 'Work on some goals will continue next year.'],
     thanks: ['{N} is a valued asset to the section.', '{N} is a valued member of the section.', '{N} is a highly valued member of the section.',
@@ -2126,9 +2117,9 @@
     const order = ['teaching','section','personal','other'];
     const pool = (ach.length ? ach : done.length ? done : gs).map(g=>({g, i:data.goals.indexOf(g)}))
       .sort((a,b)=>order.indexOf(goalType(a.g,a.i)) - order.indexOf(goalType(b.g,b.i)));
-    const cands = pool.filter(x=>shortArea(x.g.area) && shortArea(x.g.area).length <= 55);
-    const hiGoal = cands.length ? cands[((v % cands.length) + cands.length) % cands.length] : null;
-    const hi = hiGoal ? pick(OVS.hi[goalType(hiGoal.g, hiGoal.i)], v + 1).replace('{A}', shortArea(hiGoal.g.area)) : '';
+    const types = [...new Set(pool.map(x=>goalType(x.g, x.i)))];
+    const hiType = types.length ? types[((v % types.length) + types.length) % types.length] : null;
+    const hi = hiType ? pick(OVS.hi[hiType], v + 1) : '';
     const carry = done.some(g=>g.outcome === 'Carry forward to next year' || g.outcome === 'Partially achieved') ? pick(OVS.carry, v + 2) : '';
     let lead, note = '';
     if(data.lmWork && data.lmConduct){
