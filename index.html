@@ -114,6 +114,8 @@
   .next-steps{margin-top:18px;border-color:#1f7a66;background:#f3faf7}
   .next-steps ol{margin:8px 0 10px 20px;padding:0;line-height:1.7}
   .next-steps p{margin:0;font-weight:bold;color:#1f7a66}
+  .ov-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 0 4px}
+  .ov-row .note.warn{color:#b3261e}
   .link-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}
   .link-row input{max-width:520px;flex:1 1 280px;font-size:12px;color:var(--muted)}
   .approve-note{font-size:13px;color:var(--muted);text-align:center}
@@ -369,6 +371,7 @@
       <label class="tick"><input type="checkbox" data-k="lmWork" class="ht"><span>Satisfactory work performance and professional development</span></label>
       <label class="tick"><input type="checkbox" data-k="lmConduct" class="ht"><span>Satisfactory conduct</span></label>
       <p style="margin-top:14px">You are required to provide an explanation if the employee is not demonstrating satisfactory work performance, professional development or conduct.</p>
+      <div class="ov-row"><span class="note" id="ovCount"></span><button type="button" class="sugg" id="ovSugg" title="Write a draft overall comment from the goals' final review">✨ Suggest comment</button></div>
       <textarea id="lmExplain" data-k="lmExplain" class="ht" rows="3" style="min-height:80px"></textarea>
       <label class="tick" style="margin-top:14px"><input type="checkbox" data-k="lmSick" class="ht"><span>Satisfactory sick leave record (i.e. is not on Medical Certificate requirement)</span></label>
       <p class="note" style="margin:0 0 8px 30px">N.B: where sick leave is approaching unsatisfactory the process for unsatisfactory sick leave must be applied</p>
@@ -653,7 +656,7 @@
     document.getElementById('btnSubmit1').textContent = (data.s1SubmittedAt || isHT()) ? 'Resubmit Goals and Action plans' : 'Submit Goals and Action plans';
     document.getElementById('btnSubmit1').disabled = locked;
     document.getElementById('btnClear').disabled = locked && !isHT();
-    renderReady();
+    renderReady(); renderOvCount();
     document.getElementById('nextSteps5').style.display = data.finalSavedAt ? '' : 'none';
     document.getElementById('s1banner').innerHTML = locked ? `<div class="sub-banner"><span>✓ Approved by your Head Teacher${when?' on '+esc(when):''}. Your Goals and Action plans are now read-only.</span></div>` : data.s1SubmittedAt ? `<div class="sub-banner"><span>✓ Goals and Action plans submitted on ${esc(new Date(data.s1SubmittedAt).toLocaleString('en-AU',{dateStyle:'medium',timeStyle:'short'}))}. You can still make changes and click Resubmit.</span></div>` : '';
     updateDirtyNote();
@@ -1949,6 +1952,66 @@
         `<ol style="margin:0 0 8px;padding-left:20px">${['Log in to People@TAFE from the Staff Portal.', 'Click <b>Create New – KIC form</b>.', 'Choose <b>Currency Activity</b>.', 'Choose <b>Annual Teacher Review</b> from <b>Document Type</b>.', 'Complete the other information.', 'Attach the Annual Review Form + Development Plan PDF you saved.', 'Send for endorsement.'].map(x=>`<li style="margin:0">${x}</li>`).join('')}</ol>` +
         `<p style="margin:0">Thank you for another great year. I look forward to working with you next year.</p>`) };
   }
+
+  // ---------- Step 4: suggested overall comment for the year (third person, fits the printed box) ----------
+  const OVS = {
+    open: {
+      all:  ['{N} achieved all of their goals this year.', '{N} has had a very successful year, achieving all of their goals.', 'All of {n}\'s goals were achieved this year.'],
+      most: ['{N} achieved most of their goals this year.', '{N} has had a productive year and achieved most of their goals.', 'Most of {n}\'s goals were achieved this year.'],
+      some: ['{N} made progress on their goals this year.', '{N} has worked steadily on their goals throughout the year.', 'Progress was made on {n}\'s goals this year.'],
+      none: ['{N} has had a productive year.', '{N} has worked well throughout the year.', 'This has been a productive year for {n}.']
+    },
+    hi: {
+      teaching: ['Their work on “{A}” has benefited their learners.', 'Their focus on “{A}” has strengthened their teaching.', 'Learners have benefited from their work on “{A}”.'],
+      section:  ['Their contribution to the section through “{A}” is appreciated.', 'Colleagues have benefited from their work on “{A}”.', 'Their work on “{A}” has supported the section.'],
+      personal: ['Their professional learning in “{A}” has strengthened their practice.', 'They have developed their skills in “{A}”.', 'Their learning in “{A}” has supported their work.'],
+      other:    ['Their work on “{A}” has been worthwhile.', 'Their work on “{A}” is recognised.', 'Their work on “{A}” has been valuable.']
+    },
+    carry: ['Some goals will continue into next year\'s plan.', 'Remaining goals can be built into next year\'s plan.', 'Work on some goals will continue next year.'],
+    ok:    ['{N} has demonstrated satisfactory work performance, professional development and conduct.', 'Thank you for your contribution to the section this year.', '{N} is a valued member of the team.']
+  };
+  const OV_MAX = 320;   // about what fits in the 3-line box on the printed form
+  const lastOv = {v:-1, t:''};
+  function suggestOverall(v){
+    const first = (data.firstName||'').trim(), gs = data.goals.filter(g=>(g.area||'').trim());
+    const done = gs.filter(g=>g.outcome), ach = done.filter(g=>g.outcome === 'Achieved');
+    const band = !done.length ? 'none' : ach.length === gs.length ? 'all' : ach.length*2 >= gs.length ? 'most' : 'some';
+    const parts = [pick(OVS.open[band], v)];
+    const order = ['teaching','section','personal','other'];
+    const pool = (ach.length ? ach : done.length ? done : gs).map(g=>({g, i:data.goals.indexOf(g)}))
+      .sort((a,b)=>order.indexOf(goalType(a.g,a.i)) - order.indexOf(goalType(b.g,b.i)));
+    const cands = pool.filter(x=>shortArea(x.g.area) && shortArea(x.g.area).length <= 55);
+    const hiGoal = cands.length ? cands[((v % cands.length) + cands.length) % cands.length] : null;
+    const hi = hiGoal ? pick(OVS.hi[goalType(hiGoal.g, hiGoal.i)], v + 1).replace('{A}', shortArea(hiGoal.g.area)) : '';
+    const carry = done.some(g=>g.outcome === 'Carry forward to next year' || g.outcome === 'Partially achieved') ? pick(OVS.carry, v + 2) : '';
+    let close;
+    if(data.lmWork && data.lmConduct) close = pick(OVS.ok, v + 3);
+    else {
+      const areas = [!data.lmWork && 'work performance and professional development', !data.lmConduct && 'conduct'].filter(Boolean).join(' and ');
+      close = `Concerns were noted regarding ${areas}: [describe the concerns and the support agreed].`;
+    }
+    for(const opt of [[parts[0], hi, carry, close], [parts[0], hi, close], [parts[0], carry, close], [parts[0], close]]){
+      const t = opt.filter(Boolean).map(p=>fillName(p, first)).join(' ');
+      if(t.length <= OV_MAX) return t;
+    }
+    return fillName(parts[0], first) + ' ' + fillName(close, first);
+  }
+  function renderOvCount(){
+    const n = (data.lmExplain||'').length, el = document.getElementById('ovCount'); if(!el) return;
+    el.textContent = n > OV_MAX ? `${n} characters – may not all fit in the box on the printed form` : '';
+    el.classList.toggle('warn', n > OV_MAX);
+    document.getElementById('ovSugg').style.display = isHT() ? '' : 'none';
+  }
+  document.getElementById('ovSugg').onclick = ()=>{
+    if(!isHT()) return;
+    const cur = (data.lmExplain||'').trim();
+    if(cur && cur !== lastOv.t && !confirmSafe('Replace the current comment with a suggested one?')) return;
+    lastOv.v++; const t = suggestOverall(lastOv.v); lastOv.t = t;
+    data.lmExplain = t; data.editedAt = Date.now(); document.getElementById('lmExplain').value = t;
+    save(); renderPrint(); renderOvCount();
+    msgIn('subMsg4', 'Draft added – edit it as you like. Click again for different wording.', 'ok');
+  };
+  document.getElementById('lmExplain').addEventListener('input', renderOvCount);
 
   load(); data.role = 'teacher';
   if(data.s1SubmittedAt && !data.s1Hash) data.s1Hash = s1Snapshot();
