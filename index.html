@@ -2050,6 +2050,26 @@
   if(signParam) openSignLink(signParam);
   const planParam = new URLSearchParams(location.search).get('plan');
   if(planParam && !signParam) openPlanLink(planParam);
+  // Opened directly (bookmark / typed address): quietly bring this browser's plan up to date from the list
+  async function refreshFromList(){
+    if(!SIGN_FETCH_URL || !data.signToken || !data.syncedAt || unsynced()) return;
+    try{
+      const obj = await fetchByToken(data.signToken);
+      if(unsynced()) return;   // they started typing while we were fetching
+      const sig = d => JSON.stringify([d.goals, !!d.s1Approved, d.version||'', d.progressSubmittedAt||'', d.midCommentedAt||'', !!d.readyForSign, d.htName||'', d.lmExplain||'']);
+      const changed = sig(obj) !== sig(data);
+      const keepStage = data.stage, role = data.role;
+      data = Object.assign({stage:1, goals:[]}, obj); delete data.v; data.role = role;
+      data.goals = (data.goals||[]).map(g=>Object.assign(blankGoal(), g));
+      while(data.goals.length<4) data.goals.push(blankGoal());
+      syncName();
+      data.s1Hash = s1Snapshot(); if(s1Missing().length === 0) data.s1FromPdf = true;
+      data.stage = canOpen(keepStage) ? keepStage : 1;
+      markSynced(); render();
+      if(changed) flash('Your plan has been updated with the latest version from your Head Teacher.', 6000);
+    }catch(e){ /* offline or link not found: keep the copy on this device */ }
+  }
+  if(!planParam && !signParam) refreshFromList();
 })();
 </script>
 </body>
