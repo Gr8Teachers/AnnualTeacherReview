@@ -1926,17 +1926,17 @@
     const wrap = inner => `<div style="font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.35">${inner}</div>`;
     const plan = planLinkFor(ensureToken()), sign = signLinkFor(data.signToken);
     if(kind === 'approved') return { subject: 'Your Annual Review Development Plan has been approved',
-      html: wrap(P(`Hi ${first},`) + P('I have approved your Annual Review Development Plan (Goals and Action plans).') +
+      html: wrap(P(`Hi ${first},`) + P('Your Annual Review Development Plan (Goals and Action plans) has been approved.') +
         `<p style="margin:0">Open it at any time to:</p>` + UL(['view your approved plan', 'save a copy – click <b>Print / PDF</b> at the top of the page']) +
-        BTN(plan, 'View your approved plan') + P('I will email you again at mid-year for your progress review.') + `<p style="margin:0">Thank you.</p>`) };
+        BTN(plan, 'View your approved plan') + P('You will receive another email at mid-year for your progress review.') + `<p style="margin:0">Thank you.</p>`) };
     if(kind === 'changes') return { subject: 'Your Annual Review Development Plan has been updated',
-      html: wrap(P(`Hi ${first},`) + P('I have reviewed your Goals and Action plans and made some changes.') +
-        `<p style="margin:0">Please open your plan to:</p>` + UL(['review my changes', 'update anything you need to', 'click <b>Resubmit Goals and Action plans</b>']) +
+      html: wrap(P(`Hi ${first},`) + P('Your Goals and Action plans have been reviewed and some changes have been made.') +
+        `<p style="margin:0">Please open your plan to:</p>` + UL(['review the changes', 'update anything you need to', 'click <b>Resubmit Goals and Action plans</b>']) +
         BTN(plan, 'Review your updated plan') + `<p style="margin:0">Thank you.</p>`) };
     if(kind === 'midyear'){
       const items = data.goals.map((g,i)=>(g.midHT||'').trim() ? `<p style="margin:0 0 10px"><b>${esc(title(g,i))}</b>${g.status ? ' – ' + esc(g.status) : ''}<br>${esc(g.midHT).replace(/\n/g,'<br>')}</p>` : '').join('');
       return { subject: 'Mid-year review – comments from your Head Teacher',
-        html: wrap(P(`Hi ${first},`) + P('Thank you for completing your mid-year progress review. Here are my comments:') + items +
+        html: wrap(P(`Hi ${first},`) + P('Thank you for completing your mid-year progress review. Comments have been added for the following goals:') + items +
           BTN(plan, 'Open your plan') + `<p style="margin:0">Thank you.</p>`) };
     }
     // kind === 'sign'
