@@ -114,6 +114,7 @@
   .next-steps{margin-top:18px;border-color:#1f7a66;background:#f3faf7}
   .next-steps ol{margin:8px 0 10px 20px;padding:0;line-height:1.7}
   .next-steps p{margin:0;font-weight:bold;color:#1f7a66}
+  select.lvl{width:auto!important;display:inline-block;height:30px;padding:2px 6px;margin:0 2px 0 0;font-size:inherit;vertical-align:baseline}
   .ov-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 0 4px}
   .ov-row .note.warn{color:#b3261e}
   .link-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}
@@ -368,8 +369,8 @@
       <p>I certify that I have reviewed the employee's performance during the TAFE Teachers and Related Employees Annual Review for the year
         <span style="white-space:nowrap"><input type="text" id="lmYear" data-k="lmYear" class="ht yr" inputmode="numeric" maxlength="4">.</span></p>
       <p>I have found the employee to be demonstrating:</p>
-      <label class="tick"><input type="checkbox" data-k="lmWork" class="ht"><span>Satisfactory work performance and professional development</span></label>
-      <label class="tick"><input type="checkbox" data-k="lmConduct" class="ht"><span>Satisfactory conduct</span></label>
+      <label class="tick"><input type="checkbox" data-k="lmWork" class="ht"><span><select data-k="lmWorkLevel" class="ht lvl"><option>Outstanding</option><option>Satisfactory</option></select> work performance and professional development</span></label>
+      <label class="tick"><input type="checkbox" data-k="lmConduct" class="ht"><span><select data-k="lmConductLevel" class="ht lvl"><option>Outstanding</option><option>Satisfactory</option></select> conduct</span></label>
       <p style="margin-top:14px">You are required to provide an explanation if the employee is not demonstrating satisfactory work performance, professional development or conduct.</p>
       <div class="ov-row"><span class="note" id="ovCount"></span><button type="button" class="sugg" id="ovSugg" title="Write a draft overall comment from the goals' final review">✨ Suggest comment</button></div>
       <textarea id="lmExplain" data-k="lmExplain" class="ht" rows="3" style="min-height:80px"></textarea>
@@ -555,7 +556,10 @@
   }
 
   // ---------- render ----------
+  function lvl(k){ return data[k] || 'Satisfactory'; }
   function render(){
+    if(!data.lmWorkLevel) data.lmWorkLevel = 'Satisfactory';
+    if(!data.lmConductLevel) data.lmConductLevel = 'Satisfactory';
     // stage 1
     document.getElementById('s1goals').innerHTML = data.goals.map((g,i)=>`
       <div class="goal">
@@ -794,8 +798,8 @@
       <ul class="rv-list">
         <li><b>Employee:</b> ${esc([data.firstName, data.lastName].filter(Boolean).join(' ') || data.name || '—')} · Emp I.D. ${esc(data.empId||'—')} · ${esc(data.designation||'—')} · ${esc(data.location||'—')}</li>
         <li><b>Review year:</b> ${esc(data.lmYear||'—')}</li>
-        <li>${tick(data.lmWork)} Satisfactory work performance and professional development</li>
-        <li>${tick(data.lmConduct)} Satisfactory conduct</li>
+        <li>${tick(data.lmWork)} ${esc(lvl('lmWorkLevel'))} work performance and professional development</li>
+        <li>${tick(data.lmConduct)} ${esc(lvl('lmConductLevel'))} conduct</li>
         ${(data.lmExplain||'').trim()?`<li><b>Explanation:</b> ${esc(data.lmExplain)}</li>`:''}
         <li>${tick(data.lmSick)} Satisfactory sick leave record</li>
         <li>${tick(data.lmPlan)} A professional development plan has been developed with the staff member</li>
@@ -888,8 +892,8 @@
       ${A(13.3, 78.6, 'I certify that I have reviewed the employee\'s performance during the TAFE Teachers and Related')}
       ${A(14.1, 83.0, 'Employees Annual Review for the year ' + yr + '.')}
       ${A(13.1, 91.9, 'I have found the employee to be demonstrating:')}
-      ${box(14.1, 97.5, d.lmWork)}${A(21.3, 97.4, 'Satisfactory work performance and professional development')}
-      ${box(14.1, 103.6, d.lmConduct)}${A(21.3, 103.4, 'Satisfactory conduct')}
+      ${box(14.1, 97.5, d.lmWork)}${A(21.3, 97.4, lvl('lmWorkLevel') + ' work performance and professional development')}
+      ${box(14.1, 103.6, d.lmConduct)}${A(21.3, 103.4, lvl('lmConductLevel') + ' conduct')}
       ${A(14.1, 113.2, 'You are required to provide an explanation if the employee is not demonstrating satisfactory work', 'width:183mm;text-align:justify;text-align-last:justify')}
       ${A(14.1, 117.6, 'performance, professional development or conduct.')}
       <div class="pf-a pf-explain" style="left:14.6mm;top:122.4mm;width:180mm">${v(d.lmExplain)}</div>
@@ -1475,7 +1479,7 @@
       tSign:data.tSign||'', tDate:data.tDate||'', htName:data.htName||'', htSign:data.htSign||'', htDate:data.htDate||'',
       s1SubmittedAt:data.s1SubmittedAt||'', goals:data.goals,
       lastName:data.lastName||'', firstName:data.firstName||'', empId:data.empId||'', lmYear:data.lmYear||'',
-      lmWork:!!data.lmWork, lmConduct:!!data.lmConduct, lmExplain:data.lmExplain||'', lmSick:!!data.lmSick, lmPlan:!!data.lmPlan, lmFeedback:!!data.lmFeedback,
+      lmWork:!!data.lmWork, lmConduct:!!data.lmConduct, lmWorkLevel:data.lmWorkLevel||'', lmConductLevel:data.lmConductLevel||'', lmExplain:data.lmExplain||'', lmSick:!!data.lmSick, lmPlan:!!data.lmPlan, lmFeedback:!!data.lmFeedback,
       empSatisfied:data.empSatisfied||'', version:data.version||'', htModifiedAt:data.htModifiedAt||'',
       s1Approved:!!data.s1Approved, s1ApprovedAt:data.s1ApprovedAt||'', signToken:data.signToken||'',
       progressOpen:!!data.progressOpen, progressSubmittedAt:data.progressSubmittedAt||'', midCommentedAt:data.midCommentedAt||''};
@@ -1985,7 +1989,11 @@
     const hi = hiGoal ? pick(OVS.hi[goalType(hiGoal.g, hiGoal.i)], v + 1).replace('{A}', shortArea(hiGoal.g.area)) : '';
     const carry = done.some(g=>g.outcome === 'Carry forward to next year' || g.outcome === 'Partially achieved') ? pick(OVS.carry, v + 2) : '';
     let close;
-    if(data.lmWork && data.lmConduct) close = pick(OVS.ok, v + 3);
+    if(data.lmWork && data.lmConduct){
+      const w = lvl('lmWorkLevel').toLowerCase(), c = lvl('lmConductLevel').toLowerCase();
+      const first0 = w === c ? `{N} has demonstrated ${w} work performance, professional development and conduct.` : `{N} has demonstrated ${w} work performance and professional development, and ${c} conduct.`;
+      close = pick([first0].concat(OVS.ok.slice(1)), v + 3);
+    }
     else {
       const areas = [!data.lmWork && 'work performance and professional development', !data.lmConduct && 'conduct'].filter(Boolean).join(' and ');
       close = `Concerns were noted regarding ${areas}: [describe the concerns and the support agreed].`;
