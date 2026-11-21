@@ -422,7 +422,7 @@
         <li>Send for endorsement.</li>
       </ol>
       <p>Thank you for another great year!</p>
-      <div class="upl-row"><button class="btn primary" type="button" id="btnUploaded">I've uploaded it to People@TAFE</button><span class="note" id="uplNote"></span></div>
+      <div class="upl-row"><label class="tick" style="margin:0"><input type="checkbox" id="chkUploaded"><span>I have uploaded my Annual Review Form + Development Plan to People@TAFE</span></label><span class="note" id="uplNote"></span></div>
     </div>
     <p class="note" style="text-align:center">Then upload the PDF to People@TAFE via a KIC form (Document Type: <b>Annual Teacher Review</b>).</p>
     <div class="nav"><button class="btn" type="button" data-go="4">← Back</button><span></span></div>
@@ -664,8 +664,8 @@
     document.getElementById('btnClear').disabled = locked && !isHT();
     renderReady(); renderOvCount();
     document.getElementById('nextSteps5').style.display = data.finalSavedAt ? '' : 'none';
-    document.getElementById('btnUploaded').style.display = data.uploadedAt ? 'none' : '';
-    document.getElementById('uplNote').textContent = data.uploadedAt ? '✓ Marked as uploaded on ' + fmtDay(data.uploadedAt) + '.' : '';
+    const cu = document.getElementById('chkUploaded'); cu.checked = !!data.uploadedAt; cu.disabled = !!data.uploadedAt;
+    document.getElementById('uplNote').textContent = data.uploadedAt ? '(' + fmtDay(data.uploadedAt) + ')' : '';
     document.getElementById('s1banner').innerHTML = locked ? `<div class="sub-banner"><span>✓ Approved by your Head Teacher${when?' on '+esc(when):''}. Your Goals and Action plans are now read-only.</span></div>` : data.s1SubmittedAt ? `<div class="sub-banner"><span>✓ Goals and Action plans submitted on ${esc(new Date(data.s1SubmittedAt).toLocaleString('en-AU',{dateStyle:'medium',timeStyle:'short'}))}. You can still make changes and click Resubmit.</span></div>` : '';
     updateDirtyNote();
     if(showMissing) markMissing();
@@ -1914,8 +1914,8 @@
     btn.disabled = false;
   }
   document.getElementById('btnSubmit2').onclick = submitProgress;
-  document.getElementById('btnUploaded').onclick = async ()=>{
-    if(!confirmSafe('Have you uploaded your Annual Review Form + Development Plan to People@TAFE?')) return;
+  document.getElementById('chkUploaded').onchange = async e=>{
+    e.stopPropagation(); if(!e.target.checked || data.uploadedAt) return;
     const now = new Date().toISOString(); data.uploadedAt = now; save(); render();
     if(SUBMIT_URL){ try{ await postList(listPayload('Uploaded to People@TAFE', now)); }catch(err){ msgIn('subMsg5', 'Saved here, but the list could not be updated (' + err.message + ').', 'err'); } }
   };

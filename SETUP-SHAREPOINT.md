@@ -410,7 +410,7 @@ Only rows whose Stage is exactly *Goals and Action plans - Approved by HT* are e
 
 ## 12. End-of-year record
 
-The form sends `endYear`, e.g. *Sent to sign 21 Nov 2026 · Signed 22 Nov 2026 · Uploaded 23 Nov 2026*. At the bottom of the People@TAFE steps (after the final PDF is saved), the teacher can click **I've uploaded it to People@TAFE**; this sets Stage to **Uploaded to People@TAFE**.
+The form sends `endYear`, e.g. *Sent to sign 21 Nov 2026 · Signed 22 Nov 2026 · Uploaded 23 Nov 2026*. At the bottom of the People@TAFE steps (after the final PDF is saved), the teacher can tick **I have uploaded my Annual Review Form + Development Plan to People@TAFE**; this sets Stage to **Uploaded to People@TAFE**.
 
 1. List: add a column **End of year** (Single line of text).
 2. Submit flow, **Parse JSON**: add `"endYear": { "type": "string" },`.
