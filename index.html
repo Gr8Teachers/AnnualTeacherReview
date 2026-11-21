@@ -113,7 +113,6 @@
   .approve.off{cursor:not-allowed;opacity:.75}.approve.off input{cursor:not-allowed}
   .next-steps{margin-top:18px;border-color:#1f7a66;background:#f3faf7}
   .next-steps ol{margin:8px 0 10px 20px;padding:0;line-height:1.7}
-  .upl-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:4px 0 12px}
   .next-steps p{margin:0;font-weight:bold;color:#1f7a66}
   select.lvl{width:auto!important;display:inline-block;height:30px;padding:2px 6px;margin:0 2px 0 0;font-size:inherit;vertical-align:baseline}
   .ov-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 0 4px}
@@ -421,7 +420,6 @@
         <li>Attach the <b>Annual Review Form + Development Plan</b> PDF you just saved.</li>
         <li>Send for endorsement.</li>
       </ol>
-      <div class="upl-row"><button class="btn primary" type="button" id="btnUploaded">I've uploaded it to People@TAFE</button><span class="note" id="uplNote"></span></div>
       <p>Thank you for another great year!</p>
     </div>
     <p class="note" style="text-align:center">Then upload the PDF to People@TAFE via a KIC form (Document Type: <b>Annual Teacher Review</b>).</p>
@@ -664,8 +662,6 @@
     document.getElementById('btnClear').disabled = locked && !isHT();
     renderReady(); renderOvCount();
     document.getElementById('nextSteps5').style.display = data.finalSavedAt ? '' : 'none';
-    document.getElementById('btnUploaded').style.display = data.uploadedAt ? 'none' : '';
-    document.getElementById('uplNote').textContent = data.uploadedAt ? '✓ Marked as uploaded on ' + fmtDay(data.uploadedAt) + '. Your Head Teacher can see this on the list.' : '';
     document.getElementById('s1banner').innerHTML = locked ? `<div class="sub-banner"><span>✓ Approved by your Head Teacher${when?' on '+esc(when):''}. Your Goals and Action plans are now read-only.</span></div>` : data.s1SubmittedAt ? `<div class="sub-banner"><span>✓ Goals and Action plans submitted on ${esc(new Date(data.s1SubmittedAt).toLocaleString('en-AU',{dateStyle:'medium',timeStyle:'short'}))}. You can still make changes and click Resubmit.</span></div>` : '';
     updateDirtyNote();
     if(showMissing) markMissing();
@@ -1856,7 +1852,6 @@
     const parts = [];
     if(data.readyAt) parts.push('Sent to sign ' + fmtDay(data.readyAt));
     if(data.signedAt) parts.push('Signed ' + fmtDay(data.signedAt));
-    if(data.uploadedAt) parts.push('Uploaded ' + fmtDay(data.uploadedAt));
     return parts.join(' · ');
   }
   function p2Locked(){ return !isHT() && (!data.progressOpen || !!data.progressSubmittedAt); }
@@ -1914,11 +1909,6 @@
     btn.disabled = false;
   }
   document.getElementById('btnSubmit2').onclick = submitProgress;
-  document.getElementById('btnUploaded').onclick = async ()=>{
-    if(!confirmSafe('Have you uploaded your Annual Review Form + Development Plan to People@TAFE?')) return;
-    const now = new Date().toISOString(); data.uploadedAt = now; save(); render();
-    if(SUBMIT_URL){ try{ await postList(listPayload('Uploaded to People@TAFE', now)); }catch(err){ msgIn('subMsg5', 'Saved here, but the list could not be updated (' + err.message + ').', 'err'); } }
-  };
   document.getElementById('btnSend2').onclick = sendMidComments;
 
   // ---------- Approval (step 1) ----------
