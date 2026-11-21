@@ -1960,10 +1960,10 @@
   // ---------- Step 4: suggested overall comment for the year (third person, fits the printed box) ----------
   const OVS = {
     open: {
-      all:  ['{N} achieved all of their goals this year.', '{N} has had a very successful year, achieving all of their goals.', 'All of {n}\'s goals were achieved this year.'],
-      most: ['{N} achieved most of their goals this year.', '{N} has had a productive year and achieved most of their goals.', 'Most of {n}\'s goals were achieved this year.'],
-      some: ['{N} made progress on their goals this year.', '{N} has worked steadily on their goals throughout the year.', 'Progress was made on {n}\'s goals this year.'],
-      none: ['{N} has had a productive year.', '{N} has worked well throughout the year.', 'This has been a productive year for {n}.']
+      all:  ['{N} has achieved all of their goals this year', '{N} has had a very successful year, achieving all of their goals', '{N} has achieved every goal in their plan this year'],
+      most: ['{N} has achieved most of their goals this year', '{N} has had a productive year, achieving most of their goals', '{N} has achieved the majority of their goals this year'],
+      some: ['{N} has made progress on their goals this year', '{N} has worked steadily on their goals throughout the year', '{N} has made good progress on several goals this year'],
+      none: ['{N} has had a productive year', '{N} has worked well throughout the year', '{N} has had a positive year']
     },
     hi: {
       teaching: ['Their work on “{A}” has benefited their learners.', 'Their focus on “{A}” has strengthened their teaching.', 'Learners have benefited from their work on “{A}”.'],
@@ -1972,7 +1972,7 @@
       other:    ['Their work on “{A}” has been worthwhile.', 'Their work on “{A}” is recognised.', 'Their work on “{A}” has been valuable.']
     },
     carry: ['Some goals will continue into next year\'s plan.', 'Remaining goals can be built into next year\'s plan.', 'Work on some goals will continue next year.'],
-    ok:    ['{N} has demonstrated satisfactory work performance, professional development and conduct.', 'Thank you for your contribution to the section this year.', '{N} is a valued member of the team.']
+    thanks: ['Thank you for your contribution to the section this year.', '{N} is a valued member of the team.', 'Thank you for your hard work this year.']
   };
   const OV_MAX = 320;   // about what fits in the 3-line box on the printed form
   const lastOv = {v:-1, t:''};
@@ -1980,7 +1980,7 @@
     const first = (data.firstName||'').trim(), gs = data.goals.filter(g=>(g.area||'').trim());
     const done = gs.filter(g=>g.outcome), ach = done.filter(g=>g.outcome === 'Achieved');
     const band = !done.length ? 'none' : ach.length === gs.length ? 'all' : ach.length*2 >= gs.length ? 'most' : 'some';
-    const parts = [pick(OVS.open[band], v)];
+    const opener = pick(OVS.open[band], v);
     const order = ['teaching','section','personal','other'];
     const pool = (ach.length ? ach : done.length ? done : gs).map(g=>({g, i:data.goals.indexOf(g)}))
       .sort((a,b)=>order.indexOf(goalType(a.g,a.i)) - order.indexOf(goalType(b.g,b.i)));
@@ -1988,23 +1988,24 @@
     const hiGoal = cands.length ? cands[((v % cands.length) + cands.length) % cands.length] : null;
     const hi = hiGoal ? pick(OVS.hi[goalType(hiGoal.g, hiGoal.i)], v + 1).replace('{A}', shortArea(hiGoal.g.area)) : '';
     const carry = done.some(g=>g.outcome === 'Carry forward to next year' || g.outcome === 'Partially achieved') ? pick(OVS.carry, v + 2) : '';
-    let close;
+    let lead, note = '';
     if(data.lmWork && data.lmConduct){
       const w = lvl('lmWorkLevel').toLowerCase(), c = lvl('lmConductLevel').toLowerCase();
-      const first0 = w === c ? `{N} has demonstrated ${w} work performance, professional development and conduct.` : `{N} has demonstrated ${w} work performance and professional development, and ${c} conduct.`;
-      close = pick([first0].concat(OVS.ok.slice(1)), v + 3);
+      lead = opener + (w === c ? `, and demonstrated ${w} work performance, professional development and conduct.`
+                               : `, and demonstrated ${w} work performance and professional development, and ${c} conduct.`);
       const adq = [w === 'adequate' && 'work performance and professional development', c === 'adequate' && 'conduct'].filter(Boolean);
-      if(adq.length) close = first0 + ' Further development is encouraged in ' + adq.join(' and ') + '.';
-    }
-    else {
+      if(adq.length) note = 'Further development is encouraged in ' + adq.join(' and ') + '.';
+    } else {
       const areas = [!data.lmWork && 'work performance and professional development', !data.lmConduct && 'conduct'].filter(Boolean).join(' and ');
-      close = `Concerns were noted regarding ${areas}: [describe the concerns and the support agreed].`;
+      lead = opener + '.';
+      note = `Concerns were noted regarding ${areas}: [describe the concerns and the support agreed].`;
     }
-    for(const opt of [[parts[0], hi, carry, close], [parts[0], hi, close], [parts[0], carry, close], [parts[0], close]]){
+    const thanks = (note ? '' : pick(OVS.thanks, v + 3));
+    for(const opt of [[lead, hi, carry, note, thanks], [lead, hi, note, thanks], [lead, hi, carry, note], [lead, hi, note], [lead, carry, note], [lead, note]]){
       const t = opt.filter(Boolean).map(p=>fillName(p, first)).join(' ');
       if(t.length <= OV_MAX) return t;
     }
-    return fillName(parts[0], first) + ' ' + fillName(close, first);
+    return [lead, note].filter(Boolean).map(p=>fillName(p, first)).join(' ');
   }
   function renderOvCount(){
     const n = (data.lmExplain||'').length, el = document.getElementById('ovCount'); if(!el) return;
