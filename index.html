@@ -113,6 +113,7 @@
   .approve.off{cursor:not-allowed;opacity:.75}.approve.off input{cursor:not-allowed}
   .next-steps{margin-top:18px;border-color:#1f7a66;background:#f3faf7}
   .next-steps ol{margin:8px 0 10px 20px;padding:0;line-height:1.7}
+  .upl-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:4px 0 12px}
   .next-steps p{margin:0;font-weight:bold;color:#1f7a66}
   select.lvl{width:auto!important;display:inline-block;height:30px;padding:2px 6px;margin:0 2px 0 0;font-size:inherit;vertical-align:baseline}
   .ov-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 0 4px}
@@ -420,6 +421,7 @@
         <li>Attach the <b>Annual Review Form + Development Plan</b> PDF you just saved.</li>
         <li>Send for endorsement.</li>
       </ol>
+      <div class="upl-row"><button class="btn primary" type="button" id="btnUploaded">I've uploaded it to People@TAFE</button><span class="note" id="uplNote"></span></div>
       <p>Thank you for another great year!</p>
     </div>
     <p class="note" style="text-align:center">Then upload the PDF to People@TAFE via a KIC form (Document Type: <b>Annual Teacher Review</b>).</p>
@@ -662,6 +664,8 @@
     document.getElementById('btnClear').disabled = locked && !isHT();
     renderReady(); renderOvCount();
     document.getElementById('nextSteps5').style.display = data.finalSavedAt ? '' : 'none';
+    document.getElementById('btnUploaded').style.display = data.uploadedAt ? 'none' : '';
+    document.getElementById('uplNote').textContent = data.uploadedAt ? '✓ Marked as uploaded on ' + fmtDay(data.uploadedAt) + '. Your Head Teacher can see this on the list.' : '';
     document.getElementById('s1banner').innerHTML = locked ? `<div class="sub-banner"><span>✓ Approved by your Head Teacher${when?' on '+esc(when):''}. Your Goals and Action plans are now read-only.</span></div>` : data.s1SubmittedAt ? `<div class="sub-banner"><span>✓ Goals and Action plans submitted on ${esc(new Date(data.s1SubmittedAt).toLocaleString('en-AU',{dateStyle:'medium',timeStyle:'short'}))}. You can still make changes and click Resubmit.</span></div>` : '';
     updateDirtyNote();
     if(showMissing) markMissing();
@@ -849,7 +853,7 @@
       msgIn('subMsg5', 'Save the PDF, then upload it to People@TAFE (steps below).', 'ok');
       data.finalSavedAt = new Date().toISOString(); save();
       const ns = document.getElementById('nextSteps5'); ns.style.display = '';
-      if(data.signToken && SUBMIT_URL){ const now = new Date().toISOString(); data.signedAt = now; save();
+      if(data.signToken && SUBMIT_URL){ const now = new Date().toISOString(); data.signedAt = data.signedAt || now; save();
         postList(listPayload('Signed by employee', now, {}, {signedAt: now})).catch(()=>{}); }
     }
     fullPrint = true; renderPrint(); document.body.classList.add('print-full');
@@ -1745,7 +1749,7 @@
   function listPayload(stage, now, extra, planExtra){
     return Object.assign({
       teacherName: data.name.trim(), firstName: (data.firstName||'').trim(), lastName: (data.lastName||'').trim(), designation: data.designation||'', location: data.location||'',
-      stage, submittedOn: now, token: ensureToken(), planLink: planLinkFor(data.signToken), signLink: signLinkFor(data.signToken), sendEmail: '', emailSubject: '', emailHtml: '', midYear: midYearText(),
+      stage, submittedOn: now, token: ensureToken(), planLink: planLinkFor(data.signToken), signLink: signLinkFor(data.signToken), sendEmail: '', emailSubject: '', emailHtml: '', midYear: midYearText(), endYear: endYearText(),
       goal1: goalText(data.goals[0],0), goal2: goalText(data.goals[1],1), goal3: goalText(data.goals[2],2), goal4: goalText(data.goals[3],3),
       otherGoals: data.goals.slice(4).map((g,i)=>goalText(g,i+4)).join('\n\n----\n\n'),
       planJson: JSON.stringify(Object.assign({}, data, {role:'teacher'}, planExtra||{}))
@@ -1765,13 +1769,13 @@
     if(!confirmSafe(`Email ${who} a link to review the Annual Review Form and plan and sign at step 5?`)){ cb.checked = !!data.readyForSign; return; }
     const tok = data.signToken || newToken(), now = new Date().toISOString();
     cb.disabled = true; msgIn('subMsg4', 'Sending…');
-    const keep = data.signToken; data.signToken = tok;
+    const keep = data.signToken, keepAt = data.readyAt; data.signToken = tok; data.readyAt = now;
     try{
       await postList(listPayload('Ready for employee signature', now, emailFields('sign'), {readyForSign:true, readyAt:now, stage:5}));
       data.readyForSign = true; data.readyAt = now; save(); render();
       msgIn('subMsg4', `Sent. ${who} will get an email with the link. You can also copy the link below.`, 'ok');
     }catch(err){
-      data.signToken = keep; cb.checked = !!data.readyForSign; cb.disabled = false;
+      data.signToken = keep; data.readyAt = keepAt; cb.checked = !!data.readyForSign; cb.disabled = false;
       msgIn('subMsg4', 'Could not send (' + err.message + '). Check the flow\'s run history (the email step needs the teacher on the Staff list).', 'err');
     }
   }
@@ -1848,6 +1852,13 @@
     if(data.progressSubmittedAt) return 'Submitted ' + fmtDay(data.progressSubmittedAt);
     return data.progressOpen ? 'Not yet submitted' : '';
   }
+  function endYearText(){
+    const parts = [];
+    if(data.readyAt) parts.push('Sent to sign ' + fmtDay(data.readyAt));
+    if(data.signedAt) parts.push('Signed ' + fmtDay(data.signedAt));
+    if(data.uploadedAt) parts.push('Uploaded ' + fmtDay(data.uploadedAt));
+    return parts.join(' · ');
+  }
   function p2Locked(){ return !isHT() && (!data.progressOpen || !!data.progressSubmittedAt); }
   function renderStage2State(){
     const lock = p2Locked();
@@ -1903,6 +1914,11 @@
     btn.disabled = false;
   }
   document.getElementById('btnSubmit2').onclick = submitProgress;
+  document.getElementById('btnUploaded').onclick = async ()=>{
+    if(!confirmSafe('Have you uploaded your Annual Review Form + Development Plan to People@TAFE?')) return;
+    const now = new Date().toISOString(); data.uploadedAt = now; save(); render();
+    if(SUBMIT_URL){ try{ await postList(listPayload('Uploaded to People@TAFE', now)); }catch(err){ msgIn('subMsg5', 'Saved here, but the list could not be updated (' + err.message + ').', 'err'); } }
+  };
   document.getElementById('btnSend2').onclick = sendMidComments;
 
   // ---------- Approval (step 1) ----------

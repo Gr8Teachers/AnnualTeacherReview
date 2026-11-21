@@ -367,7 +367,7 @@ Add a column **Mid-year progress** (Single line of text).
        "goal1": { "type": "string" }, "goal2": { "type": "string" }, "goal3": { "type": "string" }, "goal4": { "type": "string" },
        "otherGoals": { "type": "string" }, "planJson": { "type": "string" },
        "token": { "type": "string" }, "planLink": { "type": "string" }, "signLink": { "type": "string" },
-       "midYear": { "type": "string" },
+       "midYear": { "type": "string" }, "endYear": { "type": "string" },
        "sendEmail": { "type": "string" }, "emailSubject": { "type": "string" }, "emailHtml": { "type": "string" }
      }
    }
@@ -405,3 +405,13 @@ Add a column **Mid-year progress** (Single line of text).
 3. **Save**. At mid-year open the flow and click **Run**.
 
 Only rows whose Stage is exactly *Goals and Action plans - Approved by HT* are emailed. When a teacher opens the link, the form sees *Progress check sent* and opens the Progress review for them.
+
+---
+
+## 12. End-of-year record
+
+The form sends `endYear`, e.g. *Sent to sign 21 Nov 2026 · Signed 22 Nov 2026 · Uploaded 23 Nov 2026*. After saving the final PDF, the teacher sees **I've uploaded it to People@TAFE**; clicking it sets Stage to **Uploaded to People@TAFE**.
+
+1. List: add a column **End of year** (Single line of text).
+2. Submit flow, **Parse JSON**: add `"endYear": { "type": "string" },`.
+3. **Update item** and **Create item**: set **End of year** = `endYear`.
