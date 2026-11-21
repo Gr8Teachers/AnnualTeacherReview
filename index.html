@@ -369,8 +369,8 @@
       <p>I certify that I have reviewed the employee's performance during the TAFE Teachers and Related Employees Annual Review for the year
         <span style="white-space:nowrap"><input type="text" id="lmYear" data-k="lmYear" class="ht yr" inputmode="numeric" maxlength="4">.</span></p>
       <p>I have found the employee to be demonstrating:</p>
-      <label class="tick"><input type="checkbox" data-k="lmWork" class="ht"><span><select data-k="lmWorkLevel" class="ht lvl"><option>Outstanding</option><option>Satisfactory</option></select> work performance and professional development</span></label>
-      <label class="tick"><input type="checkbox" data-k="lmConduct" class="ht"><span><select data-k="lmConductLevel" class="ht lvl"><option>Outstanding</option><option>Satisfactory</option></select> conduct</span></label>
+      <label class="tick"><input type="checkbox" data-k="lmWork" class="ht"><span><select data-k="lmWorkLevel" class="ht lvl"><option>Outstanding</option><option>Satisfactory</option><option>Adequate</option></select> work performance and professional development</span></label>
+      <label class="tick"><input type="checkbox" data-k="lmConduct" class="ht"><span><select data-k="lmConductLevel" class="ht lvl"><option>Outstanding</option><option>Satisfactory</option><option>Adequate</option></select> conduct</span></label>
       <p style="margin-top:14px">You are required to provide an explanation if the employee is not demonstrating satisfactory work performance, professional development or conduct.</p>
       <div class="ov-row"><span class="note" id="ovCount"></span><button type="button" class="sugg" id="ovSugg" title="Write a draft overall comment from the goals' final review">✨ Suggest comment</button></div>
       <textarea id="lmExplain" data-k="lmExplain" class="ht" rows="3" style="min-height:80px"></textarea>
@@ -1993,6 +1993,8 @@
       const w = lvl('lmWorkLevel').toLowerCase(), c = lvl('lmConductLevel').toLowerCase();
       const first0 = w === c ? `{N} has demonstrated ${w} work performance, professional development and conduct.` : `{N} has demonstrated ${w} work performance and professional development, and ${c} conduct.`;
       close = pick([first0].concat(OVS.ok.slice(1)), v + 3);
+      const adq = [w === 'adequate' && 'work performance and professional development', c === 'adequate' && 'conduct'].filter(Boolean);
+      if(adq.length) close = first0 + ' Further development is encouraged in ' + adq.join(' and ') + '.';
     }
     else {
       const areas = [!data.lmWork && 'work performance and professional development', !data.lmConduct && 'conduct'].filter(Boolean).join(' and ');
