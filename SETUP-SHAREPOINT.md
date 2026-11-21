@@ -331,3 +331,77 @@ Every submission now sends a permanent link for that teacher's plan (`planLink`)
 Rows submitted before this change get their link the next time the teacher submits, or when you click **Save modified plan**, **Resubmit** or **Ready for Employee signature** on that plan.
 
 If this device has changes that haven't been sent to the list yet (for example, Final review comments you haven't saved), the form asks before replacing them with the version on the list.
+
+---
+
+## 11. The full-year workflow (emails at every stage)
+
+| # | Who | What happens | Stage on the list | Email |
+|---|---|---|---|---|
+| 1 | Teacher | Submits Goals and Action plans | Goals and Action plans | – |
+| 2a | HT | Ticks **Approved** | Goals and Action plans - Approved by HT | Teacher: link to the approved plan (view / Print / PDF) |
+| 2b | HT | Changes the plan → **Save modified plan & email teacher** | Goals and Action plans - v2 by HT | Teacher: link to the updated plan |
+| 3 | Teacher | Reviews, changes, **Resubmit** | Goals and Action plans - resubmitted | – (watch the list) → back to 2a |
+| 4 | HT | Runs the **Mid-year progress check** flow (all approved plans at once) | Progress check sent | Teacher: link to fill in the progress review |
+| 5 | Teacher | Status + comments per goal → **Submit progress review** (then read-only) | Mid-year progress submitted | – (watch the list) |
+| 6 | HT | Adds **Head Teacher comment** per goal → **Send comments to teacher** | Mid-year reviewed by HT | Teacher: your comments + link to the plan |
+| 7 | HT | Final review, Annual Review Form, **Ready for Employee signature** | Ready for employee signature | Teacher: link to sign + People@TAFE steps |
+| 8 | Teacher | Signs → **Save final PDF** | Signed by employee | – |
+
+The **Mid-year progress** column shows *Not yet submitted* / *Submitted (date)* / *Reviewed by HT (date)*.
+
+The form writes every email itself (subject + HTML), so the submit flow has **one** Send email step for all of them.
+
+### 11a. List
+Add a column **Mid-year progress** (Single line of text).
+
+### 11b. Submit flow
+1. **Parse JSON** – replace the schema with:
+   ```json
+   {
+     "type": "object",
+     "properties": {
+       "teacherName": { "type": "string" }, "firstName": { "type": "string" }, "lastName": { "type": "string" },
+       "designation": { "type": "string" }, "location": { "type": "string" },
+       "stage": { "type": "string" }, "submittedOn": { "type": "string" },
+       "goal1": { "type": "string" }, "goal2": { "type": "string" }, "goal3": { "type": "string" }, "goal4": { "type": "string" },
+       "otherGoals": { "type": "string" }, "planJson": { "type": "string" },
+       "token": { "type": "string" }, "planLink": { "type": "string" }, "signLink": { "type": "string" },
+       "midYear": { "type": "string" },
+       "sendEmail": { "type": "string" }, "emailSubject": { "type": "string" }, "emailHtml": { "type": "string" }
+     }
+   }
+   ```
+2. **Update item** and **Create item**: set **Mid-year progress** = `midYear` (and **Open_Plan** = `planLink`, **Link** = `token` if not already done).
+3. **Condition 1** (`sendEmail` is equal to `yes`) → **Send an email (V2)**:
+   - **To:** `first(body('Get_staff')?['value'])?['Staff']?['Email']` (unchanged)
+   - **Subject:** `emailSubject` (dynamic content from Parse JSON)
+   - **Body:** in code view (**</>**), replace everything with `@{body('Parse_JSON')?['emailHtml']}`
+
+### 11c. New flow: Mid-year progress check (run once at mid-year)
+**Create → Instant cloud flow → Manually trigger a flow**:
+
+1. SharePoint **Get items** – List: Annual Teacher Review; **Filter Query:** `Stage eq 'Goals and Action plans - Approved by HT'`
+2. **Apply to each** – Select an output: `value` from Get items. Inside it:
+   - **Send an email (V2)**
+     - **To:** `items('Apply_to_each')?['Teacher']?['Email']`
+     - **Subject:** `Mid-year progress review – your Annual Review Development Plan`
+     - **Body** (code view):
+       ```html
+       <div style="font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.35">
+       <p style="margin:0 0 8px">Hi @{first(split(items('Apply_to_each')?['Title'], ' '))},</p>
+       <p style="margin:0 0 8px">It's time for your mid-year progress review.</p>
+       <p style="margin:0">Please open your plan to:</p>
+       <ul style="margin:0 0 8px;padding-left:20px">
+       <li style="margin:0">choose a <b>Progress review</b> status for each goal</li>
+       <li style="margin:0">write your progress comments</li>
+       <li style="margin:0">click <b>Submit progress review</b></li>
+       </ul>
+       <p style="margin:6px 0 14px 20px"><a href="@{items('Apply_to_each')?['Open_Plan']}" style="display:inline-block;padding:10px 18px;background:#1f7a66;color:#ffffff;text-decoration:none;border-radius:6px"><b>Complete your mid-year progress review</b></a></p>
+       <p style="margin:0">Thank you.</p>
+       </div>
+       ```
+   - SharePoint **Update item** – List: Annual Teacher Review; **Id:** `items('Apply_to_each')?['ID']`; **Title:** `items('Apply_to_each')?['Title']`; **Stage:** `Progress check sent`; **Mid-year progress:** `Not yet submitted`.
+3. **Save**. At mid-year open the flow and click **Run**.
+
+Only rows whose Stage is exactly *Goals and Action plans - Approved by HT* are emailed. When a teacher opens the link, the form sees *Progress check sent* and opens the Progress review for them.

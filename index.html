@@ -88,6 +88,7 @@
   .s2hb{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .s2col>select{height:38px}
   .s2col>textarea{flex:1 1 auto;min-height:90px;font-size:13px}
+  .s2ht{display:flex;flex-direction:column}.s2ht>label{margin:10px 0 4px}.s2ht textarea{min-height:90px;font-size:13px;field-sizing:content}
   .goal-b.cols2{grid-template-columns:1fr 1fr}
   .ref{font-size:14px;background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:10px;white-space:pre-wrap;min-height:42px}
   .ref.empty{color:#999;font-style:italic}
@@ -318,9 +319,11 @@
 
   <!-- STAGE 2 -->
   <section class="stage" id="stage2">
-    <p class="stage-intro">Comment on progress for each goal, based on your discussion.</p>
-    <div class="sugg-bar"><span>Choose each goal's <b>Progress review</b> status and a draft comment is written in the third person. Edit it to add details from your discussion.</span></div>
+    <p class="stage-intro">Mid-year: the teacher records progress on each goal; the Head Teacher adds comments.</p>
+    <div id="s2banner"></div>
+    <div class="sugg-bar"><span id="s2hint"></span></div>
     <div id="s2goals"></div>
+    <div class="submit-row"><button class="btn primary" type="button" id="btnSubmit2">Submit progress review</button><button class="btn primary" type="button" id="btnSend2">Send comments to teacher</button></div>
     <div class="sub-msg" id="subMsg2" style="text-align:center"></div>
     <div class="nav"><button class="btn" type="button" data-go="1">← Back</button><button class="btn primary" type="button" data-go="3">Next: Final review →</button></div>
   </section>
@@ -501,7 +504,7 @@
   }
   const STATUS = ['', 'Not started', 'In progress', 'Ongoing', 'Scheduled', 'Completed'];
   const OUTCOME = ['', 'Achieved', 'Partially achieved', 'Not achieved', 'Carry forward to next year'];
-  const blankGoal = () => ({area:'', action:'', review:'', progress:'', status:'', outcome:'', htComment:''});
+  const blankGoal = () => ({area:'', action:'', review:'', progress:'', status:'', midHT:'', outcome:'', htComment:''});
 
   let data = {role:'teacher', stage:1, goals:[blankGoal(), blankGoal(), blankGoal(), blankGoal()]};
 
@@ -589,9 +592,13 @@
           </div>
           <div class="s2col">
             <label>Progress review</label>
-            <select data-g="${i}" data-f="status">${opts(STATUS, g.status)}</select>
-            <label class="lab-sugg"><span>Progress review comments <span class="hint">(comments based on discussion)</span></span><button type="button" class="sugg" data-psugg="${i}" title="Write a draft comment from the status">✨ Suggest comment</button></label>
-            <textarea data-g="${i}" data-f="progress">${esc(g.progress)}</textarea>
+            <select data-g="${i}" data-f="status" class="s2t">${opts(STATUS, g.status)}</select>
+            <label class="lab-sugg"><span>Progress review comments <span class="hint">(by the teacher)</span></span><button type="button" class="sugg s2t" data-psugg="${i}" title="Write a draft comment from the status">✨ Suggest comment</button></label>
+            <textarea data-g="${i}" data-f="progress" class="s2t">${esc(g.progress)}</textarea>
+            <div class="s2ht"${(!isHT() && !(g.midHT||'').trim()) ? ' style="display:none"' : ''}>
+              <label class="lab-sugg"><span>Head Teacher comment</span>${isHT() ? `<button type="button" class="sugg" data-hsugg="${i}" title="Write a draft comment from the status">✨ Suggest comment</button>` : ''}</label>
+              <textarea data-g="${i}" data-f="midHT" class="ht">${esc(g.midHT||'')}</textarea>
+            </div>
           </div>
         </div>
       </div>`).join('');
@@ -628,6 +635,7 @@
       else el.value = v || '';
     });
     document.querySelectorAll('.ht').forEach(el=>{ el.disabled = !isHT(); });
+    renderStage2State();
     const approved = !!data.s1Approved;
     const locked = approved && !isHT();   // after HT approval the teacher's plan is read-only; only the HT can change or resubmit it
     document.querySelectorAll('#s1goals textarea, #s1goals select[data-f]').forEach(el=>{ el.disabled = locked; });
@@ -639,8 +647,8 @@
     ab.title = isHT() ? '' : 'Only the Head Teacher can approve';
     const when = data.s1ApprovedAt ? new Date(data.s1ApprovedAt).toLocaleDateString('en-AU',{dateStyle:'medium'}) : '';
     document.getElementById('approveNote').innerHTML = approved
-      ? (isHT() ? `Approved${when?' on '+esc(when):''}. Click <b>Save modified plan</b> (or Resubmit) to update the list and save the PDF for the teacher.` : `Approved by your Head Teacher${when?' on '+esc(when):''}. This plan is now read-only.`)
-      : (isHT() ? 'Tick when the plan is approved. The teacher can no longer change or resubmit it.' : 'Your Head Teacher ticks this when your plan is approved.');
+      ? (isHT() ? `Approved${when?' on '+esc(when):''}. The teacher was emailed a link to the approved plan.` : `Approved by your Head Teacher${when?' on '+esc(when):''}. This plan is now read-only – click <b>Print / PDF</b> at the top to save a copy.`)
+      : (isHT() ? 'Tick to approve. The teacher gets an email with a link to the approved plan and can no longer change it.' : 'Your Head Teacher ticks this when your plan is approved.');
     ['addGoal','lastName','firstName','designation','location'].forEach(id=>{ document.getElementById(id).disabled = locked; });
     document.getElementById('btnSubmit1').textContent = (data.s1SubmittedAt || isHT()) ? 'Resubmit Goals and Action plans' : 'Submit Goals and Action plans';
     document.getElementById('btnSubmit1').disabled = locked;
@@ -667,7 +675,7 @@
     // role + steps
     document.querySelectorAll('#role button').forEach(b=>b.classList.toggle('on', b.dataset.role===data.role));
     document.getElementById('btnImport').style.display = isHT() ? '' : 'none';
-    document.getElementById('btnPdf1').textContent = isHT() ? 'Save modified plan' : 'Save a PDF copy for me';
+    document.getElementById('btnPdf1').textContent = isHT() ? 'Save modified plan & email teacher' : 'Save a PDF copy for me';
     document.querySelector('#steps [data-s="3"]').classList.toggle('locked', !isHT());
     // Progress review only opens once the Goals and Action plans have been submitted (HT can always open)
     const s1done = !!data.s1SubmittedAt || !!data.s1FromPdf;
@@ -715,7 +723,8 @@
     const lines = (...xs) => xs.filter(x=>(x||'').trim()).map(esc).join('\n');
     const reviewCell = g => {
       const sec = (h, status, text) => `<b>${h}</b>${(status||'').trim()?' '+esc(status):''}${(text||'').trim()?'\n'+esc(text):''}`;
-      return sec('Mid-year Review:', g.status, g.progress) + '\n' + sec('Final Review:', g.outcome, g.htComment);
+      const mid = sec('Mid-year Review:', g.status, g.progress) + ((g.midHT||'').trim() ? '\n<i>Head Teacher:</i> ' + esc(g.midHT) : '');
+      return mid + '\n' + sec('Final Review:', g.outcome, g.htComment);
     };
     const rows = d.goals.map(g=>`<tr><td>${cell(g.area)}</td><td>${cell(g.action)}</td><td>${cell(g.review)}</td><td>${reviewCell(g)}</td></tr>`).join('');
     const lmName = [esc(d.htName), d.htSign?`<span class="pv-sig">${esc(d.htSign)}</span>`:''].filter(Boolean).join(' &nbsp; ');
@@ -806,7 +815,7 @@
           <td><div class="rv-goaltitle">${esc(title(g,i))}</div>${cellTxt(g.area)}</td>
           <td>${cellTxt(g.action)}</td>
           <td>${cellTxt(g.review)}</td>
-          <td>${rv('Mid-year Review:', g.status, g.progress)}<br>${rv('Final Review:', g.outcome, g.htComment)}</td>
+          <td>${rv('Mid-year Review:', g.status, g.progress)}${(g.midHT||'').trim() ? `<br><i>Head Teacher:</i> ${cellTxt(g.midHT)}` : ''}<br>${rv('Final Review:', g.outcome, g.htComment)}</td>
         </tr>`).join('')}</tbody>
       </table></div>`;
   }
@@ -1012,35 +1021,75 @@
       'Completed':   ['{N} will continue to use what they have learned in their everyday work.', '{N} is encouraged to share what worked with colleagues.', '{N} may build on this in next year\'s plan.']
     }
   };
+  // Teacher's own progress comment (first person). PSUGG above is the Head Teacher's mid-year comment (third person).
+  const TSUGG = {
+    open: {
+      'Not started': ['I haven\'t started this goal yet.', 'Work on this goal hasn\'t started yet.', 'I have not yet begun the action strategies for this goal.'],
+      'In progress': ['I have started this goal and it is in progress.', 'This goal is in progress.', 'I am currently working on this goal.'],
+      'Ongoing':     ['This goal is ongoing and I am continuing to work on it.', 'I am working on this goal throughout the year.', 'This is ongoing work that I am building into my regular practice.'],
+      'Scheduled':   ['The work for this goal is scheduled for later in the year.', 'I have planned and scheduled the activities for this goal.', 'This goal is scheduled for the coming terms.'],
+      'Completed':   ['I have completed this goal.', 'This goal has been completed.', 'I have finished the action strategies for this goal.']
+    },
+    focus: {
+      teaching: { done: ['Working on “{A}” has improved my classroom practice and my learners have benefited.', 'Focusing on “{A}” has had a positive effect in my classes.', 'My learners have responded well to my work on “{A}”.'],
+                  going:['So far, my work on “{A}” is having a positive effect in my classes.', 'I am already seeing some benefits of “{A}” for my learners.', 'My learners are responding well to what I have tried so far with “{A}”.'],
+                  later:['“{A}” is still an important focus for my teaching.', '“{A}” remains a worthwhile goal for my learners.', 'I still see “{A}” as valuable for my classes.'] },
+      section:  { done: ['My work on “{A}” has been a useful contribution to the section.', 'Colleagues have benefited from my work on “{A}”.', 'I am pleased to have contributed to the section through “{A}”.'],
+                  going:['My work on “{A}” is already helping the section.', 'I have had positive feedback from colleagues on “{A}” so far.', 'Contributing to the section through “{A}” is going well.'],
+                  later:['“{A}” is still a contribution I would like to make to the section.', 'I still plan to support the section through “{A}”.', '“{A}” remains a worthwhile contribution to the section.'] },
+      personal: { done: ['Developing my skills in “{A}” has helped me do my job better.', 'My learning in “{A}” has been worthwhile for my work.', 'I now feel more confident with “{A}”.'],
+                  going:['I am building my skills in “{A}” and can already use some of what I have learned.', 'My confidence with “{A}” is growing.', 'The learning I have done so far in “{A}” is useful in my work.'],
+                  later:['“{A}” is still an important area for my professional learning.', 'Developing my skills in “{A}” remains a priority for me.', 'I still plan to build my knowledge in “{A}”.'] },
+      other:    { done: ['My work on “{A}” has been worthwhile.', 'I am pleased with what I achieved on “{A}”.', 'Working on “{A}” has been valuable.'],
+                  going:['My work on “{A}” is going well so far.', 'I am making good progress on “{A}”.', 'I am happy with my progress on “{A}” so far.'],
+                  later:['“{A}” is still a worthwhile focus for me.', '“{A}” remains a goal I want to work on.', 'I still plan to work on “{A}”.'] }
+    },
+    focusPlain: {
+      teaching: { done:['This has improved my classroom practice and my learners have benefited.'], going:['So far it is having a positive effect in my classes.'], later:['It is still an important focus for my teaching.'] },
+      section:  { done:['This has been a useful contribution to the section.'], going:['It is already helping the section.'], later:['It is still a contribution I would like to make to the section.'] },
+      personal: { done:['This has helped me do my job better.'], going:['My confidence is growing and I can already use some of what I have learned.'], later:['It is still an important area for my professional learning.'] },
+      other:    { done:['This has been worthwhile.'], going:['It is going well so far.'], later:['It is still a worthwhile focus for me.'] }
+    },
+    next: {
+      'Not started': ['I plan to start the action strategies next term{B}.', 'I will begin this next term and discuss any support I need with my Head Teacher{B}.', 'I may need more time or support to get started, which I will discuss with my Head Teacher{B}.'],
+      'In progress': ['Next, I will continue with the remaining action strategies{B}.', 'I will keep working on this in the second half of the year{B}.', 'I will continue with this and reflect on what is working{B}.'],
+      'Ongoing':     ['I will continue this for the rest of the year{B}.', 'I will keep building this into my practice{B}.', 'I will continue and reflect on what is working best{B}.'],
+      'Scheduled':   ['I will carry out the planned activities later in the year{B}.', 'The planned activities will take place in the coming terms{B}.', 'I will complete the scheduled work and reflect on how it went{B}.'],
+      'Completed':   ['I will keep using what I have learned in my everyday work.', 'I am happy to share what worked with colleagues.', 'I may build on this in next year\'s plan.']
+    }
+  };
   const lastPSugg = {};
-  function suggestProgress(i, variant){
-    const g = data.goals[i], st = g.status;
-    if(!PSUGG.open[st]) return null;
+  function suggestProgress(i, variant, forHT){
+    const g = data.goals[i], st = g.status, S = forHT ? PSUGG : TSUGG;
+    if(!S.open[st]) return null;
     const band = st === 'Completed' ? 'done' : (st === 'In progress' || st === 'Ongoing') ? 'going' : 'later';
     const type = goalType(g, i), A = shortArea(g.area);
-    const by = (g.reviewBy && g.reviewBy !== 'Ongoing') ? ', with progress reviewed by the ' + g.reviewBy.replace(/^End/, 'end') : '';
-    const parts = [pick(PSUGG.open[st], variant),
-      A ? pick(PSUGG.focus[type][band], variant + 1).replace('{A}', A) : pick(PSUGG.focusPlain[type][band], variant + 1),
-      pick(PSUGG.next[st], variant + 2).replace('{B}', by)];
+    const by = (g.reviewBy && g.reviewBy !== 'Ongoing') ? (forHT ? ', with progress reviewed by the ' : ', and review my progress by the ') + g.reviewBy.replace(/^End/, 'end') : '';
+    const parts = [pick(S.open[st], variant),
+      A ? pick(S.focus[type][band], variant + 1).replace('{A}', A) : pick(S.focusPlain[type][band], variant + 1),
+      pick(S.next[st], variant + 2).replace('{B}', by)];
     const first = (data.firstName||'').trim();
-    return parts.map(p=>fillName(p, first)).join(' ');
+    return parts.map(p=>forHT ? fillName(p, first) : p).join(' ');
   }
-  function applyProgress(i, quietIfFilled){
-    const g = data.goals[i];
+  // field: 'progress' (teacher, first person) or 'midHT' (Head Teacher, third person)
+  function applyProgress(i, quietIfFilled, field){
+    field = field || 'progress';
+    const g = data.goals[i], key = field + i;
     if(!g.status) return 'noStatus';
-    const has = (g.progress||'').trim() && g.progress !== lastPSugg['t'+i];
+    const has = (g[field]||'').trim() && g[field] !== lastPSugg['t'+key];
     if(has && quietIfFilled) return 'skipped';
-    if(has && !confirmSafe(`Replace your comment for ${title(g,i)} with a suggested one?`)) return 'kept';
-    const v = (lastPSugg['v'+i] ?? -1) + 1; lastPSugg['v'+i] = v;
-    const text = suggestProgress(i, v); if(!text) return 'noStatus';
-    g.progress = text; lastPSugg['t'+i] = text;
-    const ta = document.querySelector(`#s2goals [data-g="${i}"][data-f="progress"]`); if(ta) ta.value = text;
+    if(has && !confirmSafe(`Replace the comment for ${title(g,i)} with a suggested one?`)) return 'kept';
+    const v = (lastPSugg['v'+key] ?? -1) + 1; lastPSugg['v'+key] = v;
+    const text = suggestProgress(i, v, field === 'midHT'); if(!text) return 'noStatus';
+    g[field] = text; lastPSugg['t'+key] = text; data.editedAt = Date.now();
+    const ta = document.querySelector(`#s2goals [data-g="${i}"][data-f="${field}"]`); if(ta) ta.value = text;
     return 'ok';
   }
   document.addEventListener('click', e=>{
-    const b = e.target.closest('[data-psugg]'); if(!b) return;
+    const b = e.target.closest('[data-psugg],[data-hsugg]'); if(!b) return;
     e.preventDefault();
-    const i = +b.dataset.psugg, r = applyProgress(i, false);
+    const ht = b.dataset.hsugg !== undefined; if(ht && !isHT()) return;
+    const i = +(ht ? b.dataset.hsugg : b.dataset.psugg), r = applyProgress(i, false, ht ? 'midHT' : 'progress');
     if(r === 'noStatus') msgIn('subMsg2', `Choose a Progress review status for ${title(data.goals[i], i)} first.`, 'err');
     else { msgIn('subMsg2', r === 'ok' ? 'Draft added – edit it as you like. Click again for different wording.' : '', 'ok'); save(); renderPrint(); }
   });
@@ -1315,7 +1364,7 @@
       }
       // choosing a status drafts the teacher's progress comment (never overwrites their own words)
       if(el.dataset.f === 'status' && el.value){
-        const r = applyProgress(+el.dataset.g, true);
+        const r = applyProgress(+el.dataset.g, true, isHT() ? 'midHT' : 'progress');
         msgIn('subMsg2', r === 'ok' ? `Comment drafted for ${title(data.goals[+el.dataset.g], +el.dataset.g)} – edit it as you like.` : r === 'skipped' ? 'Your own comment was kept. Click ✨ Suggest comment to replace it.' : '', 'ok');
       }
       // choosing an Outcome drafts the Head Teacher comment (never overwrites a comment the HT wrote)
@@ -1329,7 +1378,9 @@
       data[k] = el.type === 'checkbox' ? el.checked : el.value;
       if(el.type !== 'radio') document.querySelectorAll(`[data-k="${k}"]`).forEach(o=>{ if(o!==el){ if(o.type==='checkbox') o.checked = el.checked; else o.value = el.value; } });
       if(k==='firstName'||k==='lastName'){ syncName(); document.getElementById('empNameRef').textContent = data.name || '—'; document.getElementById('lastRef').textContent = data.lastName || '—'; document.getElementById('firstRef').textContent = data.firstName || '—'; }
-      if(k==='s1Approved'){ if(!isHT()){ data.s1Approved = !el.checked; el.checked = data.s1Approved; return; } if(el.checked){ const miss = s1Missing(); if(miss.length){ data.s1Approved = false; el.checked = false; markMissing(); subMsg('Can\'t approve yet. Please fill in: ' + miss.join(', ') + '.', 'err'); return; } }
+      if(k==='s1Approved'){ if(!isHT()){ data.s1Approved = !el.checked; el.checked = data.s1Approved; return; }
+        if(el.checked){ data.s1Approved = false; el.checked = false; const miss = s1Missing(); if(miss.length){ markMissing(); subMsg('Can\'t approve yet. Please fill in: ' + miss.join(', ') + '.', 'err'); return; } sendApproval(); return; }
+        if(!confirmSafe('Untick Approved? The teacher will be able to change and resubmit their plan again (once you save it to the list).')){ data.s1Approved = true; el.checked = true; return; }
         data.s1ApprovedAt = el.checked ? new Date().toISOString() : ''; subMsg(''); save(); render(); return; }
       if(k==='htName'||k==='htSign'||k==='htDate') document.querySelector('#steps [data-s="5"]').classList.toggle('locked', !canOpen(5));
     }
@@ -1388,36 +1439,29 @@
     setTimeout(()=>{ document.title = t; }, 1000);
   }
   document.getElementById('btnPrint').onclick = printPdf;
-  document.getElementById('btnPdf1').onclick = ()=>{ if(isHT()) saveModifiedPlan(); else printPdf(); };
+  document.getElementById('btnPdf1').onclick = ()=>{ if(isHT()) saveModifiedPlan(true); else printPdf(); };
 
   // ---------- Head Teacher: Save modified plan = update the teacher's row on the list + save a v2 PDF ----------
   const HT_STAGE_V2 = 'Goals and Action plans - v2 by HT', HT_STAGE_OK = 'Goals and Action plans - Approved by HT';
-  async function saveModifiedPlan(withPdf){
-    if(withPdf === undefined) withPdf = true;
+  async function saveModifiedPlan(sendEmail){
     const HT_STAGE = data.s1Approved ? HT_STAGE_OK : HT_STAGE_V2;
     const missing = s1Missing();
     if(missing.length){ markMissing(); subMsg('Please fill in: ' + missing.join(', ') + '.', 'err'); return; }
-    if(!SUBMIT_URL){ subMsg('The list isn\'t connected yet, so only the v2 PDF was saved.', 'err'); if(withPdf) printPdf(); return; }
-    const btn = document.getElementById(withPdf ? 'btnPdf1' : 'btnSubmit1'); btn.disabled = true; subMsg('Updating the list…');
-    const now = new Date().toISOString();
-    const payload = {
-      teacherName: data.name.trim(), firstName: (data.firstName||'').trim(), lastName: (data.lastName||'').trim(), designation: data.designation||'', location: data.location||'',
-      stage: HT_STAGE, submittedOn: now, token: ensureToken(), planLink: planLinkFor(data.signToken), signLink: signLinkFor(data.signToken), sendEmail: '',
-      goal1: goalText(data.goals[0],0), goal2: goalText(data.goals[1],1), goal3: goalText(data.goals[2],2), goal4: goalText(data.goals[3],3),
-      otherGoals: data.goals.slice(4).map((g,i)=>goalText(g,i+4)).join('\n\n----\n\n'),
-      planJson: JSON.stringify(Object.assign({}, data, {role:'teacher', version:'v2', htModifiedAt: now}))
-    };
-    let ok = false;
+    if(!SUBMIT_URL){ subMsg('The list isn\'t connected yet.', 'err'); return; }
+    const who = (data.name||'').trim() || 'the teacher';
+    if(sendEmail && !confirmSafe(`Save your changes and email ${who} a link to the ${data.s1Approved ? 'approved' : 'updated'} plan?`)) return;
+    const btn = document.getElementById(sendEmail ? 'btnPdf1' : 'btnSubmit1'); btn.disabled = true; subMsg('Updating the list…');
+    const now = new Date().toISOString(), keepV = data.version, keepM = data.htModifiedAt;
+    data.version = 'v2'; data.htModifiedAt = now;
     try{
-      const res = await fetch(SUBMIT_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(payload)});
-      if(!res.ok) throw new Error('HTTP ' + res.status);
-      ok = true;
+      await postList(listPayload(HT_STAGE, now, sendEmail ? emailFields(data.s1Approved ? 'approved' : 'changes') : {}));
+      data.s1Hash = s1Snapshot(); save(); render();
+      subMsg(`List updated (${HT_STAGE}).` + (sendEmail ? ` ${who} has been emailed a link to the plan.` : ''), 'ok');
     }catch(err){
-      subMsg('The list could not be updated (' + err.message + '). The v2 PDF will still be saved; try again later to update the list.', 'err');
+      data.version = keepV; data.htModifiedAt = keepM; save();
+      subMsg('The list could not be updated (' + err.message + '). Please try again.', 'err');
     }
     btn.disabled = false;
-    if(ok){ data.version = 'v2'; data.htModifiedAt = now; data.s1Hash = s1Snapshot(); markSynced(); subMsg(`List updated (${HT_STAGE}).` + (withPdf ? ' Now save the v2 PDF and send it to the teacher.' : ' Click Save modified plan to save the v2 PDF for the teacher.'), 'ok'); }
-    if(withPdf) printPdf();
   }
   document.getElementById('btnClear').onclick = ()=>{
     if(confirmSafe('Clear all answers on this form?')){ data = {role:data.role, stage:1, goals:[blankGoal(),blankGoal(),blankGoal(),blankGoal()]}; subMsg(''); save(); render(); }
@@ -1430,7 +1474,8 @@
       lastName:data.lastName||'', firstName:data.firstName||'', empId:data.empId||'', lmYear:data.lmYear||'',
       lmWork:!!data.lmWork, lmConduct:!!data.lmConduct, lmExplain:data.lmExplain||'', lmSick:!!data.lmSick, lmPlan:!!data.lmPlan, lmFeedback:!!data.lmFeedback,
       empSatisfied:data.empSatisfied||'', version:data.version||'', htModifiedAt:data.htModifiedAt||'',
-      s1Approved:!!data.s1Approved, s1ApprovedAt:data.s1ApprovedAt||''};
+      s1Approved:!!data.s1Approved, s1ApprovedAt:data.s1ApprovedAt||'', signToken:data.signToken||'',
+      progressOpen:!!data.progressOpen, progressSubmittedAt:data.progressSubmittedAt||'', midCommentedAt:data.midCommentedAt||''};
     return btoa(unescape(encodeURIComponent(JSON.stringify(keep))));
   }
   function applyLoaded(obj){
@@ -1527,7 +1572,7 @@
     const findPlan = r => vals(r).find(v=>/^\s*\{/.test(v) && v.includes('"goals"')) || '';
     const findLoc  = r => vals(r).find(v=>v==='St Leonards' || v==='Campsie') || '';
     const findDate = r => { for(const k of Object.keys(r)){ if(/submit/i.test(k)){ const v = norm(r[k]); if(v) return v; } } return ''; };
-    return out.map(r=>({name:pick(r,'name','title','teachername'), location:pick(r,'location')||findLoc(r), submittedOn:pick(r,'submittedon')||findDate(r), planJson:pick(r,'planjson')||findPlan(r), empId:pick(r,'empid','employeeid','empidno')}))
+    return out.map(r=>({name:pick(r,'name','title','teachername'), location:pick(r,'location')||findLoc(r), submittedOn:pick(r,'submittedon')||findDate(r), planJson:pick(r,'planjson')||findPlan(r), empId:pick(r,'empid','employeeid','empidno'), stage:pick(r,'stage')}))
       .filter(r=>r.name).sort((a,b)=>a.name.localeCompare(b.name));
   }
   async function impLoad(){
@@ -1622,13 +1667,7 @@
     if(skipConfirm !== true && !confirmSafe('Submit your Goals and Action plans to your Head Teacher?')) return false;
     const btn = document.getElementById('btnSubmit1'); btn.disabled = true; subMsg('Submitting…');
     const now = new Date().toISOString();
-    const payload = {
-      teacherName: data.name.trim(), firstName: (data.firstName||'').trim(), lastName: (data.lastName||'').trim(), designation: data.designation||'', location: data.location||'',
-      stage: 'Goals and Action plans', submittedOn: now, token: ensureToken(), planLink: planLinkFor(data.signToken), signLink: '', sendEmail: '',
-      goal1: goalText(data.goals[0],0), goal2: goalText(data.goals[1],1), goal3: goalText(data.goals[2],2), goal4: goalText(data.goals[3],3),
-      otherGoals: data.goals.slice(4).map((g,i)=>goalText(g,i+4)).join('\n\n----\n\n'),
-      planJson: JSON.stringify(Object.assign({}, data, {role:'teacher', s1SubmittedAt: now}))
-    };
+    const payload = listPayload(data.version === 'v2' ? 'Goals and Action plans - resubmitted' : 'Goals and Action plans', now, {}, {s1SubmittedAt: now});
     try{
       // text/plain avoids a CORS pre-flight; the flow parses it with "Parse JSON".
       const res = await fetch(SUBMIT_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(payload)});
@@ -1699,7 +1738,7 @@
   function listPayload(stage, now, extra, planExtra){
     return Object.assign({
       teacherName: data.name.trim(), firstName: (data.firstName||'').trim(), lastName: (data.lastName||'').trim(), designation: data.designation||'', location: data.location||'',
-      stage, submittedOn: now, token: ensureToken(), planLink: planLinkFor(data.signToken), signLink: signLinkFor(data.signToken), sendEmail: '',
+      stage, submittedOn: now, token: ensureToken(), planLink: planLinkFor(data.signToken), signLink: signLinkFor(data.signToken), sendEmail: '', emailSubject: '', emailHtml: '', midYear: midYearText(),
       goal1: goalText(data.goals[0],0), goal2: goalText(data.goals[1],1), goal3: goalText(data.goals[2],2), goal4: goalText(data.goals[3],3),
       otherGoals: data.goals.slice(4).map((g,i)=>goalText(g,i+4)).join('\n\n----\n\n'),
       planJson: JSON.stringify(Object.assign({}, data, {role:'teacher'}, planExtra||{}))
@@ -1721,7 +1760,7 @@
     cb.disabled = true; msgIn('subMsg4', 'Sending…');
     const keep = data.signToken; data.signToken = tok;
     try{
-      await postList(listPayload('Ready for employee signature', now, {sendEmail:'yes'}, {readyForSign:true, readyAt:now, stage:5}));
+      await postList(listPayload('Ready for employee signature', now, emailFields('sign'), {readyForSign:true, readyAt:now, stage:5}));
       data.readyForSign = true; data.readyAt = now; save(); render();
       msgIn('subMsg4', `Sent. ${who} will get an email with the link. You can also copy the link below.`, 'ok');
     }catch(err){
@@ -1752,6 +1791,7 @@
     const obj = JSON.parse(row.planJson.replace(/[\u200b\u00a0]/g,' '));
     if(row.empId) obj.empId = row.empId;
     obj.signToken = tok;
+    if(row.stage === 'Progress check sent') obj.progressOpen = true;   // set on the list by the mid-year flow
     return obj;
   }
   // "Open plan" link from the MS List (?plan=…): always loads the latest version saved on the list
@@ -1770,7 +1810,10 @@
         if(!confirmSafe(msg)) return;
       }
       applyLoaded(obj); markSynced();
-      flash(`${obj.name||'Plan'} loaded from the list.` + (isHT() ? '' : ' Head Teachers: switch to Head Teacher to review it.'), 6000);
+      if(!isHT() && data.progressOpen && !data.progressSubmittedAt){ showStage(2, true); window.scrollTo({top:document.getElementById('steps').offsetTop-10}); flash('Time for your mid-year progress review: choose a status and write your comments for each goal, then click Submit progress review.', 9000); }
+      else if(!isHT() && data.s1Approved) flash('Your plan is approved. Click Print / PDF at the top to save a copy.', 7000);
+      else if(!isHT() && data.version === 'v2') flash('Your Head Teacher has updated your plan. Review the changes, update anything you need to, then click Resubmit Goals and Action plans.', 9000);
+      else flash(`${obj.name||'Plan'} loaded from the list. Head Teachers: switch to Head Teacher to review it.`, 6000);
     }catch(err){
       flash('Could not open the plan (' + err.message + ').', 8000);
     }
@@ -1789,6 +1832,122 @@
     }catch(err){
       flash('Could not open the link (' + err.message + '). It may have expired – ask your Head Teacher to resend it.', 8000);
     }
+  }
+
+  // ---------- Mid-year: teacher submits progress, Head Teacher sends comments ----------
+  const fmtDay = iso => iso ? new Date(iso).toLocaleDateString('en-AU',{dateStyle:'medium'}) : '';
+  function midYearText(){
+    if(data.midCommentedAt) return 'Reviewed by HT ' + fmtDay(data.midCommentedAt);
+    if(data.progressSubmittedAt) return 'Submitted ' + fmtDay(data.progressSubmittedAt);
+    return data.progressOpen ? 'Not yet submitted' : '';
+  }
+  function p2Locked(){ return !isHT() && (!data.progressOpen || !!data.progressSubmittedAt); }
+  function renderStage2State(){
+    const lock = p2Locked();
+    document.querySelectorAll('#s2goals .s2t').forEach(el=>{ if(el.tagName === 'BUTTON') el.style.display = lock ? 'none' : ''; else el.disabled = lock; });
+    document.getElementById('btnSubmit2').style.display = (!isHT() && data.progressOpen && !data.progressSubmittedAt) ? '' : 'none';
+    document.getElementById('btnSend2').style.display = isHT() ? '' : 'none';
+    document.getElementById('btnSend2').textContent = data.midCommentedAt ? 'Resend comments to teacher' : 'Send comments to teacher';
+    const who = (data.firstName||'').trim() || 'The teacher';
+    let b = '';
+    if(isHT()){
+      if(data.midCommentedAt) b = `Comments emailed to ${esc(who)} on ${esc(fmtDay(data.midCommentedAt))}.`;
+      else if(data.progressSubmittedAt) b = `${esc(who)} submitted their progress review on ${esc(fmtDay(data.progressSubmittedAt))}. Add your comments, then click <b>Send comments to teacher</b>.`;
+      else if(data.progressOpen) b = `Progress check sent – waiting for ${esc(who)} to submit their progress review.`;
+    } else {
+      if(data.midCommentedAt) b = `Your Head Teacher's comments were added on ${esc(fmtDay(data.midCommentedAt))}.`;
+      else if(data.progressSubmittedAt) b = `Submitted on ${esc(fmtDay(data.progressSubmittedAt))}. Your Head Teacher will review it and email you their comments.`;
+      else if(!data.progressOpen) b = 'Your Head Teacher will email you a link when it\'s time for your mid-year progress review.';
+    }
+    document.getElementById('s2banner').innerHTML = b ? `<div class="sub-banner"><span>${b}</span></div>` : '';
+    document.getElementById('s2hint').parentElement.style.display = lock ? 'none' : '';
+    document.getElementById('s2hint').innerHTML = isHT()
+      ? 'Choosing a <b>Progress review</b> status drafts your <b>Head Teacher comment</b> in the third person (the teacher\'s own comment is never replaced).'
+      : 'Choose each goal\'s <b>Progress review</b> status and a draft comment is written for you. Edit it to add your own details.';
+  }
+  async function submitProgress(){
+    if(isHT() || p2Locked()) return;
+    const miss = [];
+    data.goals.forEach((g,i)=>{ if((g.area||'').trim()){ if(!g.status) miss.push(title(g,i) + ' – status'); if(!(g.progress||'').trim()) miss.push(title(g,i) + ' – comments'); } });
+    if(miss.length){ msgIn('subMsg2', 'Please complete: ' + miss.join('; ') + '.', 'err'); return; }
+    if(!SUBMIT_URL){ msgIn('subMsg2', 'Submitting isn\'t set up yet.', 'err'); return; }
+    if(!confirmSafe('Submit your mid-year progress review to your Head Teacher? You won\'t be able to change it afterwards.')) return;
+    const btn = document.getElementById('btnSubmit2'); btn.disabled = true; msgIn('subMsg2', 'Submitting…');
+    const now = new Date().toISOString(); data.progressSubmittedAt = now;
+    try{
+      await postList(listPayload('Mid-year progress submitted', now));
+      render(); msgIn('subMsg2', 'Submitted. Your Head Teacher will review it and email you their comments.', 'ok');
+    }catch(err){ data.progressSubmittedAt = ''; save(); msgIn('subMsg2', 'Could not submit (' + err.message + '). Please try again.', 'err'); }
+    btn.disabled = false;
+  }
+  async function sendMidComments(){
+    if(!isHT()) return;
+    const withC = data.goals.filter(g=>(g.midHT||'').trim());
+    if(!withC.length){ msgIn('subMsg2', 'Add at least one Head Teacher comment first.', 'err'); return; }
+    if(!SUBMIT_URL){ msgIn('subMsg2', 'The list isn\'t connected yet.', 'err'); return; }
+    const who = (data.name||'').trim() || 'the teacher';
+    if(!confirmSafe(`Email your mid-year comments to ${who}?`)) return;
+    const btn = document.getElementById('btnSend2'); btn.disabled = true; msgIn('subMsg2', 'Sending…');
+    const now = new Date().toISOString(), keep = data.midCommentedAt; data.midCommentedAt = now;
+    try{
+      await postList(listPayload('Mid-year reviewed by HT', now, emailFields('midyear')));
+      render(); msgIn('subMsg2', `Sent. ${who} will get an email with your comments and a link to their plan.`, 'ok');
+    }catch(err){ data.midCommentedAt = keep; save(); msgIn('subMsg2', 'Could not send (' + err.message + '). Check the flow\'s run history.', 'err'); }
+    btn.disabled = false;
+  }
+  document.getElementById('btnSubmit2').onclick = submitProgress;
+  document.getElementById('btnSend2').onclick = sendMidComments;
+
+  // ---------- Approval (step 1) ----------
+  async function sendApproval(){
+    const cb = document.getElementById('s1Approved');
+    const who = (data.name||'').trim() || 'the teacher';
+    if(!SUBMIT_URL){ subMsg('The list isn\'t connected yet.', 'err'); return; }
+    if(!confirmSafe(`Approve ${who}'s Goals and Action plans and email them a link to the approved plan?`)) return;
+    const now = new Date().toISOString();
+    data.s1Approved = true; data.s1ApprovedAt = now; cb.disabled = true; subMsg('Approving…');
+    try{
+      await postList(listPayload(HT_STAGE_OK, now, emailFields('approved')));
+      data.s1Hash = s1Snapshot(); save(); render();
+      subMsg(`Approved. ${who} has been emailed a link to the approved plan.`, 'ok');
+    }catch(err){
+      data.s1Approved = false; data.s1ApprovedAt = ''; save(); render();
+      subMsg('Could not approve (' + err.message + '). Check the flow\'s run history and try again.', 'err');
+    }
+  }
+
+  // ---------- Emails (the flow sends emailSubject / emailHtml when sendEmail = yes) ----------
+  function emailFields(kind){ const e = buildEmail(kind); return {sendEmail:'yes', emailSubject:e.subject, emailHtml:e.html}; }
+  function buildEmail(kind){
+    const first = esc((data.firstName||'').trim() || 'there');
+    const P = t => `<p style="margin:0 0 8px">${t}</p>`;
+    const UL = items => `<ul style="margin:0 0 8px;padding-left:20px">${items.map(x=>`<li style="margin:0">${x}</li>`).join('')}</ul>`;
+    const BTN = (href, t) => `<p style="margin:6px 0 14px 20px"><a href="${esc(href)}" style="display:inline-block;padding:10px 18px;background:#1f7a66;color:#ffffff;text-decoration:none;border-radius:6px"><b>${t}</b></a></p>`;
+    const wrap = inner => `<div style="font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.35">${inner}</div>`;
+    const plan = planLinkFor(ensureToken()), sign = signLinkFor(data.signToken);
+    if(kind === 'approved') return { subject: 'Your Annual Review Development Plan has been approved',
+      html: wrap(P(`Hi ${first},`) + P('I have approved your Annual Review Development Plan (Goals and Action plans).') +
+        `<p style="margin:0">Open it at any time to:</p>` + UL(['view your approved plan', 'save a copy – click <b>Print / PDF</b> at the top of the page']) +
+        BTN(plan, 'View your approved plan') + P('I will email you again at mid-year for your progress review.') + `<p style="margin:0">Thank you.</p>`) };
+    if(kind === 'changes') return { subject: 'Your Annual Review Development Plan has been updated',
+      html: wrap(P(`Hi ${first},`) + P('I have reviewed your Goals and Action plans and made some changes.') +
+        `<p style="margin:0">Please open your plan to:</p>` + UL(['review my changes', 'update anything you need to', 'click <b>Resubmit Goals and Action plans</b>']) +
+        BTN(plan, 'Review your updated plan') + `<p style="margin:0">Thank you.</p>`) };
+    if(kind === 'midyear'){
+      const items = data.goals.map((g,i)=>(g.midHT||'').trim() ? `<p style="margin:0 0 10px"><b>${esc(title(g,i))}</b>${g.status ? ' – ' + esc(g.status) : ''}<br>${esc(g.midHT).replace(/\n/g,'<br>')}</p>` : '').join('');
+      return { subject: 'Mid-year review – comments from your Head Teacher',
+        html: wrap(P(`Hi ${first},`) + P('Thank you for completing your mid-year progress review. Here are my comments:') + items +
+          BTN(plan, 'Open your plan') + `<p style="margin:0">Thank you.</p>`) };
+    }
+    // kind === 'sign'
+    return { subject: 'Your Annual Review is ready to sign',
+      html: wrap(P(`Hi ${first},`) + P('Congratulations on completing your Annual Teacher Review.') +
+        `<p style="margin:0">Please open the link below to:</p>` +
+        UL(['review your Annual Review Development Plan and Annual Teacher Review Form', 'tick the Employee box', 'sign and date at the bottom', 'click <b>Save final PDF – Annual Review Form + Development Plan</b>']) +
+        BTN(sign, 'Sign and Download your final copy for People@TAFE upload') +
+        `<p style="margin:0"><b>Next step – upload your Annual Teacher Review to People@TAFE</b></p>` +
+        `<ol style="margin:0 0 8px;padding-left:20px">${['Log in to People@TAFE from the Staff Portal.', 'Click <b>Create New – KIC form</b>.', 'Choose <b>Currency Activity</b>.', 'Choose <b>Annual Teacher Review</b> from <b>Document Type</b>.', 'Complete the other information.', 'Attach the Annual Review Form + Development Plan PDF you saved.', 'Send for endorsement.'].map(x=>`<li style="margin:0">${x}</li>`).join('')}</ol>` +
+        `<p style="margin:0">Thank you for another great year. I look forward to working with you next year.</p>`) };
   }
 
   load(); data.role = 'teacher';
