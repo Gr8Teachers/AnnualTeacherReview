@@ -1822,7 +1822,7 @@
       }
       applyLoaded(obj); markSynced();
       if(!isHT() && data.progressOpen && !data.progressSubmittedAt){ showStage(2, true); window.scrollTo({top:document.getElementById('steps').offsetTop-10}); flash('Time for your mid-year progress review: choose a status and write your comments for each goal, then click Submit progress review.', 9000); }
-      else if(!isHT() && data.s1Approved) flash('Your plan is approved. Click Print / PDF at the top to save a copy.', 7000);
+      else if(!isHT() && data.s1Approved) flash('Your plan is approved. Click Print / PDF at the top to save a copy. When you\'re ready, you can complete your mid-year progress review at step 2.', 9000);
       else if(!isHT() && data.version === 'v2') flash('Your Head Teacher has updated your plan. Review the changes, update anything you need to, then click Resubmit Goals and Action plans.', 9000);
       else flash(`${obj.name||'Plan'} loaded from the list. Head Teachers: switch to Head Teacher to review it.`, 6000);
     }catch(err){
@@ -1859,11 +1859,13 @@
     if(data.uploadedAt) parts.push('Uploaded ' + fmtDay(data.uploadedAt));
     return parts.join(' · ');
   }
-  function p2Locked(){ return !isHT() && (!data.progressOpen || !!data.progressSubmittedAt); }
+  // Teachers can do their mid-year review any time once the plan is approved (or the HT has sent the progress check)
+  function p2Open(){ return !!(data.s1Approved || data.progressOpen); }
+  function p2Locked(){ return !isHT() && (!p2Open() || !!data.progressSubmittedAt); }
   function renderStage2State(){
     const lock = p2Locked();
     document.querySelectorAll('#s2goals .s2t').forEach(el=>{ if(el.tagName === 'BUTTON') el.style.display = lock ? 'none' : ''; else el.disabled = lock; });
-    document.getElementById('btnSubmit2').style.display = (!isHT() && data.progressOpen && !data.progressSubmittedAt) ? '' : 'none';
+    document.getElementById('btnSubmit2').style.display = (!isHT() && p2Open() && !data.progressSubmittedAt) ? '' : 'none';
     document.getElementById('btnSend2').style.display = isHT() ? '' : 'none';
     document.getElementById('btnSend2').textContent = data.midCommentedAt ? 'Resend comments to teacher' : 'Send comments to teacher';
     const who = (data.firstName||'').trim() || 'The teacher';
@@ -1875,7 +1877,7 @@
     } else {
       if(data.midCommentedAt) b = `Your Head Teacher's comments were added on ${esc(fmtDay(data.midCommentedAt))}.`;
       else if(data.progressSubmittedAt) b = `Submitted on ${esc(fmtDay(data.progressSubmittedAt))}. Your Head Teacher will review it and email you their comments.`;
-      else if(!data.progressOpen) b = 'Your Head Teacher will email you a link when it\'s time for your mid-year progress review.';
+      else if(!p2Open()) b = 'You can complete your mid-year progress review once your Head Teacher has approved your plan.';
     }
     document.getElementById('s2banner').innerHTML = b ? `<div class="sub-banner"><span>${b}</span></div>` : '';
     document.getElementById('s2hint').parentElement.style.display = lock ? 'none' : '';
