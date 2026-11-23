@@ -440,6 +440,15 @@
     Select <b>Annual Teacher Review</b> from the <b>Document Type</b> dropdown list. Signatures not required when uploaded and approved as a KIC form.
   </p>
 
+  <div class="modal" id="bankModal" role="dialog" aria-modal="true" aria-labelledby="bankTitle">
+    <div class="modal-box idea-box">
+      <div class="idea-head"><h2 id="bankTitle">Comment bank</h2><button type="button" class="idea-x" data-bank-close aria-label="Close">×</button></div>
+      <p class="note" style="margin:4px 0 8px">Choose a comment, check the preview, then add it to the Head Teacher comments.</p>
+      <div class="idea-list" id="bankList" role="listbox"></div>
+      <div class="idea-prev" id="bankPrev"><span class="note">Choose a comment above to see it.</span></div>
+      <div class="row" style="margin-top:12px"><button class="btn" type="button" data-bank-close>Cancel</button><button class="btn" type="button" id="bankAdd" disabled>Add to end</button><button class="btn primary" type="button" id="bankUse" disabled>Use this comment</button></div>
+    </div>
+  </div>
   <div class="modal" id="ideaModal" role="dialog" aria-modal="true" aria-labelledby="ideaTitle">
     <div class="modal-box idea-box">
       <div class="idea-head">
@@ -628,7 +637,7 @@
           <div class="ref${g.area?'':' empty'}">${g.area?esc(g.area):'—'}</div>
           <select data-g="${i}" data-f="outcome" class="ht"${dis}>${opts(OUTCOME, g.outcome)}</select>
           <span class="lab">Teacher's progress review</span>
-          <label class="lab-sugg">Head Teacher comments ${isHT()?`<button type="button" class="sugg" data-sugg="${i}" title="Write a draft comment from the outcome and mid-year status">✨ Suggest comment</button>`:''}</label>
+          <label class="lab-sugg">Head Teacher comments ${isHT()?`<button type="button" class="sugg" data-sugg="${i}" title="Write a draft comment from the outcome and mid-year status">✨ Suggest comment</button> <button type="button" class="sugg" data-bank="${i}" title="Choose from your comment bank">📋 Comment bank</button>`:''}</label>
           <div class="ref${g.progress?'':' empty'}">${g.progress?esc(g.progress):'Not filled in at Stage 2'}</div>
           <textarea data-g="${i}" data-f="htComment" class="ht"${dis}>${esc(g.htComment)}</textarea>
         </div>
@@ -2156,6 +2165,50 @@
     msgIn('subMsg4', 'Draft added – edit it as you like. Click again for different wording.', 'ok');
   };
   document.getElementById('lmExplain').addEventListener('input', renderOvCount);
+
+  // ---------- Final review: Head Teacher comment bank ----------
+  const BANK = [
+    ['Overall strong performance', '{N} has demonstrated a high level of professionalism and commitment throughout the year, consistently delivering quality education, supporting student outcomes and contributing to the section.'],
+    ['Teaching and learning excellence', '{N} has maintained a strong commitment to effective teaching and learning practices throughout the year. {N} has created an inclusive and supportive learning environment that has contributed positively to student engagement and progression.'],
+    ['Commitment to students', '{N} has consistently demonstrated a student-centred approach, showing patience, understanding and responsiveness to diverse learning needs, and has supported students to achieve their educational goals.'],
+    ['Team contribution', '{N} has worked effectively as a member of the teaching team, demonstrating cooperation, professionalism and a willingness to support colleagues, and has contributed positively to team activities and section operations throughout the year.'],
+    ['Flexibility and adaptability', '{N} has demonstrated commendable flexibility in responding to changes in teaching arrangements, student needs and operational requirements throughout the year, with a cooperative attitude and a willingness to support section priorities.'],
+    ['Assessment and administrative responsibilities', '{N} has consistently met teaching, assessment and administrative responsibilities throughout the year. {N}\'s ongoing attention to student progress, assessment records and program requirements has supported the effective delivery of AMEP/SEE programs.'],
+    ['Professional growth and development', '{N} has demonstrated ongoing commitment to professional development and continuous improvement, developing new skills, reflecting on teaching practice and responding to evolving educational requirements.'],
+    ['Innovation and digital capability', '{N} has demonstrated a positive attitude towards adopting new technologies and teaching approaches, developing digital capabilities and incorporating new tools into professional practice.'],
+    ['Balanced performance and future development', '{N} has made a positive contribution to the section throughout the year and demonstrated commitment to teaching responsibilities. Continued attention to assessment practices, administrative timelines and professional development will support further growth and effectiveness.']
+  ];
+  const bankModal = document.getElementById('bankModal');
+  let bankGoal = null, bankPick = null;
+  const bankText = k => fillName(BANK[k][1], (data.firstName||'').trim());
+  function openBank(i){
+    if(!isHT()) return;
+    bankGoal = i; bankPick = null;
+    document.getElementById('bankTitle').textContent = 'Comment bank – ' + title(data.goals[i], i);
+    document.getElementById('bankList').innerHTML = BANK.map((b,k)=>`<button type="button" class="idea-opt" role="option" data-bk="${k}"><span class="num">${k+1}.</span>${esc(b[0])}</button>`).join('');
+    document.getElementById('bankPrev').innerHTML = '<span class="note">Choose a comment above to see it.</span>';
+    document.getElementById('bankUse').disabled = document.getElementById('bankAdd').disabled = true;
+    bankModal.classList.add('on');
+  }
+  function bankApply(add){
+    if(bankGoal === null || bankPick === null) return;
+    const g = data.goals[bankGoal], cur = (g.htComment||'').trim(), t = bankText(bankPick);
+    if(!add && cur && !confirmSafe('Replace the current comment with this one?')) return;
+    g.htComment = add && cur ? cur + ' ' + t : t; data.editedAt = Date.now();
+    const ta = document.querySelector(`#s3goals [data-g="${bankGoal}"][data-f="htComment"]`); if(ta){ ta.value = g.htComment; autoGrow(ta); }
+    save(); renderPrint(); bankModal.classList.remove('on');
+  }
+  document.addEventListener('click', e=>{ const b = e.target.closest('[data-bank]'); if(b){ e.preventDefault(); openBank(+b.dataset.bank); } });
+  bankModal.addEventListener('click', e=>{
+    if(e.target === bankModal || e.target.closest('[data-bank-close]')){ bankModal.classList.remove('on'); return; }
+    const o = e.target.closest('[data-bk]'); if(!o) return;
+    bankPick = +o.dataset.bk;
+    bankModal.querySelectorAll('[data-bk]').forEach(x=>x.classList.toggle('on', x === o));
+    document.getElementById('bankPrev').textContent = bankText(bankPick);
+    document.getElementById('bankUse').disabled = document.getElementById('bankAdd').disabled = false;
+  });
+  document.getElementById('bankUse').onclick = ()=>bankApply(false);
+  document.getElementById('bankAdd').onclick = ()=>bankApply(true);
 
   load(); data.role = 'teacher';
   if(data.s1SubmittedAt && !data.s1Hash) data.s1Hash = s1Snapshot();
