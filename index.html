@@ -619,7 +619,7 @@
             <label class="lab-sugg"><span>Progress review comments <span class="hint">(by the teacher)</span></span><button type="button" class="sugg s2t" data-psugg="${i}" title="Write a draft comment from the status">✨ Suggest comment</button></label>
             <textarea data-g="${i}" data-f="progress" class="s2t">${esc(g.progress)}</textarea>
             <div class="s2ht"${(!isHT() && !(g.midHT||'').trim()) ? ' style="display:none"' : ''}>
-              <label class="lab-sugg"><span>Head Teacher comment</span>${isHT() ? `<button type="button" class="sugg" data-hsugg="${i}" title="Write a draft comment from the status">✨ Suggest comment</button>` : ''}</label>
+              <label class="lab-sugg"><span>Head Teacher comment</span>${isHT() ? `<span><button type="button" class="sugg" data-hsugg="${i}" title="Write a draft comment from the status">✨ Suggest comment</button> <button type="button" class="sugg" data-bankm="${i}" title="Choose from your mid-year comment bank">📋 Comment bank</button></span>` : ''}</label>
               <textarea data-g="${i}" data-f="midHT" class="ht">${esc(g.midHT||'')}</textarea>
             </div>
           </div>
@@ -2167,7 +2167,8 @@
   document.getElementById('lmExplain').addEventListener('input', renderOvCount);
 
   // ---------- Final review: Head Teacher comment bank ----------
-  const BANK = [
+  const BANKS = {
+    final: [
     ['Overall strong performance', '{N} has demonstrated a high level of professionalism and commitment throughout the year, consistently delivering quality education, supporting student outcomes and contributing to the section.'],
     ['Teaching and learning excellence', '{N} has maintained a strong commitment to effective teaching and learning practices throughout the year. {N} has created an inclusive and supportive learning environment that has contributed positively to student engagement and progression.'],
     ['Commitment to students', '{N} has consistently demonstrated a student-centred approach, showing patience, understanding and responsiveness to diverse learning needs, and has supported students to achieve their educational goals.'],
@@ -2177,28 +2178,44 @@
     ['Professional growth and development', '{N} has demonstrated ongoing commitment to professional development and continuous improvement, developing new skills, reflecting on teaching practice and responding to evolving educational requirements.'],
     ['Innovation and digital capability', '{N} has demonstrated a positive attitude towards adopting new technologies and teaching approaches, developing digital capabilities and incorporating new tools into professional practice.'],
     ['Balanced performance and future development', '{N} has made a positive contribution to the section throughout the year and demonstrated commitment to teaching responsibilities. Continued attention to assessment practices, administrative timelines and professional development will support further growth and effectiveness.']
-  ];
+    ],
+    mid: [
+      ['Overall positive performance', '{N} has demonstrated consistent commitment to quality teaching and student learning throughout the first half of the year, showing professionalism, flexibility and a positive contribution to the teaching team. {N} is well placed to continue this progress in the second half of the year.'],
+      ['Teaching quality and student engagement', '{N} continues to demonstrate effective teaching practices and a strong commitment to creating a supportive and engaging learning environment. {N} has made good progress in meeting diverse student needs and encouraging active participation.'],
+      ['Teamwork and collaboration', '{N} has worked collaboratively with colleagues and contributed positively to the teaching team, sharing resources, supporting others and participating in section activities. Building on these strengths will support further progress in the second half of the year.'],
+      ['Adaptability and flexibility', '{N} has demonstrated flexibility and a positive attitude in responding to operational changes and evolving delivery requirements, adapting teaching approaches and supporting section priorities.'],
+      ['Assessment and compliance', '{N} has demonstrated a sound understanding of assessment and compliance requirements and continues to work towards maintaining accurate and timely student records. Ongoing attention to assessment documentation, attendance monitoring and relevant administrative processes will support further progress.'],
+      ['Professional development', '{N} has shown a positive commitment to professional learning and maintaining vocational and educational currency. Continuing to explore professional development opportunities and to apply new knowledge and strategies in teaching practice will support further progress.'],
+      ['Student-centred approach', '{N} demonstrates care and commitment towards students, recognising their diverse backgrounds, learning needs and individual circumstances. {N} has made good progress in supporting student confidence, participation and progression.'],
+      ['Initiative and continuous improvement', '{N} has shown initiative in identifying opportunities to improve teaching practices and student learning experiences, exploring new approaches and contributing ideas.'],
+      ['Constructive development comment', '{N} has made steady progress towards the goals in this plan during the first half of the year. Continued focus on timely completion of assessment and administrative requirements, alongside ongoing professional development, will further strengthen overall performance.']
+    ]
+  };
   const bankModal = document.getElementById('bankModal');
-  let bankGoal = null, bankPick = null;
-  const bankText = k => fillName(BANK[k][1], (data.firstName||'').trim());
-  function openBank(i){
+  let bankGoal = null, bankPick = null, bankKind = 'final';
+  const bankText = k => fillName(BANKS[bankKind][k][1], (data.firstName||'').trim());
+  function openBank(i, kind){
     if(!isHT()) return;
-    bankGoal = i; bankPick = null;
-    document.getElementById('bankTitle').textContent = 'Comment bank – ' + title(data.goals[i], i);
-    document.getElementById('bankList').innerHTML = BANK.map((b,k)=>`<button type="button" class="idea-opt" role="option" data-bk="${k}"><span class="num">${k+1}.</span>${esc(b[0])}</button>`).join('');
+    bankGoal = i; bankPick = null; bankKind = kind;
+    document.getElementById('bankTitle').textContent = (kind === 'mid' ? 'Mid-year comment bank – ' : 'Final review comment bank – ') + title(data.goals[i], i);
+    document.getElementById('bankList').innerHTML = BANKS[kind].map((b,k)=>`<button type="button" class="idea-opt" role="option" data-bk="${k}"><span class="num">${k+1}.</span>${esc(b[0])}</button>`).join('');
     document.getElementById('bankPrev').innerHTML = '<span class="note">Choose a comment above to see it.</span>';
     document.getElementById('bankUse').disabled = document.getElementById('bankAdd').disabled = true;
     bankModal.classList.add('on');
   }
   function bankApply(add){
     if(bankGoal === null || bankPick === null) return;
-    const g = data.goals[bankGoal], cur = (g.htComment||'').trim(), t = bankText(bankPick);
+    const f = bankKind === 'mid' ? 'midHT' : 'htComment', box = bankKind === 'mid' ? '#s2goals' : '#s3goals';
+    const g = data.goals[bankGoal], cur = (g[f]||'').trim(), t = bankText(bankPick);
     if(!add && cur && !confirmSafe('Replace the current comment with this one?')) return;
-    g.htComment = add && cur ? cur + ' ' + t : t; data.editedAt = Date.now();
-    const ta = document.querySelector(`#s3goals [data-g="${bankGoal}"][data-f="htComment"]`); if(ta){ ta.value = g.htComment; autoGrow(ta); }
+    g[f] = add && cur ? cur + ' ' + t : t; data.editedAt = Date.now();
+    const ta = document.querySelector(`${box} [data-g="${bankGoal}"][data-f="${f}"]`); if(ta){ ta.value = g[f]; autoGrow(ta); }
     save(); renderPrint(); bankModal.classList.remove('on');
   }
-  document.addEventListener('click', e=>{ const b = e.target.closest('[data-bank]'); if(b){ e.preventDefault(); openBank(+b.dataset.bank); } });
+  document.addEventListener('click', e=>{
+    const b = e.target.closest('[data-bank],[data-bankm]'); if(!b) return;
+    e.preventDefault(); if(b.dataset.bankm !== undefined) openBank(+b.dataset.bankm, 'mid'); else openBank(+b.dataset.bank, 'final');
+  });
   bankModal.addEventListener('click', e=>{
     if(e.target === bankModal || e.target.closest('[data-bank-close]')){ bankModal.classList.remove('on'); return; }
     const o = e.target.closest('[data-bk]'); if(!o) return;
