@@ -377,7 +377,7 @@
       <label class="tick"><input type="checkbox" data-k="lmWork" class="ht"><span><select data-k="lmWorkLevel" class="ht lvl"><option>Outstanding</option><option>Satisfactory</option><option>Adequate</option></select> work performance and professional development</span></label>
       <label class="tick"><input type="checkbox" data-k="lmConduct" class="ht"><span><select data-k="lmConductLevel" class="ht lvl"><option>Outstanding</option><option>Satisfactory</option><option>Adequate</option></select> conduct</span></label>
       <p style="margin-top:14px">You are required to provide an explanation if the employee is not demonstrating satisfactory work performance, professional development or conduct.</p>
-      <div class="ov-row"><span class="note" id="ovCount"></span><button type="button" class="sugg" id="ovSugg" title="Write a draft overall comment from the goals' final review">✨ Suggest comment</button></div>
+      <div class="ov-row"><span class="note" id="ovCount"></span><span id="ovBtns"><button type="button" class="sugg" id="ovSugg" title="Write a draft overall comment from the goals' final review">✨ Suggest comment</button> <button type="button" class="sugg" id="ovBank" title="Choose a comment of appreciation">📋 Comment bank</button></span></div>
       <textarea id="lmExplain" data-k="lmExplain" class="ht" rows="3" style="min-height:80px"></textarea>
       <label class="tick" style="margin-top:14px"><input type="checkbox" data-k="lmSick" class="ht"><span>Satisfactory sick leave record (i.e. is not on Medical Certificate requirement)</span></label>
       <p class="note" style="margin:0 0 8px 30px">N.B: where sick leave is approaching unsatisfactory the process for unsatisfactory sick leave must be applied</p>
@@ -2153,7 +2153,7 @@
     const n = (data.lmExplain||'').length, el = document.getElementById('ovCount'); if(!el) return;
     el.textContent = n > OV_MAX ? `${n} characters – may not all fit in the box on the printed form` : '';
     el.classList.toggle('warn', n > OV_MAX);
-    document.getElementById('ovSugg').style.display = isHT() ? '' : 'none';
+    document.getElementById('ovBtns').style.display = isHT() ? '' : 'none';
   }
   document.getElementById('ovSugg').onclick = ()=>{
     if(!isHT()) return;
@@ -2179,6 +2179,20 @@
     ['Innovation and digital capability', '{N} has demonstrated a positive attitude towards adopting new technologies and teaching approaches, developing digital capabilities and incorporating new tools into professional practice.'],
     ['Balanced performance and future development', '{N} has made a positive contribution to the section throughout the year and demonstrated commitment to teaching responsibilities. Continued attention to assessment practices, administrative timelines and professional development will support further growth and effectiveness.']
     ],
+    overall: [
+      ['Sincere appreciation', '{N}\'s hard work and dedication throughout the year are sincerely appreciated. {N} has made a valuable contribution to students\' learning and to the section.'],
+      ['Valued team member', '{N} is a valued member of the teaching team. {N}\'s professionalism, cooperation and willingness to support colleagues throughout the year are greatly appreciated.'],
+      ['Commitment to students', '{N}\'s commitment to students and to quality teaching has been evident throughout the year. The care and effort {N} brings to every class are greatly appreciated.'],
+      ['Above and beyond', '{N} has consistently gone above and beyond this year, both in the classroom and in supporting the section. This contribution is recognised and sincerely appreciated.'],
+      ['Positive influence', '{N} brings a positive, can-do attitude that makes a real difference to colleagues and students alike. {N}\'s contribution to the section this year is greatly valued.'],
+      ['Reliability and professionalism', '{N} has been reliable, professional and responsive throughout the year. {N}\'s steady contribution to the smooth running of classes and the section is much appreciated.'],
+      ['Flexibility and support', '{N}\'s flexibility and willingness to step in when needed have been a great support to the section this year. This cooperative approach is sincerely appreciated.'],
+      ['Sharing expertise', '{N}\'s generosity in sharing resources, ideas and expertise with colleagues has strengthened the team this year and is greatly appreciated.'],
+      ['Student success', 'Students have made good progress under {n}\'s guidance this year. {N}\'s patience, encouragement and commitment to student success are sincerely appreciated.'],
+      ['Professional learning', '{N}\'s commitment to professional learning this year has benefited both students and colleagues. This effort is recognised and appreciated.'],
+      ['Successful year', '{N} has had a very successful year and made a valuable contribution to students and colleagues. This dedication and hard work are sincerely appreciated.'],
+      ['Pleasure to work with', '{N}\'s contribution this year is greatly appreciated, and it has been a pleasure working with {n}. {N} is a highly valued member of the section.']
+    ],
     mid: [
       ['Overall positive performance', '{N} has demonstrated consistent commitment to quality teaching and student learning throughout the first half of the year, showing professionalism, flexibility and a positive contribution to the teaching team. {N} is well placed to continue this progress in the second half of the year.'],
       ['Teaching quality and student engagement', '{N} continues to demonstrate effective teaching practices and a strong commitment to creating a supportive and engaging learning environment. {N} has made good progress in meeting diverse student needs and encouraging active participation.'],
@@ -2197,14 +2211,22 @@
   function openBank(i, kind){
     if(!isHT()) return;
     bankGoal = i; bankPick = null; bankKind = kind;
-    document.getElementById('bankTitle').textContent = (kind === 'mid' ? 'Mid-year comment bank – ' : 'Final review comment bank – ') + title(data.goals[i], i);
+    document.getElementById('bankTitle').textContent = kind === 'overall' ? 'Overall comment bank' : (kind === 'mid' ? 'Mid-year comment bank – ' : 'Final review comment bank – ') + title(data.goals[i], i);
     document.getElementById('bankList').innerHTML = BANKS[kind].map((b,k)=>`<button type="button" class="idea-opt" role="option" data-bk="${k}"><span class="num">${k+1}.</span>${esc(b[0])}</button>`).join('');
     document.getElementById('bankPrev').innerHTML = '<span class="note">Choose a comment above to see it.</span>';
     document.getElementById('bankUse').disabled = document.getElementById('bankAdd').disabled = true;
     bankModal.classList.add('on');
   }
   function bankApply(add){
-    if(bankGoal === null || bankPick === null) return;
+    if(bankPick === null) return;
+    if(bankKind === 'overall'){
+      const cur = (data.lmExplain||'').trim(), t = bankText(bankPick);
+      if(!add && cur && !confirmSafe('Replace the current comment with this one?')) return;
+      data.lmExplain = add && cur ? cur + ' ' + t : t; data.editedAt = Date.now();
+      document.getElementById('lmExplain').value = data.lmExplain;
+      save(); renderPrint(); renderOvCount(); bankModal.classList.remove('on'); return;
+    }
+    if(bankGoal === null) return;
     const f = bankKind === 'mid' ? 'midHT' : 'htComment', box = bankKind === 'mid' ? '#s2goals' : '#s3goals';
     const g = data.goals[bankGoal], cur = (g[f]||'').trim(), t = bankText(bankPick);
     if(!add && cur && !confirmSafe('Replace the current comment with this one?')) return;
@@ -2225,6 +2247,7 @@
     document.getElementById('bankUse').disabled = document.getElementById('bankAdd').disabled = false;
   });
   document.getElementById('bankUse').onclick = ()=>bankApply(false);
+  document.getElementById('ovBank').onclick = ()=>openBank(null, 'overall');
   document.getElementById('bankAdd').onclick = ()=>bankApply(true);
 
   load(); data.role = 'teacher';
